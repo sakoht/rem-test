@@ -1,0 +1,28 @@
+<VirtualHost *:80>
+	ServerName factmap.org
+	Redirect / http://www.factmap.org/
+</VirtualHost>
+
+
+<VirtualHost *:80>
+	ServerName www.factmap.org
+	ServerAdmin webmaster@factmap.org
+	
+	<Location "/">
+	    SetHandler python-program
+	    PythonHandler django.core.handlers.modpython
+	    PythonDebug On
+	    PythonPath "['/var/www/www.factmap.org/'] + sys.path "
+	    SetEnv DJANGO_SETTINGS_MODULE factmap.settings
+	</Location>
+	
+	ErrorLog /var/log/apache2/factmap.org-error.log
+
+	# Possible values include: debug, info, notice, warn, error, crit,
+	# alert, emerg.
+	LogLevel warn
+
+	CustomLog /var/log/apache2/factmap.org-access.log combined
+	ServerSignature Off
+</VirtualHost>
+

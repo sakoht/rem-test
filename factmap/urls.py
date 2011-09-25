@@ -6,8 +6,8 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     # Example:
-    (r'^$',         'factmap.views.main'),
-    (r'^selector/', 'factmap.views.selector'),
+    (r'^$',                 'factmap.views.main'),
+    (r'^js/selector.js',    'factmap.views.selector_js'),
 
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
     # to INSTALLED_APPS to enable admin documentation:

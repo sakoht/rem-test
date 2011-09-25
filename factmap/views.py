@@ -10,7 +10,7 @@ def main(request):
     r.write('<li>one</li>');
     r.write('<li>two</li>');
     r.write('<li>three</li>');
-    r.write('<a href="' + bookmarklet_text() + '">Selector</a>');
+    r.write('<a href="' + bookmarklet_text() + '">Selector</a> <== drag this onto your bookmarks bar!');
     r.write('</ul>');
     return r
 
@@ -19,14 +19,19 @@ def bookmarklet_text():
     b = b + "s=document.createElement('script');"
     b = b + "s.setAttribute('type','text/javascript');"
     b = b + "s.setAttribute('charset','UTF-8');"
-    b = b + "s.setAttribute('src','http://factmap.org/selector');"
+    b = b + "s.setAttribute('src','http://factmap.org/js/selector.js');"
     b = b + "document.body.appendChild(s);"
     b = b + "})();"
     return b
 
-def selector(request):
-    r = http.HttpResponse('alert("begin");',mimetype='text/javascript')
-    r.write('alert("end")');
+def selector_js(request):
+    r = http.HttpResponse("alert('begin');\n",mimetype='text/javascript')
+    r.write("p = document.createElement('div');\n")
+    r.write("alert('b');\n")
+    r.write("p.innerHTML = 'HI';\n")
+    r.write("alert('c');\n")
+    r.write("document.body.appendChild(p);\n")
+    r.write("alert('end')")
     return r
 
 # old junk from the examples

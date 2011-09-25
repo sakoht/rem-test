@@ -1,5 +1,35 @@
 # Create your views here.
 from django import http
+from django.http import HttpResponse
+from django.utils.html import escape
+import pprint
+
+def main(request):
+    r = http.HttpResponse('<h1>FactMap</h1>')
+    r.write('<ul>');
+    r.write('<li>one</li>');
+    r.write('<li>two</li>');
+    r.write('<li>three</li>');
+    r.write('<a href="' + bookmarklet_text() + '">Selector</a>');
+    r.write('</ul>');
+    return r
+
+def bookmarklet_text():
+    b = "javascript:(function(){"
+    b = b + "s=document.createElement('script');"
+    b = b + "s.setAttribute('type','text/javascript');"
+    b = b + "s.setAttribute('charset','UTF-8');"
+    b = b + "s.setAttribute('src','http://factmap.org/selector');"
+    b = b + "document.body.appendChild(s);"
+    b = b + "})();"
+    return b
+
+def selector(request):
+    r = http.HttpResponse('alert("begin");',mimetype='text/javascript')
+    r.write('alert("end")');
+    return r
+
+# old junk from the examples
 
 def index(request):
     r = http.HttpResponse('<h1>FactMap Entry<h1><ul>')
@@ -8,9 +38,6 @@ def index(request):
     r.write('<li><a href="summarize/">Summarize</a></li>')
     r.write('</ul>')
     return r
-
-from django.http import HttpResponse
-from django.utils.html import escape
 
 def hello_html(request):
     "This view is a basic 'hello world' example in HTML."
@@ -64,3 +91,4 @@ def post_data(request):
     r.write('<p><input type="submit" value="Submit"></p>')
     r.write('</form>')
     return r
+

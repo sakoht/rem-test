@@ -7,10 +7,10 @@ import pprint
 def main(request):
     r = http.HttpResponse('<h1>FactMap</h1>')
     r.write('<ul>');
-    r.write('<li>one</li>');
-    r.write('<li>two</li>');
-    r.write('<li>three</li>');
-    r.write('<a href="' + bookmarklet_text() + '">Selector</a> <== drag this onto your bookmarks bar!');
+    r.write('<li>select statements anywhere on the web</li>');
+    r.write('<li>remember everything you select</li>');
+    r.write('<li>mail web pages with your selection highlighted</li>');
+    r.write('<a href="' + bookmarklet_text() + '">Selector</a> <== drag this onto your bookmarks bar to use it anywhere!');
     r.write('</ul>');
     return r
 
@@ -37,6 +37,7 @@ def selector_js(request):
     return r
 
 def pen_div_html():
+
     return "HI"
 
 # old junk from the examples

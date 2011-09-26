@@ -30,7 +30,7 @@ def selector_js(request):
     r.write("if(document.getElementById('factmap.org pen') == null) {\n")
     r.write("  p = document.createElement('div');\n")
     r.write("  p.setAttribute('id','factmap.org pen')\n")
-    r.write("  p.setAttribute('style','position:fixed; right:32px; top:32px; z-index:9999');\n")
+    #r.write("  p.setAttribute('style','position:fixed; right:32px; top:32px;');\n")
     r.write("  p.innerHTML = '" + pen_div_html() + "';\n")
     r.write("  document.body.appendChild(p);\n")
     r.write("}\n");
@@ -38,7 +38,12 @@ def selector_js(request):
     return r
 
 def pen_div_html():
-    p = '<img src="http://www.factmap.org/images/pen32.jpg">'
+    p =  '    <div style="position:fixed; top:32px; right:32px; z-index:100;">'
+    p += '      <img src="http://www.factmap.org/images/pen32.jpg">'
+    p += '    </div>'
+    p += '    <div style="position:fixed; top:32px; right:32px; z-index:101;">'
+    p += '      <img src="http://www.factmap.org/images/x10.jpg">'
+    p += '    </div>'
     return p
 
 # old junk from the examples

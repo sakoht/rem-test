@@ -42,6 +42,10 @@ def selector_js(request):
     s += "}\n"
     
     s += "function close_click() {\n"
+    s += "  var a = document.getElementById('factmap.org app');\n" 
+    s += "  var b = document.getElementById('factmap.org bookmarklet');\n" 
+    s += "  a.parentNode.removeChild(a);\n" 
+    s += "  b.parentNode.removeChild(b);\n" 
     s += "  alert('close click');\n"
     s += "}\n"
     
@@ -54,13 +58,13 @@ def selector_js(request):
     return r
 
 def pen_div_html():
-    p =  '    <div style="position:fixed; top:32px; right:32px; z-index:100;">'
+    p =  '    <div style="position:fixed; top:32px; right:32px; z-index:9999;">'
     p += '      <img onclick="pen_click()" src="http://www.factmap.org/images/pen32lr.jpg">'
     p += '    </div>'
-    p += '    <div style="position:fixed; top:32px; right:20px; z-index:101;">'
+    p += '    <div style="position:fixed; top:32px; right:20px; z-index:9999;">'
     p += '      <img onclick="close_click()" src="http://www.factmap.org/images/x12.jpg">'
     p += '    </div>'
-    p += '    <div style="position:fixed; top:44px; right:20px; z-index:101;">'
+    p += '    <div style="position:fixed; top:44px; right:20px; z-index:9999;">'
     p += '      <img onclick="site_click()" src="http://www.factmap.org/images/right20.jpg">'
     p += '    </div>'
     return p

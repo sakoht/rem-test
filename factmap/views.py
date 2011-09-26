@@ -37,29 +37,39 @@ def selector_js(request):
     r.write("p.innerHTML = '" + pen_div_html() + "';\n")
     r.write("document.body.appendChild(p);\n")
     
-    s =  "function pen_click() {\n"
-    s += "  alert('pen click');\n"
+    s =  "function pen_on() {\n"
+    s += "  document.getElementById('factmap.org pen on').style.zIndex = 9998;\n" 
+    s += "  document.getElementById('factmap.org pen off').style.zIndex = 9997;\n" 
+    s += "}\n"
+    
+    s += "function pen_off() {\n"
+    s += "  document.getElementById('factmap.org pen on').style.zIndex = 9997;\n" 
+    s += "  document.getElementById('factmap.org pen off').style.zIndex = 9998;\n" 
     s += "}\n"
     
     s += "function close_click() {\n"
     s += "  var a = document.getElementById('factmap.org app');\n" 
     s += "  var b = document.getElementById('factmap.org bookmarklet');\n" 
-    s += "  a.parentNode.removeChild(a);\n" 
-    s += "  b.parentNode.removeChild(b);\n" 
-    s += "  alert('close click');\n"
+    s += "  if (a != null) { a.parentNode.removeChild(a); }\n" 
+    s += "  if (b != null) { b.parentNode.removeChild(b); }\n" 
     s += "}\n"
     
     s += "function site_click() {\n"
     s += "  alert('site click');\n"
     s += "}\n"
 
+    s += "pen_on_click();";
+
     r.write(s);
     #r.write("alert('pen injected')\n")
     return r
 
 def pen_div_html():
-    p =  '    <div style="position:fixed; top:32px; right:32px; z-index:9999;">'
-    p += '      <img onclick="pen_click()" src="http://www.factmap.org/images/pen32lr.jpg">'
+    p =  '    <div style="position:fixed; top:32px; right:32px; z-index:9997;" id="factmap.org pen off">'
+    p += '      <img onclick="pen_on()" src="http://www.factmap.org/images/pen32right.jpg">'
+    p += '    </div>'
+    p +=  '   <div style="position:fixed; top:32px; right:32px; z-index:9998;" id="factmap.org pen on">'
+    p += '      <img onclick="pen_off()" src="http://www.factmap.org/images/pen32left.jpg">'
     p += '    </div>'
     p += '    <div style="position:fixed; top:32px; right:20px; z-index:9999;">'
     p += '      <img onclick="close_click()" src="http://www.factmap.org/images/x12.jpg">'

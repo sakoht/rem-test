@@ -36,44 +36,46 @@ def selector_js(request):
     #r.write("p.setAttribute('style','position:fixed; right:32px; top:32px;');\n")
     r.write("p.innerHTML = '" + pen_div_html() + "';\n")
     r.write("document.body.appendChild(p);\n")
-   
-    s =  "var mouse_listener;\n";
-    s += "var pen_status = 'off'\n";
 
-    s +=  "function pen_on() {\n"
-    s += "  document.getElementById('factmap.org pen on').style.zIndex = 9998;\n" 
-    s += "  document.getElementById('factmap.org pen off').style.zIndex = 9997;\n" 
-    s += "  mouse_listener = document.addEventListener('mouseup', on_mouseup, true);\n"
-    s += "  pen_status = 'on';\n"
-    s += "}\n"
-    
-    s += "function pen_off() {\n"
-    s += "  document.getElementById('factmap.org pen on').style.zIndex = 9997;\n" 
-    s += "  document.getElementById('factmap.org pen off').style.zIndex = 9998;\n"
-    s += "  document.removeEventListener('mouseup',on_mouseup, true);\n"
-    s += "  pen_status = 'off';\n"
-    s += "}\n"
-    
-    s += "function close_click() {\n"
-    s += "  var a = document.getElementById('factmap.org app');\n" 
-    s += "  var b = document.getElementById('factmap.org bookmarklet');\n" 
-    s += "  if (a != null) { a.parentNode.removeChild(a); }\n" 
-    s += "  if (b != null) { b.parentNode.removeChild(b); }\n" 
-    s += "}\n"
-    
-    s += "function site_click() {\n"
-    s += "  alert('site click');\n"
-    s += "}\n"
+    s = '''
+        var pen_status = 'off'
 
-    s += "function on_mouseup() {\n"
-    s += "  if (pen_status == 'on') {\n"
-    s += "    alert('snap');\n"
-    s += "  }\n"
-    s += "  else {\n"
-    s += "    alert('nope');\n"
-    s += "  }\n"
-    s += "}\n"
-    s += "pen_on();"
+        function pen_on() {
+            document.getElementById('factmap.org pen on').style.zIndex = 9998;
+            document.getElementById('factmap.org pen off').style.zIndex = 9997;
+            document.addEventListener('mouseup', on_mouseup, true);
+            pen_status = 'on';
+        }
+
+        function pen_off() {
+            document.getElementById('factmap.org pen on').style.zIndex = 9997;
+            document.getElementById('factmap.org pen off').style.zIndex = 9998;
+            document.removeEventListener('mouseup',on_mouseup, true);
+            pen_status = 'off';
+        }
+
+        function close_click() {
+            var a = document.getElementById('factmap.org app');
+            var b = document.getElementById('factmap.org bookmarklet');
+            if (a != null) { a.parentNode.removeChild(a); }
+            if (b != null) { b.parentNode.removeChild(b); }
+        }
+
+        function site_click() {
+            alert('site click');
+        }
+
+        function on_mouseup() {
+            if (pen_status == 'on') {
+                alert('snap');
+            }
+            else {
+                alert('nope');
+            }
+        }
+
+        pen_on()
+    '''
 
     r.write(s);
     #r.write("alert('pen injected')\n")
@@ -83,7 +85,7 @@ def pen_div_html():
     p =  '    <div style="position:fixed; top:32px; right:32px; z-index:9997;" id="factmap.org pen off">'
     p += '      <img onclick="pen_on()" src="http://www.factmap.org/images/pen32right.jpg">'
     p += '    </div>'
-    p +=  '   <div style="position:fixed; top:32px; right:32px; z-index:9998;" id="factmap.org pen on">'
+    p += '   <div style="position:fixed; top:32px; right:32px; z-index:9998;" id="factmap.org pen on">'
     p += '      <img onclick="pen_off()" src="http://www.factmap.org/images/pen32left.jpg">'
     p += '    </div>'
     p += '    <div style="position:fixed; top:32px; right:20px; z-index:9999;">'

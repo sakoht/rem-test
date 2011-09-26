@@ -36,15 +36,22 @@ def selector_js(request):
     #r.write("p.setAttribute('style','position:fixed; right:32px; top:32px;');\n")
     r.write("p.innerHTML = '" + pen_div_html() + "';\n")
     r.write("document.body.appendChild(p);\n")
-    
-    s =  "function pen_on() {\n"
+   
+    s =  "var mouse_listener;\n";
+    s += "var pen_status = 'off'\n";
+
+    s +=  "function pen_on() {\n"
     s += "  document.getElementById('factmap.org pen on').style.zIndex = 9998;\n" 
     s += "  document.getElementById('factmap.org pen off').style.zIndex = 9997;\n" 
+    s += "  mouse_listener = document.addEventListener('mouseup', on_mouseup, true);\n"
+    s += "  pen_status = 'on';\n"
     s += "}\n"
     
     s += "function pen_off() {\n"
     s += "  document.getElementById('factmap.org pen on').style.zIndex = 9997;\n" 
-    s += "  document.getElementById('factmap.org pen off').style.zIndex = 9998;\n" 
+    s += "  document.getElementById('factmap.org pen off').style.zIndex = 9998;\n"
+    s += "  document.removeEventListener('mouseup',on_mouseup, true);\n"
+    s += "  pen_status = 'off';\n"
     s += "}\n"
     
     s += "function close_click() {\n"
@@ -58,7 +65,15 @@ def selector_js(request):
     s += "  alert('site click');\n"
     s += "}\n"
 
-    s += "pen_on_click();";
+    s += "function on_mouseup() {\n"
+    s += "  if (pen_status == 'on') {\n"
+    s += "    alert('snap');\n"
+    s += "  }\n"
+    s += "  else {\n"
+    s += "    alert('nope');\n"
+    s += "  }\n"
+    s += "}\n"
+    s += "pen_on();"
 
     r.write(s);
     #r.write("alert('pen injected')\n")

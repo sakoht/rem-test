@@ -7,7 +7,7 @@
 <VirtualHost *:80>
 	ServerName www.factmap.org
 	ServerAdmin webmaster@factmap.org
-	
+
 	<Location "/">
 	    SetHandler python-program
 	    PythonHandler django.core.handlers.modpython
@@ -16,6 +16,11 @@
 	    SetEnv DJANGO_SETTINGS_MODULE factmap.settings
 	</Location>
 	
+    Alias /images "/var/www/www.factmap.org/images"
+    <Location "/images">
+        SetHandler None
+    </Location>
+
 	ErrorLog /var/log/apache2/factmap.org-error.log
 
 	# Possible values include: debug, info, notice, warn, error, crit,

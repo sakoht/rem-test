@@ -16,11 +16,12 @@ def main(request):
 
 def bookmarklet_text():
     b = "javascript:(function(){"
-    b += "  if(document.getElementById('factmap.org pen') == null) {"
+    b += "  if(document.getElementById('factmap.org bookmarklet') == null) {"
     b += "    s=document.createElement('script');"
     b += "    s.setAttribute('type','text/javascript');"
     b += "    s.setAttribute('charset','UTF-8');"
     b += "    s.setAttribute('src','http://factmap.org/js/selector.js');"
+    b += "    s.setAttribute('id','factmap.org bookmarklet');"
     b += "    document.body.appendChild(s);"
     b += "  }"
     b += "})();"
@@ -28,24 +29,39 @@ def bookmarklet_text():
 
 def selector_js(request):
     r = http.HttpResponse('',mimetype='text/javascript')
+
     #r.write("alert('injecting pen')\n")
     r.write("p = document.createElement('div');\n")
-    r.write("p.setAttribute('id','factmap.org pen')\n")
+    r.write("p.setAttribute('id','factmap.org app')\n")
     #r.write("p.setAttribute('style','position:fixed; right:32px; top:32px;');\n")
     r.write("p.innerHTML = '" + pen_div_html() + "';\n")
     r.write("document.body.appendChild(p);\n")
+    
+    s =  "function pen_click() {\n"
+    s += "  alert('pen click');\n"
+    s += "}\n"
+    
+    s += "function close_click() {\n"
+    s += "  alert('close click');\n"
+    s += "}\n"
+    
+    s += "function site_click() {\n"
+    s += "  alert('site click');\n"
+    s += "}\n"
+
+    r.write(s);
     #r.write("alert('pen injected')\n")
     return r
 
 def pen_div_html():
     p =  '    <div style="position:fixed; top:32px; right:32px; z-index:100;">'
-    p += '      <img src="http://www.factmap.org/images/pen32lr.jpg">'
+    p += '      <img onclick="pen_click()" src="http://www.factmap.org/images/pen32lr.jpg">'
     p += '    </div>'
     p += '    <div style="position:fixed; top:32px; right:20px; z-index:101;">'
-    p += '      <img src="http://www.factmap.org/images/x12.jpg">'
+    p += '      <img onclick="close_click()" src="http://www.factmap.org/images/x12.jpg">'
     p += '    </div>'
     p += '    <div style="position:fixed; top:44px; right:20px; z-index:101;">'
-    p += '      <img src="http://www.factmap.org/images/right20.jpg">'
+    p += '      <img onclick="site_click()" src="http://www.factmap.org/images/right20.jpg">'
     p += '    </div>'
     return p
 

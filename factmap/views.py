@@ -39,10 +39,13 @@ def selector_js(request):
 
 def pen_div_html():
     p =  '    <div style="position:fixed; top:32px; right:32px; z-index:100;">'
-    p += '      <img src="http://www.factmap.org/images/pen32.jpg">'
+    p += '      <img src="http://www.factmap.org/images/pen32lr.jpg">'
     p += '    </div>'
-    p += '    <div style="position:fixed; top:32px; right:32px; z-index:101;">'
-    p += '      <img src="http://www.factmap.org/images/x10.jpg">'
+    p += '    <div style="position:fixed; top:32px; right:20px; z-index:101;">'
+    p += '      <img src="http://www.factmap.org/images/x12.jpg">'
+    p += '    </div>'
+    p += '    <div style="position:fixed; top:44px; right:20px; z-index:101;">'
+    p += '      <img src="http://www.factmap.org/images/right20.jpg">'
     p += '    </div>'
     return p
 

@@ -16,24 +16,24 @@ def main(request):
 
 def bookmarklet_text():
     b = "javascript:(function(){"
-    b += "s=document.createElement('script');"
-    b += "s.setAttribute('type','text/javascript');"
-    b += "s.setAttribute('charset','UTF-8');"
-    b += "s.setAttribute('src','http://factmap.org/js/selector.js');"
-    b += "document.body.appendChild(s);"
+    b += "  if(document.getElementById('factmap.org pen') == null) {"
+    b += "    s=document.createElement('script');"
+    b += "    s.setAttribute('type','text/javascript');"
+    b += "    s.setAttribute('charset','UTF-8');"
+    b += "    s.setAttribute('src','http://factmap.org/js/selector.js');"
+    b += "    document.body.appendChild(s);"
+    b += "  }"
     b += "})();"
     return b
 
 def selector_js(request):
     r = http.HttpResponse('',mimetype='text/javascript')
     #r.write("alert('injecting pen')\n")
-    r.write("if(document.getElementById('factmap.org pen') == null) {\n")
-    r.write("  p = document.createElement('div');\n")
-    r.write("  p.setAttribute('id','factmap.org pen')\n")
-    #r.write("  p.setAttribute('style','position:fixed; right:32px; top:32px;');\n")
-    r.write("  p.innerHTML = '" + pen_div_html() + "';\n")
-    r.write("  document.body.appendChild(p);\n")
-    r.write("}\n");
+    r.write("p = document.createElement('div');\n")
+    r.write("p.setAttribute('id','factmap.org pen')\n")
+    #r.write("p.setAttribute('style','position:fixed; right:32px; top:32px;');\n")
+    r.write("p.innerHTML = '" + pen_div_html() + "';\n")
+    r.write("document.body.appendChild(p);\n")
     #r.write("alert('pen injected')\n")
     return r
 

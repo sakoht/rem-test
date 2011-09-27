@@ -4,10 +4,14 @@ from django.http import HttpResponse
 from django.utils.html import escape
 import pprint
 
+def under_construction(request):
+    r = http.HttpResponse('This site is under construction.  Come back soon...')
+    return r
+
 def main(request):
-    r = http.HttpResponse('<h1>FactMap</h1>')
+    r = http.HttpResponse('<h1>vootr</h1>')
     r.write('<ol>')
-    r.write('<li><a href="' + bookmarklet_text() + '">Vootr</a>   <==========   drag this link onto your bookmarks bar!</li>')
+    r.write('<li><a href="' + bookmarklet_text() + '">vootr</a>   <==========   drag this link onto your bookmarks bar!</li>')
     r.write('<li>go to any web site</li>')
     r.write('<li>click the bookmark to turn on the vootr pen ...it appears on the right</li>')
     r.write('<li>click on any statement to highlight it</li>')

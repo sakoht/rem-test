@@ -3,6 +3,15 @@
 	Redirect / http://www.factmap.org/
 </VirtualHost>
 
+<VirtualHost *:80>
+	ServerName factmap.net
+	Redirect / http://www.factmap.org/
+</VirtualHost>
+
+<VirtualHost *:80>
+	ServerName www.factmap.net
+	Redirect / http://www.factmap.org/
+</VirtualHost>
 
 <VirtualHost *:80>
 	ServerName www.factmap.org

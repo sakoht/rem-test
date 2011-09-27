@@ -6,12 +6,16 @@ import pprint
 
 def main(request):
     r = http.HttpResponse('<h1>FactMap</h1>')
-    r.write('<ul>');
-    r.write('<li>select statements anywhere on the web</li>');
-    r.write('<li>remember everything you select</li>');
-    r.write('<li>mail web pages with your selection highlighted</li>');
-    r.write('<a href="' + bookmarklet_text() + '">Selector</a> <== drag this onto your bookmarks bar to use it anywhere!');
-    r.write('</ul>');
+    r.write('<ol>')
+    r.write('<li><a href="' + bookmarklet_text() + '">Vootr</a>   <==========   drag this link onto your bookmarks bar!</li>')
+    r.write('<li>go to any web site</li>')
+    r.write('<li>click the bookmark to turn on the vootr pen ...it appears on the right</li>')
+    r.write('<li>click on any statement to highlight it</li>')
+    r.write('<li>hover over the highlighted statement to see options like email, digg, facebook, google+, and twitter</li>')
+    r.write('<li>turn the pen on and off whenever you want by clicking on the image on the right</li>')
+    r.write('<li>when you come back to the site, turn on the pen again to see your previous highlights</li>')
+    r.write('<li>click on the green arrow to see all of your highlights, see a capture of the page, and send them around</li>')
+    r.write('</ol>')
     return r
 
 def bookmarklet_text():

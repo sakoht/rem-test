@@ -12,7 +12,7 @@ def main(request):
     r = http.HttpResponse('<h1>vootr</h1>')
     r.write('<ol>')
     r.write('<li><a href="' + bookmarklet_text() + '">vootr</a>   <==========   drag this link onto your bookmarks bar!</li>')
-    r.write('<li>go to any web site</li>')
+    r.write('<li>go to any web site (or try it right here)</li>')
     r.write('<li>click the bookmark to turn on the vootr pen ...it appears on the right</li>')
     r.write('<li>click on any statement to highlight it</li>')
     r.write('<li>hover over the highlighted statement to see options like email, digg, facebook, google+, and twitter</li>')

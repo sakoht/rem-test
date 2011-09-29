@@ -1,11 +1,31 @@
 <VirtualHost *:80>
 	ServerName flinkt.com
-	Redirect / http://www.flinkt.com/
+	Redirect / http://www.flinkt.org/
+</VirtualHost>
+
+<VirtualHost *:80>
+	ServerName flinkt.net
+	Redirect / http://www.flinkt.org/
+</VirtualHost>
+
+<VirtualHost *:80>
+	ServerName flinkt.org
+	Redirect / http://www.flinkt.org/
 </VirtualHost>
 
 <VirtualHost *:80>
 	ServerName www.flinkt.com
-	ServerAdmin webmaster@factmap.org
+	Redirect / http://www.flinkt.org/
+</VirtualHost>
+
+<VirtualHost *:80>
+	ServerName www.flinkt.net
+	Redirect / http://www.flinkt.org/
+</VirtualHost>
+
+<VirtualHost *:80>
+	ServerName www.flinkt.org
+	ServerAdmin scottsmith1@gmail.com
 
 	<Location "/">
 	    SetHandler python-program

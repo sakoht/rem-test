@@ -1,31 +1,21 @@
 <VirtualHost *:80>
-	ServerName factmap.org
-	Redirect / http://www.factmap.org/
+	ServerName flinkt.com
+	Redirect / http://www.flinkt.com/
 </VirtualHost>
 
 <VirtualHost *:80>
-	ServerName factmap.net
-	Redirect / http://www.factmap.org/
-</VirtualHost>
-
-<VirtualHost *:80>
-	ServerName www.factmap.net
-	Redirect / http://www.factmap.org/
-</VirtualHost>
-
-<VirtualHost *:80>
-	ServerName www.factmap.org
+	ServerName www.flinkt.com
 	ServerAdmin webmaster@factmap.org
 
 	<Location "/">
 	    SetHandler python-program
 	    PythonHandler django.core.handlers.modpython
 	    PythonDebug On
-	    PythonPath "['/var/www/www.factmap.org/'] + sys.path "
+	    PythonPath "['/var/www/www.flinkt.com/'] + sys.path "
 	    SetEnv DJANGO_SETTINGS_MODULE factmap.settings
 	</Location>
 	
-    Alias /images "/var/www/www.factmap.org/images"
+    Alias /images "/var/www/www.flinkt.com/images"
     <Location "/images">
         SetHandler None
     </Location>

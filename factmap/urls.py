@@ -7,7 +7,7 @@ admin.autodiscover()
 urlpatterns = patterns('',
     # Example:
     (r'^$',                         'factmap.views.under_construction'),
-    (r'^home$',                     'factmap.views.main'),
+    (r'^demo$',                     'factmap.views.main'),
     (r'^js/selector.js',            'factmap.views.selector_js'),
     
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
@@ -18,7 +18,7 @@ urlpatterns = patterns('',
     #(r'^admin/', include(admin.site.urls)),
     
     #(r'^examples/$', 'examples.views.index'),
-    (r'^examples/', include('examples.hello.urls')),
+    (r'^djexamples/', include('examples.hello.urls')),
 
     (r'^.*', 'factmap.views.under_construction'),
 )

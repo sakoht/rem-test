@@ -12,7 +12,7 @@ def main(request):
     r = http.HttpResponse('<h1>flinkt</h1>')
     r.write('<ol>')
     r.write('<li><a href="' + bookmarklet_text() + '">flinkt</a>   <==========   drag this link onto your bookmarks bar!</li>')
-    r.write('<li>go to any web site (or try it right here)</li>')
+    r.write('<li>go to any web site (or stay right here to try it)</li>')
     r.write('<li>click the bookmark to turn on the flinkt pen ...it appears on the right</li>')
     r.write('<li>click on any statement to highlight it</li>')
     r.write('<li>hover over the highlighted statement to see options like email, digg, facebook, google+, and twitter</li>')
@@ -24,12 +24,12 @@ def main(request):
 
 def bookmarklet_text():
     b = "javascript:(function(){"
-    b += "  if(document.getElementById('factmap.org bookmarklet') == null) {"
+    b += "  if(document.getElementById('flinkt.org bookmarklet') == null) {"
     b += "    s=document.createElement('script');"
     b += "    s.setAttribute('type','text/javascript');"
     b += "    s.setAttribute('charset','UTF-8');"
-    b += "    s.setAttribute('src','http://factmap.org/js/selector.js');"
-    b += "    s.setAttribute('id','factmap.org bookmarklet');"
+    b += "    s.setAttribute('src','http://flinkt.org/js/selector.js');"
+    b += "    s.setAttribute('id','flinkt.org bookmarklet');"
     b += "    document.body.appendChild(s);"
     b += "  }"
     b += "})();"
@@ -40,7 +40,7 @@ def selector_js(request):
 
     #r.write("alert('injecting pen')\n")
     r.write("p = document.createElement('div');\n")
-    r.write("p.setAttribute('id','factmap.org app')\n")
+    r.write("p.setAttribute('id','flinkt.org app')\n")
     #r.write("p.setAttribute('style','position:fixed; right:32px; top:32px;');\n")
     r.write("p.innerHTML = '" + pen_div_html() + "';\n")
     r.write("document.body.appendChild(p);\n")
@@ -49,22 +49,22 @@ def selector_js(request):
         var pen_status = 'off'
 
         function pen_on() {
-            document.getElementById('factmap.org pen on').style.zIndex = 9998;
-            document.getElementById('factmap.org pen off').style.zIndex = 9997;
+            document.getElementById('flinkt.org pen on').style.zIndex = 9998;
+            document.getElementById('flinkt.org pen off').style.zIndex = 9997;
             document.addEventListener('mouseup', on_mouseup, true);
             pen_status = 'on';
         }
 
         function pen_off() {
-            document.getElementById('factmap.org pen on').style.zIndex = 9997;
-            document.getElementById('factmap.org pen off').style.zIndex = 9998;
+            document.getElementById('flinkt.org pen on').style.zIndex = 9997;
+            document.getElementById('flinkt.org pen off').style.zIndex = 9998;
             document.removeEventListener('mouseup',on_mouseup, true);
             pen_status = 'off';
         }
 
         function close_click() {
-            var a = document.getElementById('factmap.org app');
-            var b = document.getElementById('factmap.org bookmarklet');
+            var a = document.getElementById('flinkt.org app');
+            var b = document.getElementById('flinkt.org bookmarklet');
             if (a != null) { a.parentNode.removeChild(a); }
             if (b != null) { b.parentNode.removeChild(b); }
         }
@@ -90,17 +90,17 @@ def selector_js(request):
     return r
 
 def pen_div_html():
-    p =  '    <div style="position:fixed; top:32px; right:32px; z-index:9997;" id="factmap.org pen off">'
-    p += '      <img onclick="pen_on()" src="http://www.factmap.org/images/pen32right.jpg">'
+    p =  '    <div style="position:fixed; top:32px; right:32px; z-index:9997;" id="flinkt.org pen off">'
+    p += '      <img onclick="pen_on()" src="http://www.flinkt.org/images/pen32right.jpg">'
     p += '    </div>'
-    p += '   <div style="position:fixed; top:32px; right:32px; z-index:9998;" id="factmap.org pen on">'
-    p += '      <img onclick="pen_off()" src="http://www.factmap.org/images/pen32left.jpg">'
+    p += '   <div style="position:fixed; top:32px; right:32px; z-index:9998;" id="flinkt.org pen on">'
+    p += '      <img onclick="pen_off()" src="http://www.flinkt.org/images/pen32left.jpg">'
     p += '    </div>'
     p += '    <div style="position:fixed; top:32px; right:20px; z-index:9999;">'
-    p += '      <img onclick="close_click()" src="http://www.factmap.org/images/x12.jpg">'
+    p += '      <img onclick="close_click()" src="http://www.flinkt.org/images/x12.jpg">'
     p += '    </div>'
     p += '    <div style="position:fixed; top:44px; right:20px; z-index:9999;">'
-    p += '      <img onclick="site_click()" src="http://www.factmap.org/images/right20.jpg">'
+    p += '      <img onclick="site_click()" src="http://www.flinkt.org/images/right20.jpg">'
     p += '    </div>'
     return p
 

@@ -31,11 +31,11 @@
 	    SetHandler python-program
 	    PythonHandler django.core.handlers.modpython
 	    PythonDebug On
-	    PythonPath "['/var/www/www.flinkt.com/'] + sys.path "
+	    PythonPath "['/var/www/www.flinkt.org/'] + sys.path "
 	    SetEnv DJANGO_SETTINGS_MODULE factmap.settings
 	</Location>
 	
-    Alias /images "/var/www/www.flinkt.com/images"
+    Alias /images "/var/www/www.flinkt.org/images"
     <Location "/images">
         SetHandler None
     </Location>

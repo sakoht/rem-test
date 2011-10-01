@@ -59,6 +59,7 @@ def selector_js(request):
             document.getElementById('flinkt.org pen off').style.zIndex = 999996;
             document.addEventListener('click',on_click, true);
             document.addEventListener('touchend',on_touchend, true);
+            document.addEventListener('touchmove',on_touchmove, true);
             pen_status = 'on';
         }
 
@@ -67,12 +68,14 @@ def selector_js(request):
             document.getElementById('flinkt.org pen on').style.zIndex = 99997;
             document.removeEventListener('click',on_click, true);
             document.removeEventListener('touchend',on_touchend, true);
+            document.removeEventListener('touchmove',on_touchmove, true);
             pen_status = 'off';
         }
 
         function close_click() {
             document.removeEventListener('click',on_click, true);
             document.removeEventListener('touchend',on_touchend, true);
+            document.removeEventListener('touchmove',on_touchmove, true);
             var a = document.getElementById('flinkt.org app');
             var b = document.getElementById('flinkt.org bookmarklet');
             if (a != null) { a.parentNode.removeChild(a); }
@@ -83,21 +86,40 @@ def selector_js(request):
             alert('site click');
         }
 
+        var select_count = 0;
+
+        var moving = 0;
+        function on_touchmove() {
+            moving = 1;
+        }
+
         function on_touchend() {
-            if (event.touches && event.touches.length == 1) {
-                // iphone resize, etc.
+            if (event.touches != null && event.touches.length != 0) {
+                // if fingers are down, ignore this event
+                // we only act upon touchend
                 return;
             }
-            statement_select();
+            if (moving) {
+                moving = 0;
+                return;
+            }
+            var obj = (event.changedTouches.length ? event.changedTouches[0].target : null);
+            if (obj == null) {
+                alert(event.touches.length + ' ' + event.changedTouches.length + ' ' + event.targetTouches.length);
+                return;
+            }
+            else {
+                statement_select(obj);
+            }
         }
             
         function on_click() {
-            statement_select();
+            statement_select(event.srcElement);
         }
 
-        var select_count = 0;
-        function statement_select() {
-            if (event.srcElement != null && event.srcElement.tagName == 'IMG') {
+        function statement_select(obj) {
+            if (obj != null && obj.tagName == 'IMG') {
+                alert('image');
                 return;
             }
             if (pen_status != 'on') {
@@ -106,7 +128,8 @@ def selector_js(request):
             }
             select_count++;
             document.flink_last_event = event;
-            document.getElementById('flinkt.org status').innerHTML = select_count + '<br><pre>' + mydump(event) + '</pre>';
+            document.flink_last_obj = obj;
+            document.getElementById('flinkt.org status').innerHTML = select_count + '<br><pre>' + mydump(obj) + '</pre>';
         }
 
         // from stackoverflow:
@@ -123,7 +146,7 @@ def selector_js(request):
                 for(var item in arr) {
                     var value = arr[item];
 
-                    if(typeof(value) == 'object') { 
+                    if(typeof(value) == 'xobject') { 
                         dumped_text += level_padding + "'" + item + "' ...\\n";
                         dumped_text += (level <= 0 ? mydump(value,level+1) : "");
                     } else {

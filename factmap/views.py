@@ -4,10 +4,12 @@ from django.http import HttpResponse
 from django.utils.html import escape
 import pprint
 
+# ^$
 def under_construction(request):
     r = http.HttpResponse('This site is under construction.  Come back soon...')
     return r
 
+# ^demo$
 def main(request):
     r = http.HttpResponse('<h1>flinkt</h1>')
     r.write('<ol>')
@@ -35,6 +37,10 @@ def bookmarklet_text():
     b += "})();"
     return b
 
+
+# ^js/selector.js'
+# TODO: this is only in django for composability
+# ...we want to just have a static js file for the real site
 def selector_js(request):
     r = http.HttpResponse('',mimetype='text/javascript')
 
@@ -49,20 +55,24 @@ def selector_js(request):
         var pen_status = 'off'
 
         function pen_on() {
-            document.getElementById('flinkt.org pen on').style.zIndex = 9998;
-            document.getElementById('flinkt.org pen off').style.zIndex = 9997;
-            document.addEventListener('mouseup', on_mouseup, true);
+            document.getElementById('flinkt.org pen on').style.zIndex = 999998;
+            document.getElementById('flinkt.org pen off').style.zIndex = 999996;
+            document.addEventListener('click',statement_select, true);
+            document.addEventListener('touchend',statement_select, true);
             pen_status = 'on';
         }
 
         function pen_off() {
-            document.getElementById('flinkt.org pen on').style.zIndex = 9997;
-            document.getElementById('flinkt.org pen off').style.zIndex = 9998;
-            document.removeEventListener('mouseup',on_mouseup, true);
+            document.getElementById('flinkt.org pen off').style.zIndex = 99998;
+            document.getElementById('flinkt.org pen on').style.zIndex = 99997;
+            document.removeEventListener('click',statement_select, true);
+            document.removeEventListener('touchend',statement_select, true);
             pen_status = 'off';
         }
 
         function close_click() {
+            document.removeEventListener('click',statement_select, true);
+            document.removeEventListener('touchend',statement_select, true);
             var a = document.getElementById('flinkt.org app');
             var b = document.getElementById('flinkt.org bookmarklet');
             if (a != null) { a.parentNode.removeChild(a); }
@@ -73,13 +83,45 @@ def selector_js(request):
             alert('site click');
         }
 
-        function on_mouseup() {
-            if (pen_status == 'on') {
-                alert('snap');
+        function statement_select() {
+            if (pen_status != 'on') {
+                alert('the selection event occurred with the pen off?');
+                return;
             }
-            else {
-                alert('nope');
+            if (event.touches && event.touches.length == 1) {
+                // iphone resize, etc.
+                return;
             }
+            document.flink_last_event = event;
+            alert(mydump(event)); 
+        }
+
+        // from stackoverflow:
+        // http://stackoverflow.com/questions/749266/object-dump-javascript
+        function mydump(arr,level) {
+            var dumped_text = "";
+            //return dumped_text;
+            if(!level) level = 0;
+            
+            var level_padding = "";
+            for(var j=0;j<level+1;j++) level_padding += "    ";
+
+            if(typeof(arr) == 'object') {  
+                for(var item in arr) {
+                    var value = arr[item];
+
+                    if(typeof(value) == 'object') { 
+                        dumped_text += level_padding + "'" + item + "' ...\\n";
+                        //dumped_text += (level <= 0 ? mydump(value,level+1) : ".....");
+                        dumped_text += (level <= 0 ? (value,level+1) : ".....");
+                    } else {
+                        dumped_text += level_padding + "'" + item + "' => \\"" + value + "\\"\\n";
+                    }
+                }
+            } else { 
+                dumped_text = "===>"+arr+"<===("+typeof(arr)+")";
+            }
+            return dumped_text;
         }
 
         pen_on()
@@ -90,29 +132,21 @@ def selector_js(request):
     return r
 
 def pen_div_html():
-    p =  '    <div style="position:fixed; top:32px; right:32px; z-index:9997;" id="flinkt.org pen off">'
+    p =  '    <div style="position:fixed; top:32px; right:32px; z-index:999997;" id="flinkt.org pen off">'
     p += '      <img onclick="pen_on()" src="http://www.flinkt.org/images/pen32right.jpg">'
     p += '    </div>'
-    p += '   <div style="position:fixed; top:32px; right:32px; z-index:9998;" id="flinkt.org pen on">'
+    p += '    <div style="position:fixed; top:32px; right:32px; z-index:999998;" id="flinkt.org pen on">'
     p += '      <img onclick="pen_off()" src="http://www.flinkt.org/images/pen32left.jpg">'
     p += '    </div>'
-    p += '    <div style="position:fixed; top:32px; right:20px; z-index:9999;">'
+    p += '    <div style="position:fixed; top:32px; right:20px; z-index:999999;">'
     p += '      <img onclick="close_click()" src="http://www.flinkt.org/images/x12.jpg">'
     p += '    </div>'
-    p += '    <div style="position:fixed; top:44px; right:20px; z-index:9999;">'
+    p += '    <div style="position:fixed; top:44px; right:20px; z-index:999999;">'
     p += '      <img onclick="site_click()" src="http://www.flinkt.org/images/right20.jpg">'
     p += '    </div>'
     return p
 
 # old junk from the examples
-
-def index(request):
-    r = http.HttpResponse('<h1>FactMap Entry<h1><ul>')
-    r.write('<li><a href="examples/">Hello</a></li>')
-    r.write('<li><a href="selector/">Selector</a></li>')
-    r.write('<li><a href="summarize/">Summarize</a></li>')
-    r.write('</ul>')
-    return r
 
 def hello_html(request):
     "This view is a basic 'hello world' example in HTML."

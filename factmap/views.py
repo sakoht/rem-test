@@ -57,22 +57,22 @@ def selector_js(request):
         function pen_on() {
             document.getElementById('flinkt.org pen on').style.zIndex = 999998;
             document.getElementById('flinkt.org pen off').style.zIndex = 999996;
-            document.addEventListener('click',statement_select, true);
-            document.addEventListener('touchend',statement_select, true);
+            document.addEventListener('click',on_click, true);
+            document.addEventListener('touchend',on_touchend, true);
             pen_status = 'on';
         }
 
         function pen_off() {
             document.getElementById('flinkt.org pen off').style.zIndex = 99998;
             document.getElementById('flinkt.org pen on').style.zIndex = 99997;
-            document.removeEventListener('click',statement_select, true);
-            document.removeEventListener('touchend',statement_select, true);
+            document.removeEventListener('click',on_click, true);
+            document.removeEventListener('touchend',on_touchend, true);
             pen_status = 'off';
         }
 
         function close_click() {
-            document.removeEventListener('click',statement_select, true);
-            document.removeEventListener('touchend',statement_select, true);
+            document.removeEventListener('click',on_click, true);
+            document.removeEventListener('touchend',on_touchend, true);
             var a = document.getElementById('flinkt.org app');
             var b = document.getElementById('flinkt.org bookmarklet');
             if (a != null) { a.parentNode.removeChild(a); }
@@ -83,17 +83,30 @@ def selector_js(request):
             alert('site click');
         }
 
-        function statement_select() {
-            if (pen_status != 'on') {
-                alert('the selection event occurred with the pen off?');
-                return;
-            }
+        function on_touchend() {
             if (event.touches && event.touches.length == 1) {
                 // iphone resize, etc.
                 return;
             }
+            statement_select();
+        }
+            
+        function on_click() {
+            statement_select();
+        }
+
+        var select_count = 0;
+        function statement_select() {
+            if (event.srcElement != null && event.srcElement.tagName == 'IMG') {
+                return;
+            }
+            if (pen_status != 'on') {
+                alert('the selection event occurred with the pen off?');
+                return;
+            }
+            select_count++;
             document.flink_last_event = event;
-            alert(mydump(event)); 
+            document.getElementById('flinkt.org status').innerHTML = select_count + '<br><pre>' + mydump(event) + '</pre>';
         }
 
         // from stackoverflow:
@@ -106,14 +119,13 @@ def selector_js(request):
             var level_padding = "";
             for(var j=0;j<level+1;j++) level_padding += "    ";
 
-            if(typeof(arr) == 'object') {  
+            if(typeof(arr) == 'object' && arr != null && arr.tagName != 'IMG') {  
                 for(var item in arr) {
                     var value = arr[item];
 
                     if(typeof(value) == 'object') { 
                         dumped_text += level_padding + "'" + item + "' ...\\n";
-                        //dumped_text += (level <= 0 ? mydump(value,level+1) : ".....");
-                        dumped_text += (level <= 0 ? (value,level+1) : ".....");
+                        dumped_text += (level <= 0 ? mydump(value,level+1) : "");
                     } else {
                         dumped_text += level_padding + "'" + item + "' => \\"" + value + "\\"\\n";
                     }
@@ -143,6 +155,9 @@ def pen_div_html():
     p += '    </div>'
     p += '    <div style="position:fixed; top:44px; right:20px; z-index:999999;">'
     p += '      <img onclick="site_click()" src="http://www.flinkt.org/images/right20.jpg">'
+    p += '    </div>'
+    #p += '    <div style="position:fixed; top:64px; right:32px; width:20%; height:80%; z-index:999999;" id="flinkt.org status">'
+    p += '    <div z-index:999999;" id="flinkt.org status">'
     p += '    </div>'
     return p
 

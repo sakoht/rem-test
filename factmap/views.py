@@ -103,14 +103,12 @@ def selector_js(request):
                 moving = 0;
                 return;
             }
-            var obj = (event.changedTouches.length ? event.changedTouches[0].target : null);
-            if (obj == null) {
-                alert(event.touches.length + ' ' + event.changedTouches.length + ' ' + event.targetTouches.length);
+            var target = (event.changedTouches.length ? event.changedTouches[0].target : null);
+            if (target == null) {
+                alert('Error getting the touch target, counts are:' + event.touches.length + ' ' + event.changedTouches.length + ' ' + event.targetTouches.length);
                 return;
             }
-            else {
-                statement_select(obj);
-            }
+            statement_select(target.parentElement);
         }
             
         function on_click() {
@@ -118,18 +116,27 @@ def selector_js(request):
         }
 
         function statement_select(obj) {
-            if (obj != null && obj.tagName == 'IMG') {
-                alert('image');
+            if (obj == null) {
+                return;
+            }
+            if (obj.parentNote && obj.parentNode.id == 'flinkt.org app') {
+                // ignore this app's control set
                 return;
             }
             if (pen_status != 'on') {
                 alert('the selection event occurred with the pen off?');
                 return;
             }
+            if (obj.tagName == 'IMG') {
+                // can't select images
+                return;
+            }
+
+            // this is just debugging code as we work toward statement extraction and processing
             select_count++;
+            document.getElementById('flinkt.org status').innerHTML = select_count + '<br><pre>' + mydump(obj.innerHTML) + '</pre>';
             document.flink_last_event = event;
             document.flink_last_obj = obj;
-            document.getElementById('flinkt.org status').innerHTML = select_count + '<br><pre>' + mydump(obj) + '</pre>';
         }
 
         // from stackoverflow:

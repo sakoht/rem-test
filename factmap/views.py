@@ -146,9 +146,10 @@ def selector_js(request):
                 for(var item in arr) {
                     var value = arr[item];
 
-                    if(typeof(value) == 'xobject') { 
-                        dumped_text += level_padding + "'" + item + "' ...\\n";
-                        dumped_text += (level <= 0 ? mydump(value,level+1) : "");
+                    if(typeof(value) == 'object') { 
+                        dumped_text += level_padding + "'" + item + "' => \\"" + typeof(value) + "\\"\\n";
+                        //dumped_text += level_padding + "'" + item + "' ...\\n";
+                        //dumped_text += (level <= 0 ? mydump(value,level+1) : "");
                     } else {
                         dumped_text += level_padding + "'" + item + "' => \\"" + value + "\\"\\n";
                     }

@@ -142,6 +142,11 @@ def selector_js(request):
                 // can't select images
                 return;
             }
+            
+            if (!window.getSelection()) {
+                alert("window can't getSelection");
+                return;
+            }
 
             var selection = window.getSelection();
             if (!selection) {

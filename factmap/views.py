@@ -242,6 +242,7 @@ def selector_js(request):
                     statement_range.setEnd(statement_range.endContainer, statement_range.endOffset - beginning_of_next_sentence[1].length);
                     break;
                 }   
+                console.log(statement_range.toString() + ' ');
                 statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1); 
             }   
             

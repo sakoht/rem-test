@@ -57,7 +57,7 @@ def selector_js(request):
         function pen_on() {
             document.getElementById('flinkt.org pen on').style.zIndex = 999998;
             document.getElementById('flinkt.org pen off').style.zIndex = 999996;
-            document.addEventListener('click',on_click, true);
+            document.addEventListener('mouseup',on_click, true);
             document.addEventListener('touchend',on_touchend, true);
             document.addEventListener('touchmove',on_touchmove, true);
             pen_status = 'on';
@@ -129,7 +129,7 @@ def selector_js(request):
                 alert('selecting null object?' + e);
                 return;
             }
-            if (obj.parentNode && obj.parentElement.id == 'flinkt.org app') {
+            if (obj.parentElement && obj.parentElement.id == 'flinkt.org app') {
                 // ignore this app's control set
                 alert("app");
                 return;
@@ -143,26 +143,30 @@ def selector_js(request):
                 return;
             }
 
-            if (false) {
-                var selection = window.getSelection();
-                if (!s) {
-                    alert("no selection found?");
-                    return;
-                }
-
-                var range = selection.getRangeAt(0)
-                if (range.toString().length != 0) {
-                    return;
-                }
-
-                //e.cancelBubble = true;  //ie
-                //e.stopPropagation();    //w3c
-                //e.preventDefault();    //w3c
+            var selection = window.getSelection();
+            if (!selection) {
+                alert("no selection found?");
+                return;
             }
+
+            var range = selection.getRangeAt(0)
+            if (!range) {
+                alert("no range found?");
+                return;
+            }
+
+            var range_text = range.toString();
+            if (range_text.length != 0) {
+                //ignore regular highlights, just capture zero-width selections (clicks)
+            }
+
+            //e.cancelBubble = true;  //ie
+            //e.stopPropagation();    //w3c
+            //e.preventDefault();    //w3c
 
             // this is just debugging code as we work toward statement extraction and processing
             select_count++;
-            document.getElementById('flinkt.org status').innerHTML = select_count + '<br><pre>' + obj.innerHTML + '</pre>';
+            document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + range.toString().length + '<br><pre>' + obj.innerHTML + '</pre>';
             document.flink_last_event = e;
             document.flink_last_obj = obj;
 

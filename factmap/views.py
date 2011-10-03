@@ -143,7 +143,7 @@ def selector_js(request):
                 return;
             }
             
-            if (!window.getSelection()) {
+            if (!window.getSelection) {
                 alert("window can't getSelection");
                 return;
             }

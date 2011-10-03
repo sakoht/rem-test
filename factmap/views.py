@@ -118,10 +118,9 @@ def selector_js(request):
             
         function on_click(e) {
             if (!e) e = window.event;
-            var o = e.srcElement;
+            var o = e.target;
             if (!o) o = e.target;
-            //statement_select(e.srcElement || e.target, e);
-            statement_select(e.srcElement, e);
+            statement_select(o, e);
         }
 
         var select_count = 0;
@@ -130,8 +129,9 @@ def selector_js(request):
                 alert('selecting null object?' + e);
                 return;
             }
-            if (obj.parentNote && obj.parentElement.id == 'flinkt.org app') {
+            if (obj.parentNode && obj.parentElement.id == 'flinkt.org app') {
                 // ignore this app's control set
+                alert("app");
                 return;
             }
             if (pen_status != 'on') {

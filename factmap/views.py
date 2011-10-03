@@ -165,7 +165,17 @@ def selector_js(request):
             var range_text = range.toString();
             if (range_text.length != 0) {
                 //ignore regular highlights, just capture zero-width selections (clicks)
+                return;
             }
+
+            range.collapse(false);
+            var span = document.createElement("span");
+            range.insertNode(span);
+            
+            var rect = span.getBoundingClientRect();
+            var x = rect.left, y = rect.top;
+
+            document.flinkt_span = span; 
 
             //e.cancelBubble = true;  //ie
             //e.stopPropagation();    //w3c

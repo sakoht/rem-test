@@ -125,65 +125,89 @@ def selector_js(request):
 
         var select_count = 0;
         function statement_select(obj, e) {
-            if (obj == null) {
-                alert('selecting null object?' + e);
-                return;
-            }
-            if (obj.parentElement && obj.parentElement.id == 'flinkt.org app') {
-                // ignore this app's control set
-                alert("app");
-                return;
-            }
-            if (pen_status != 'on') {
-                alert('the selection event occurred with the pen off?');
-                return;
-            }
-            if (false) { //obj.tagName == 'IMG') {
-                // can't select images
-                return;
-            }
-            
-            var selection = window.getSelection();
-            if (!selection) {
-                alert("no selection found?");
-                return;
-            }
-            if (selection.rangeCount == 0) {
-                //this only happens on iphone, as other browser return a single zero-width range
+            try {
+                if (obj == null) {
+                    alert('selecting null object?' + e);
+                    return;
+                }
+                if (obj.parentElement && obj.parentElement.id == 'flinkt.org app') {
+                    // ignore this app's control set
+                    alert("app");
+                    return;
+                }
+                if (pen_status != 'on') {
+                    alert('the selection event occurred with the pen off?');
+                    return;
+                }
+                if (false) { //obj.tagName == 'IMG') {
+                    // can't select images
+                    return;
+                }
+                
+                var selection = window.getSelection();
+                var selection_range;
+                var selection_range_text;
+                var selection_pos; 
+                if (!selection) {
+                    // old IE
+                    selection_range = document.selection.createRange();
+                    selection_range_text = selection_range.text;
+                }
+                else {
+                    // not old IE
+                    if (!selection.getRangeAt) {
+                        // old safari
+                        selection_range = document.createRange();
+                        selection_range.setStart(selection.anchorNode,selection.anchorOffset);
+                        selection_range.setEnd(selection.focusNode,selection.focusOffset);
+                    }
+                    else {
+                        // everything else
+                        if (selection.rangeCount == 0) {
+                            // touch ...but on the iphone only the first touch hits here 
+                            selection_range = document.createRange();
+                            selection.addRange(selection_range);
+                            selection_range.setStart(obj,0);
+                            selection_range.setEnd(obj,0);
+                        }
+                        else {
+                            // default mouse interface or touch on 2nd+ hit
+                            selection_range = selection.getRangeAt(0);
+                        }
+                    }
+                    selection_range_text = selection_range.toString();
+                    selection_pos = selection_range.startOffset;
+                }
+                
+                if (selection_range_text.length != 0) {
+                    //ignore regular highlights, just capture zero-width selections (clicks)
+                }
+                
+                var statement_range = selection_range.cloneRange();
+                statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1);
+                statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1);
+
+                var statement_span = document.createElement("statement_span");
+                statement_span.style.backgroundColor = "yellow";
+                statement_span.id = 'flinkt.org selection 1';
+                
+                document.flinkt_selection_range = selection_range;;
+                document.flinkt_statement_range = statement_range;
+                document.flinkt_statement_span = statement_span;
+
+                statement_range.surroundContents(statement_span);
+
+                //e.cancelBubble = true;  //ie
+                //e.stopPropagation();    //w3c
+                //e.preventDefault();    //w3c
+
                 // this is just debugging code as we work toward statement extraction and processing
                 select_count++;
-                document.getElementById('flinkt.org status').innerHTML = select_count + '<br>IPHONE' + '<br><pre>' + obj.innerHTML + '</pre>';
-                return false;
+                document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + selection_pos + '<br><pre>' + obj.innerHTML + '</pre>';
             }
-
-            var range = selection.getRangeAt(0);
-            if (!range) {
-                alert("no range found?");
-                return;
+            catch(e) {
+                alert("error capturing selection: " + e);
             }
-
-            var range_text = range.toString();
-            if (range_text.length != 0) {
-                //ignore regular highlights, just capture zero-width selections (clicks)
-                return;
-            }
-
-            range.collapse(false);
-            var span = document.createElement("span");
-            range.insertNode(span);
-            
-            var rect = span.getBoundingClientRect();
-            var x = rect.left, y = rect.top;
-
-            document.flinkt_span = span; 
-
-            //e.cancelBubble = true;  //ie
-            //e.stopPropagation();    //w3c
-            //e.preventDefault();    //w3c
-
-            // this is just debugging code as we work toward statement extraction and processing
-            select_count++;
-            document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + range_text.length + '<br><pre>' + obj.innerHTML + '</pre>';
             return false;
         }
 

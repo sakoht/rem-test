@@ -86,8 +86,6 @@ def selector_js(request):
             alert('site click');
         }
 
-        var select_count = 0;
-
         var moving = 0;
         function on_touchmove() {
             moving = 1;
@@ -108,18 +106,31 @@ def selector_js(request):
                 alert('Error getting the touch target, counts are:' + event.touches.length + ' ' + event.changedTouches.length + ' ' + event.targetTouches.length);
                 return;
             }
-            statement_select(target.parentElement);
+            
+            
+            if (target.innertHTML == null) {
+                statement_select(target.parentElement, event);
+            }
+            else {
+                statement_select(target, event);
+            }
         }
             
-        function on_click() {
-            statement_select(event.srcElement);
+        function on_click(e) {
+            if (!e) e = window.event;
+            var o = e.srcElement;
+            if (!o) o = e.target;
+            //statement_select(e.srcElement || e.target, e);
+            statement_select(e.srcElement, e);
         }
 
-        function statement_select(obj) {
+        var select_count = 0;
+        function statement_select(obj, e) {
             if (obj == null) {
+                alert('selecting null object?' + e);
                 return;
             }
-            if (obj.parentNote && obj.parentNode.id == 'flinkt.org app') {
+            if (obj.parentNote && obj.parentElement.id == 'flinkt.org app') {
                 // ignore this app's control set
                 return;
             }
@@ -127,44 +138,35 @@ def selector_js(request):
                 alert('the selection event occurred with the pen off?');
                 return;
             }
-            if (obj.tagName == 'IMG') {
+            if (false) { //obj.tagName == 'IMG') {
                 // can't select images
                 return;
             }
 
+            if (false) {
+                var selection = window.getSelection();
+                if (!s) {
+                    alert("no selection found?");
+                    return;
+                }
+
+                var range = selection.getRangeAt(0)
+                if (range.toString().length != 0) {
+                    return;
+                }
+
+                //e.cancelBubble = true;  //ie
+                //e.stopPropagation();    //w3c
+                //e.preventDefault();    //w3c
+            }
+
             // this is just debugging code as we work toward statement extraction and processing
             select_count++;
-            document.getElementById('flinkt.org status').innerHTML = select_count + '<br><pre>' + mydump(obj.innerHTML) + '</pre>';
-            document.flink_last_event = event;
+            document.getElementById('flinkt.org status').innerHTML = select_count + '<br><pre>' + obj.innerHTML + '</pre>';
+            document.flink_last_event = e;
             document.flink_last_obj = obj;
-        }
 
-        // from stackoverflow:
-        // http://stackoverflow.com/questions/749266/object-dump-javascript
-        function mydump(arr,level) {
-            var dumped_text = "";
-            //return dumped_text;
-            if(!level) level = 0;
-            
-            var level_padding = "";
-            for(var j=0;j<level+1;j++) level_padding += "    ";
-
-            if(typeof(arr) == 'object' && arr != null && arr.tagName != 'IMG') {  
-                for(var item in arr) {
-                    var value = arr[item];
-
-                    if(typeof(value) == 'object') { 
-                        dumped_text += level_padding + "'" + item + "' => \\"" + typeof(value) + "\\"\\n";
-                        //dumped_text += level_padding + "'" + item + "' ...\\n";
-                        //dumped_text += (level <= 0 ? mydump(value,level+1) : "");
-                    } else {
-                        dumped_text += level_padding + "'" + item + "' => \\"" + value + "\\"\\n";
-                    }
-                }
-            } else { 
-                dumped_text = "===>"+arr+"<===("+typeof(arr)+")";
-            }
-            return dumped_text;
+            return false;
         }
 
         pen_on()
@@ -181,16 +183,54 @@ def pen_div_html():
     p += '    <div style="position:fixed; top:32px; right:32px; z-index:999998;" id="flinkt.org pen on">'
     p += '      <img onclick="pen_off()" src="http://www.flinkt.org/images/pen32left.jpg">'
     p += '    </div>'
-    p += '    <div style="position:fixed; top:32px; right:20px; z-index:999999;">'
+    p += '    <div style="position:fixed; top:32px; right:12px; z-index:999999;">'
     p += '      <img onclick="close_click()" src="http://www.flinkt.org/images/x12.jpg">'
     p += '    </div>'
-    p += '    <div style="position:fixed; top:44px; right:20px; z-index:999999;">'
+    p += '    <div style="position:fixed; top:48px; right:8px; z-index:999999;">'
     p += '      <img onclick="site_click()" src="http://www.flinkt.org/images/right20.jpg">'
     p += '    </div>'
-    #p += '    <div style="position:fixed; top:64px; right:32px; width:20%; height:80%; z-index:999999;" id="flinkt.org status">'
-    p += '    <div z-index:999999;" id="flinkt.org status">'
+    p += '    <div style="position:fixed; top:64px; right:32px; width:30%; height:90%; z-index:999999; bg-color:yellow; opacity:70%" id="flinkt.org status">'
     p += '    </div>'
     return p
+
+def faq(request):
+    p = '''
+        <br>
+        <hl>
+        <i><small>(The purpose of the text below is primarily to give testers things to highlight.)</small></i>
+        <p>
+        The flinkt <i>"magic pen"</i> lets you highlight statements on a web page quickly, then do lots of things with them easily.
+        One of the handiest things you can do is get a URL which contains the highlighted line and email it around or post it.
+        </p>
+        <p> 
+        More importantly, flinkt remembers the line, the page, and the context for you, so you can later get back to things you read.
+        The flinkt site gives you your own private database, for keeping your thoughts organized ...without making you do a lot of work to organize them.
+        <p>
+        <h3>FAQ</h3>
+        <ol>
+        <li>
+            Q: How is this different than fleck, diigo, clipmarks? <br>
+            A: Several reasons:
+            <ul>
+                <li>No one wants to fill out a form.  It disrupts flow, and just sucks.</li>
+                <li>Tags put too much responsibility on the user.  They are a nit-wit solution to organization.  Remember search engine meta tags?  They're only worth remembering for the lesson.</li>
+                <li><a href="http://techcrunch.com/2008/10/16/fleck-headed-to-the-deadpool-because-nobody-wants-to-annotate-the-web/">article on fleck's demise</a>
+            </ul>
+        </li>
+        <li>
+            Q: What about security and privacy?<br>
+            A: All user-specific information on flinkt is completely private, though you can use flinkt to send to public/social places.
+               <br>
+               Sites which have content sent around through flinkt get summary information on what is sent and how often, but not who.
+        </li>
+        <li>
+            Q: I'm a web site maintainer, why would I want to put this on my site instead of the standard facebook, digg, etc. buttons?<br>
+            A: You get to know the exact things on the page readers took interest in.  Because we protect reader anonymity, they can confidently share more from your site.
+        </li>
+        </ol>
+        '''
+    r = http.HttpResponse(p)
+    return r
 
 # old junk from the examples
 

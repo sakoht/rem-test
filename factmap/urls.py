@@ -8,6 +8,7 @@ urlpatterns = patterns('',
     # Example:
     (r'^$',                         'factmap.views.under_construction'),
     (r'^demo$',                     'factmap.views.main'),
+    (r'^faq$',                      'factmap.views.faq'),
     (r'^js/selector.js',            'factmap.views.selector_js'),
     
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 

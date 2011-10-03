@@ -11,7 +11,20 @@ def under_construction(request):
 
 # ^demo$
 def main(request):
-    r = http.HttpResponse('<h1>flinkt</h1>')
+    r = http.HttpResponse()
+    add_points(r)
+    return r
+
+def testo(request):
+    r = http.HttpResponse()
+    r.write('<head><script type="text/javascript" src="http://flinkt.org/js/selector.js" id="flinkt.org bookmarklet"></script></head>')
+    r.write('<body>')
+    add_points(r)
+    r.write('</body>')
+    return r
+
+def add_points(r):
+    r.write('<h1>flinkt</h1>')
     r.write('<ol>')
     r.write('<li><a href="' + bookmarklet_text() + '">flinkt</a>   <==========   drag this link onto your bookmarks bar!</li>')
     r.write('<li>go to any web site (or stay right here to try it)</li>')
@@ -22,7 +35,6 @@ def main(request):
     r.write('<li>when you come back to the site, turn on the pen again to see your previous highlights</li>')
     r.write('<li>click on the green arrow to see all of your highlights, see a capture of the page, and send them around</li>')
     r.write('</ol>')
-    return r
 
 def bookmarklet_text():
     b = "javascript:(function(){"
@@ -49,7 +61,7 @@ def selector_js(request):
     r.write("p.setAttribute('id','flinkt.org app')\n")
     #r.write("p.setAttribute('style','position:fixed; right:32px; top:32px;');\n")
     r.write("p.innerHTML = '" + pen_div_html() + "';\n")
-    r.write("document.body.appendChild(p);\n")
+    r.write("try { document.body.appendChild(p); } catch(e) { alert(e) };\n")
 
     s = '''
         var pen_status = 'off'
@@ -57,7 +69,7 @@ def selector_js(request):
         function pen_on() {
             document.getElementById('flinkt.org pen on').style.zIndex = 999998;
             document.getElementById('flinkt.org pen off').style.zIndex = 999996;
-            document.addEventListener('click',on_click, true);
+            document.addEventListener('mouseup',on_click, true);
             document.addEventListener('touchend',on_touchend, true);
             document.addEventListener('touchmove',on_touchmove, true);
             pen_status = 'on';
@@ -66,7 +78,7 @@ def selector_js(request):
         function pen_off() {
             document.getElementById('flinkt.org pen off').style.zIndex = 99998;
             document.getElementById('flinkt.org pen on').style.zIndex = 99997;
-            document.removeEventListener('click',on_click, true);
+            document.removeEventListener('mouseup',on_click, true);
             document.removeEventListener('touchend',on_touchend, true);
             document.removeEventListener('touchmove',on_touchmove, true);
             pen_status = 'off';
@@ -124,8 +136,9 @@ def selector_js(request):
         }
 
         var select_count = 0;
+        var selections = {};
         function statement_select(obj, e) {
-            try {
+            if (true) {
                 if (obj == null) {
                     alert('selecting null object?' + e);
                     return;
@@ -139,7 +152,7 @@ def selector_js(request):
                     alert('the selection event occurred with the pen off?');
                     return;
                 }
-                if (false) { //obj.tagName == 'IMG') {
+                if (obj.tagName == 'IMG') {
                     // can't select images
                     return;
                 }
@@ -183,19 +196,19 @@ def selector_js(request):
                     //ignore regular highlights, just capture zero-width selections (clicks)
                 }
                 
-                var statement_range = selection_range.cloneRange();
-                statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1);
-                statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1);
+                var statement_range = selection2statement(selection_range);
+
+                var id = 'flinkt.org selection ' + select_count;
 
                 var statement_span = document.createElement("statement_span");
                 statement_span.style.backgroundColor = "yellow";
-                statement_span.id = 'flinkt.org selection 1';
-                
+                statement_span.id = id; 
+                statement_range.surroundContents(statement_span);
+
                 document.flinkt_selection_range = selection_range;;
                 document.flinkt_statement_range = statement_range;
                 document.flinkt_statement_span = statement_span;
-
-                statement_range.surroundContents(statement_span);
+                document.flinkt_selections = selections;
 
                 //e.cancelBubble = true;  //ie
                 //e.stopPropagation();    //w3c
@@ -205,10 +218,36 @@ def selector_js(request):
                 select_count++;
                 document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + selection_pos + '<br><pre>' + obj.innerHTML + '</pre>';
             }
-            catch(e) {
-                alert("error capturing selection: " + e);
-            }
+            //catch(e) { alert("error capturing selection: " + e); }
             return false;
+        }
+
+        var startPunct = new RegExp("^([\?\.\!]\\s*)");    
+        var endPunct = new RegExp("[\?\.\!](\\s+\\S)$");
+        function selection2statement(selection_range) {
+            var statement_range = selection_range.cloneRange();
+            
+            while (statement_range.startOffset > 0) {
+                var end_of_last_sentence = startPunct.exec(statement_range.toString());
+                if (end_of_last_sentence != null) {
+                    statement_range.setStart(statement_range.startContainer, statement_range.startOffset + end_of_last_sentence[1].length);
+                    break;
+                }   
+                statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1); 
+            }   
+                
+            while (statement_range.endOffset < statement_range.endContainer.length) {
+                var beginning_of_next_sentence = endPunct.exec(statement_range.toString());
+                if( beginning_of_next_sentence != null ) { 
+                    statement_range.setEnd(statement_range.endContainer, statement_range.endOffset - beginning_of_next_sentence[1].length);
+                    break;
+                }   
+                statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1); 
+            }   
+            
+            //statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1);
+            //statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1);
+            return statement_range;
         }
 
         pen_on()
@@ -231,7 +270,7 @@ def pen_div_html():
     p += '    <div style="position:fixed; top:48px; right:8px; z-index:999999;">'
     p += '      <img onclick="site_click()" src="http://www.flinkt.org/images/right20.jpg">'
     p += '    </div>'
-    p += '    <div style="position:fixed; top:64px; right:32px; width:30%; height:90%; z-index:999999; bg-color:yellow; opacity:70%" id="flinkt.org status">'
+    p += '    <div style="position:fixed; top:64px; right:32px; width:30%; height:90%; z-index:999999; opacity:.70" id="flinkt.org status">'
     p += '    </div>'
     return p
 

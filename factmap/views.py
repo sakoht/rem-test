@@ -57,7 +57,7 @@ def selector_js(request):
         function pen_on() {
             document.getElementById('flinkt.org pen on').style.zIndex = 999998;
             document.getElementById('flinkt.org pen off').style.zIndex = 999996;
-            document.addEventListener('mouseup',on_click, true);
+            document.addEventListener('click',on_click, true);
             document.addEventListener('touchend',on_touchend, true);
             document.addEventListener('touchmove',on_touchmove, true);
             pen_status = 'on';
@@ -143,18 +143,20 @@ def selector_js(request):
                 return;
             }
             
-            if (!window.getSelection) {
-                alert("window can't getSelection");
-                return;
-            }
-
             var selection = window.getSelection();
             if (!selection) {
                 alert("no selection found?");
                 return;
             }
+            if (selection.rangeCount == 0) {
+                //this only happens on iphone, as other browser return a single zero-width range
+                // this is just debugging code as we work toward statement extraction and processing
+                select_count++;
+                document.getElementById('flinkt.org status').innerHTML = select_count + '<br>IPHONE' + '<br><pre>' + obj.innerHTML + '</pre>';
+                return false;
+            }
 
-            var range = selection.getRangeAt(0)
+            var range = selection.getRangeAt(0);
             if (!range) {
                 alert("no range found?");
                 return;
@@ -171,10 +173,7 @@ def selector_js(request):
 
             // this is just debugging code as we work toward statement extraction and processing
             select_count++;
-            document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + range.toString().length + '<br><pre>' + obj.innerHTML + '</pre>';
-            document.flink_last_event = e;
-            document.flink_last_obj = obj;
-
+            document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + range_text.length + '<br><pre>' + obj.innerHTML + '</pre>';
             return false;
         }
 

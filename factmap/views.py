@@ -119,7 +119,6 @@ def selector_js(request):
                 return;
             }
             
-            
             if (target.innertHTML == null) {
                 statement_select(target.parentElement, event);
             }
@@ -161,7 +160,6 @@ def selector_js(request):
                     // can't select images
                     return;
                 }
-                
 
                 var prev_statement = statements[obj.id];
                 if (prev_statement && prev_statement != null) {
@@ -243,24 +241,86 @@ def selector_js(request):
         function selection2statement(selection_range) {
             var statement_range = selection_range.cloneRange();
 
-            while (statement_range.startOffset > 0) {
-                var end_of_last_sentence = startPunct.exec(statement_range.toString());
-                if (end_of_last_sentence != null) {
-                    statement_range.setStart(statement_range.startContainer, statement_range.startOffset + end_of_last_sentence[1].length);
+            var found_start = false;
+            var prev = statement_range.startContainer.previousSibling;
+            while (1) { 
+                while (statement_range.startOffset > 0) {
+                    var end_of_last_sentence = startPunct.exec(statement_range.toString());
+                    if (end_of_last_sentence != null) {
+                        statement_range.setStart(statement_range.startContainer, statement_range.startOffset + end_of_last_sentence[1].length);
+                        found_start = true;
+                        break;
+                    }   
+                    statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1); 
+                }
+                if (found_start) {
                     break;
-                }   
-                statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1); 
-            }   
-                
+                }
+
+                while (prev && prev.nodeName != '#text' && prev.previousSibling) {
+                    prev = prev.previousSibling;
+                }
+                if (!prev) {
+                    break;
+                }
+                if (prev.nodeName != '#text') {
+                    statement_range.setStart(prev, 0);
+                    found_start = true;
+                    break;
+                }
+                statement_range.setStart(prev, prev.data.length - 1); 
+                prev = prev.previousSibling;
+            } 
+
+            var found_end = false;
             while (statement_range.endOffset < statement_range.endContainer.length) {
                 var beginning_of_next_sentence = endPunct.exec(statement_range.toString());
                 if( beginning_of_next_sentence != null ) { 
                     statement_range.setEnd(statement_range.endContainer, statement_range.endOffset - beginning_of_next_sentence[1].length);
+                    found_end = true;
                     break;
                 }   
                 statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1); 
             }   
-            
+           
+            while(0) { 
+                if (false) {
+                    console.log("no start found");
+                    var last = statement_range.startContainer;
+                    var prev = last.previousSibling;
+                    while (prev == null) {
+                        // go up if we cannot find a previous sibling
+                        last = last.parentNode;
+                        if (last == document) {
+                            break;
+                        }
+                        name = last.tagName;
+                        if (name == 'P' || name == 'BR') {
+                            break;
+                        }
+                        prev = last.previousSibling;
+                    }
+                    if (!prev) {
+                        found_start = true;
+                    }
+                    else {
+                        // go down from the previous element until we find something without nodes
+                        // this is probably, but not always, text 
+                        while (prev.childNodes.length) {
+                            prev = prev.childNodes(prev.childNodes.length-1);
+                        } 
+                        if (!prev.data) {
+                            console.log(prev);
+                            console.log("prev child had no data?");
+                            break;
+                        }
+                        else {
+                            statement_range.setStart(prev.parentElement,prev.data.length-1);
+                        }
+                    }
+                }
+            }
+
             //statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1);
             //statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1);
             return statement_range;

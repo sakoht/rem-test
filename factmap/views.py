@@ -136,7 +136,7 @@ def selector_js(request):
         }
 
         var select_count = 0;
-        var selections = {};
+        var statements = {};
         function statement_select(obj, e) {
             if (true) {
                 if (obj == null) {
@@ -162,6 +162,13 @@ def selector_js(request):
                     return;
                 }
                 
+
+                var prev_statement = statements[obj.id];
+                if (prev_statement && prev_statement != null) {
+                    statement_unselect(prev_statement);
+                    return;
+                }
+
                 var selection = window.getSelection();
                 var selection_range;
                 var selection_range_text;
@@ -203,22 +210,29 @@ def selector_js(request):
                 
                 var statement_range = selection2statement(selection_range);
 
+                select_count++;
                 var id = 'flinkt.org selection ' + select_count;
 
+                statements[id] = {
+                    // storable
+                    id: id,
+                    path: to_path(obj),
+                    startOffset: statement_range.startOffset,
+                    endOffset: statement_range.endOffset,
+                    // transient
+                    obj: obj,
+                    span: statement_span,
+                    range: statement_range,
+                };
+                
+                console.log(statements[id]);
                 var statement_span = document.createElement("statement_span");
                 statement_span.style.backgroundColor = "yellow";
                 statement_span.id = id; 
                 statement_range.surroundContents(statement_span);
-
-                document.flinkt_selection_range = selection_range;;
-                document.flinkt_statement_range = statement_range;
-                document.flinkt_statement_span = statement_span;
-                document.flinkt_selections = selections;
-
-
+                
                 // this is just debugging code as we work toward statement extraction and processing
-                select_count++;
-                document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + selection_pos + '<br><pre>' + obj.innerHTML + '</pre>';
+                //document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + selection_pos + '<br><pre>' + obj.innerHTML + '</pre>';
             }
             //catch(e) { alert("error capturing selection: " + e); }
             return false;
@@ -252,6 +266,55 @@ def selector_js(request):
             return statement_range;
         }
 
+        function statement_unselect(statement) {
+            var span = statement.span;
+            parent = span.parentNode;
+            while (span.firstChild) {
+                parent.insertBefore(span.firstChild, span);
+            }
+            parent.removeChild(span);
+            delete statements[statement.id];
+            for (var key in statement) {
+                delete statement[key]; 
+            }
+        }
+
+        function to_path (container) {
+            if (container == document) {
+                return "document";
+            }
+        
+            var parent_node = container.parentNode;
+            if (parent_node == null) {
+                alert("I'm an orphan??");
+            }
+        
+            var parent_path = to_path(parent_node);
+        
+            var child_nodes = parent_node.childNodes;
+            for (var n = 0; n < child_nodes.length; n++) {
+                if (child_nodes[n] == container) {
+                    var path = parent_path + ".childNodes[" + n + "]";
+                    //alert("got path " + path);
+                    var another_me = eval(path);
+                    if (another_me == container) {
+                        //alert("Verified");
+                        return path;
+                    }
+                    else {
+                        alert("Not found?  Another me is " + another_me);
+                    }
+                }
+            }
+        
+            if (n == child_nodes.length) {
+                alert("Never found myself in my parents list of children!");
+            }
+            else {
+                alert("How did I get here?")
+            }
+        }
+
         pen_on()
     '''
 
@@ -272,9 +335,9 @@ def pen_div_html():
     p += '    <div style="position:fixed; top:48px; right:8px; z-index:999999;">'
     p += '      <img onclick="site_click()" src="http://www.flinkt.org/images/right20.jpg">'
     p += '    </div>'
+    return p
     p += '    <div style="position:fixed; top:64px; right:32px; width:30%; height:90%; z-index:999999; opacity:.70" id="flinkt.org status">'
     p += '    </div>'
-    return p
 
 def faq(request):
     p = '''

@@ -69,7 +69,7 @@ def selector_js(request):
         function pen_on() {
             document.getElementById('flinkt.org pen on').style.zIndex = 999998;
             document.getElementById('flinkt.org pen off').style.zIndex = 999996;
-            document.addEventListener('mouseup',on_click, true);
+            document.addEventListener('click',on_click, true);
             document.addEventListener('touchend',on_touchend, true);
             document.addEventListener('touchmove',on_touchmove, true);
             pen_status = 'on';
@@ -78,7 +78,7 @@ def selector_js(request):
         function pen_off() {
             document.getElementById('flinkt.org pen off').style.zIndex = 99998;
             document.getElementById('flinkt.org pen on').style.zIndex = 99997;
-            document.removeEventListener('mouseup',on_click, true);
+            document.removeEventListener('click',on_click, true);
             document.removeEventListener('touchend',on_touchend, true);
             document.removeEventListener('touchmove',on_touchmove, true);
             pen_status = 'off';
@@ -152,6 +152,11 @@ def selector_js(request):
                     alert('the selection event occurred with the pen off?');
                     return;
                 }
+                
+                //e.cancelBubble = true;  //ie
+                //e.stopPropagation();    //w3c
+                e.preventDefault();    //w3c
+                
                 if (obj.tagName == 'IMG') {
                     // can't select images
                     return;
@@ -210,9 +215,6 @@ def selector_js(request):
                 document.flinkt_statement_span = statement_span;
                 document.flinkt_selections = selections;
 
-                //e.cancelBubble = true;  //ie
-                //e.stopPropagation();    //w3c
-                //e.preventDefault();    //w3c
 
                 // this is just debugging code as we work toward statement extraction and processing
                 select_count++;

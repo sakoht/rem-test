@@ -210,7 +210,12 @@ def selector_js(request):
 
                 select_count++;
                 var id = 'flinkt.org selection ' + select_count;
-
+                
+                var statement_span = document.createElement("statement_span");
+                statement_span.style.backgroundColor = "yellow";
+                statement_span.id = id; 
+                statement_range.surroundContents(statement_span);
+                
                 statements[id] = {
                     // storable
                     id: id,
@@ -222,13 +227,8 @@ def selector_js(request):
                     span: statement_span,
                     range: statement_range,
                 };
-                
                 console.log(statements[id]);
-                var statement_span = document.createElement("statement_span");
-                statement_span.style.backgroundColor = "yellow";
-                statement_span.id = id; 
-                statement_range.surroundContents(statement_span);
-                
+
                 // this is just debugging code as we work toward statement extraction and processing
                 //document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + selection_pos + '<br><pre>' + obj.innerHTML + '</pre>';
             }
@@ -253,10 +253,14 @@ def selector_js(request):
                     }   
                     statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1); 
                 }
+                if (prev != null && statements[prev.id]) {
+                    // we adjoin another selected statement
+                    found_start = true;
+                }
                 if (found_start) {
                     break;
                 }
-
+                
                 while (prev && prev.nodeName != '#text' && prev.previousSibling) {
                     prev = prev.previousSibling;
                 }
@@ -268,58 +272,44 @@ def selector_js(request):
                     found_start = true;
                     break;
                 }
-                statement_range.setStart(prev, prev.data.length - 1); 
+                statement_range.setStart(prev, (prev.data.length > 0 ? prev.data.length - 1 : 0)); 
                 prev = prev.previousSibling;
             } 
 
             var found_end = false;
-            while (statement_range.endOffset < statement_range.endContainer.length) {
-                var beginning_of_next_sentence = endPunct.exec(statement_range.toString());
-                if( beginning_of_next_sentence != null ) { 
-                    statement_range.setEnd(statement_range.endContainer, statement_range.endOffset - beginning_of_next_sentence[1].length);
+            var next = statement_range.startContainer.nextSibling;
+            while(1) {
+                while (statement_range.endOffset < statement_range.endContainer.length) {
+                    var beginning_of_next_sentence = endPunct.exec(statement_range.toString());
+                    if( beginning_of_next_sentence != null ) { 
+                        statement_range.setEnd(statement_range.endContainer, statement_range.endOffset - beginning_of_next_sentence[1].length);
+                        found_end = true;
+                        break;
+                    }   
+                    statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1); 
+                }
+                if (next != null && statements[next.id]) {
+                    // we adjoin another selected statement
+                    found_end = true;
+                }
+                if (found_end) {
+                    break;
+                }
+
+                while (next && next.nodeName != '#text' && next.nextSibling) {
+                    next = next.nextSibling;
+                }
+                if (!next) {
+                    break;
+                }
+                if (next.nodeName != '#text') {
+                    statement_range.setEnd(next, 0);
                     found_end = true;
                     break;
-                }   
-                statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1); 
-            }   
-           
-            while(0) { 
-                if (false) {
-                    console.log("no start found");
-                    var last = statement_range.startContainer;
-                    var prev = last.previousSibling;
-                    while (prev == null) {
-                        // go up if we cannot find a previous sibling
-                        last = last.parentNode;
-                        if (last == document) {
-                            break;
-                        }
-                        name = last.tagName;
-                        if (name == 'P' || name == 'BR') {
-                            break;
-                        }
-                        prev = last.previousSibling;
-                    }
-                    if (!prev) {
-                        found_start = true;
-                    }
-                    else {
-                        // go down from the previous element until we find something without nodes
-                        // this is probably, but not always, text 
-                        while (prev.childNodes.length) {
-                            prev = prev.childNodes(prev.childNodes.length-1);
-                        } 
-                        if (!prev.data) {
-                            console.log(prev);
-                            console.log("prev child had no data?");
-                            break;
-                        }
-                        else {
-                            statement_range.setStart(prev.parentElement,prev.data.length-1);
-                        }
-                    }
                 }
-            }
+                statement_range.setEnd(next, 0); 
+                next = next.nextSibling;
+            }   
 
             //statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1);
             //statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1);

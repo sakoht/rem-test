@@ -222,11 +222,11 @@ def selector_js(request):
             return false;
         }
 
-        var startPunct = new RegExp("^([\?\.\!]\\s*)");    
-        var endPunct = new RegExp("[\?\.\!](\\s+\\S)$");
+        var startPunct = /^([\\?\.\\!]\\s+)/;    
+        var endPunct = /[\\?\\.\\!]\\s+(\\S)$/;
         function selection2statement(selection_range) {
             var statement_range = selection_range.cloneRange();
-            
+
             while (statement_range.startOffset > 0) {
                 var end_of_last_sentence = startPunct.exec(statement_range.toString());
                 if (end_of_last_sentence != null) {
@@ -242,7 +242,6 @@ def selector_js(request):
                     statement_range.setEnd(statement_range.endContainer, statement_range.endOffset - beginning_of_next_sentence[1].length);
                     break;
                 }   
-                console.log(statement_range.toString() + ' ');
                 statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1); 
             }   
             

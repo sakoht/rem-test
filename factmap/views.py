@@ -212,7 +212,8 @@ def selector_js(request):
                 var id = 'flinkt.org selection ' + select_count;
                 
                 var statement_span = document.createElement("statement_span");
-                statement_span.style.backgroundColor = "yellow";
+                statement_span.style.backgroundColor = '#FFFFAA';
+                statement_span.style.backgroundColor.opacity = .3;
                 statement_span.id = id; 
                 statement_range.surroundContents(statement_span);
                 

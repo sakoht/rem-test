@@ -1,8 +1,9 @@
-# Create your views here.
 from django import http
 from django.http import HttpResponse
 from django.utils.html import escape
 import pprint
+from hashlib import sha1
+from uuid import uuid1
 
 # ^$
 def under_construction(request):
@@ -13,14 +14,6 @@ def under_construction(request):
 def main(request):
     r = http.HttpResponse()
     add_points(r)
-    return r
-
-def testo(request):
-    r = http.HttpResponse()
-    r.write('<head><script type="text/javascript" src="http://flinkt.org/js/selector.js" id="flinkt.org bookmarklet"></script></head>')
-    r.write('<body>')
-    add_points(r)
-    r.write('</body>')
     return r
 
 def add_points(r):
@@ -37,6 +30,8 @@ def add_points(r):
     r.write('</ol>')
 
 def bookmarklet_text():
+    flinkt_id = uuid1()
+    flinkt_id_str = str(flinkt_id)
     b = "javascript:(function(){"
     b += "  if(document.getElementById('flinkt.org bookmarklet') == null) {"
     b += "    s=document.createElement('script');"
@@ -44,11 +39,11 @@ def bookmarklet_text():
     b += "    s.setAttribute('charset','UTF-8');"
     b += "    s.setAttribute('src','http://flinkt.org/js/selector.js');"
     b += "    s.setAttribute('id','flinkt.org bookmarklet');"
+    b += "    s.flinkt_id = '" + flinkt_id_str + "';"
     b += "    document.body.appendChild(s);"
     b += "  }"
     b += "})();"
     return b
-
 
 # ^js/selector.js'
 # TODO: this is only in django for composability
@@ -70,6 +65,9 @@ def selector_js(request):
             document.getElementById('flinkt.org pen on').style.zIndex = 999998;
             document.getElementById('flinkt.org pen off').style.zIndex = 999996;
             document.addEventListener('click',on_click, true);
+            document.addEventListener('mousedown',on_mousedown, true);
+            document.addEventListener('mousemove',on_mousemove, true);
+            document.addEventListener('mouseup',on_mouseup, true);
             document.addEventListener('touchend',on_touchend, true);
             document.addEventListener('touchmove',on_touchmove, true);
             pen_status = 'on';
@@ -79,6 +77,9 @@ def selector_js(request):
             document.getElementById('flinkt.org pen off').style.zIndex = 99998;
             document.getElementById('flinkt.org pen on').style.zIndex = 99997;
             document.removeEventListener('click',on_click, true);
+            document.removeEventListener('mousedown',on_mousedown, true);
+            document.removeEventListener('mousemove',on_mousemove, true);
+            document.removeEventListener('mouseup',on_mouseup, true);
             document.removeEventListener('touchend',on_touchend, true);
             document.removeEventListener('touchmove',on_touchmove, true);
             pen_status = 'off';
@@ -86,6 +87,9 @@ def selector_js(request):
 
         function close_click() {
             document.removeEventListener('click',on_click, true);
+            document.removeEventListener('mousedown',on_mousedown, true);
+            document.removeEventListener('mousemove',on_mousemove, true);
+            document.removeEventListener('mouseup',on_mouseup, true);
             document.removeEventListener('touchend',on_touchend, true);
             document.removeEventListener('touchmove',on_touchmove, true);
             var a = document.getElementById('flinkt.org app');
@@ -98,9 +102,28 @@ def selector_js(request):
             alert('site click');
         }
 
-        var moving = 0;
+        var moving = false;
+
         function on_touchmove() {
-            moving = 1;
+            moving = true;
+        }
+
+        function on_mousedown() {
+            console.log("down");
+        }
+
+        function on_mousemove(e) {
+            console.log("move");
+            moving = true;
+        }
+
+        function on_mouseup(e) {
+            console.log("up with moving set to " + moving.toString());
+            if (!e) e = window.event;
+            var o = e.target;
+            if (!o) o = e.target;
+            e.preventDefault();
+            statement_select(o, e);
         }
 
         function on_touchend() {
@@ -110,7 +133,7 @@ def selector_js(request):
                 return;
             }
             if (moving) {
-                moving = 0;
+                moving = false;
                 return;
             }
             var target = (event.changedTouches.length ? event.changedTouches[0].target : null);
@@ -128,10 +151,10 @@ def selector_js(request):
         }
             
         function on_click(e) {
+            console.log("click with moving set to " + moving.toString());
             if (!e) e = window.event;
-            var o = e.target;
-            if (!o) o = e.target;
-            statement_select(o, e);
+            e.preventDefault();
+            return;
         }
 
         var select_count = 0;
@@ -237,18 +260,28 @@ def selector_js(request):
             return false;
         }
 
-        var startPunct = /^([\\?\.\\!]\\s+)/;    
-        var endPunct = /[\\?\\.\\!]\\s+(\\S)$/;
+        var startPunct = /^([\\?\.\\!][\\s]+)/;    
+        var endPunct = /[\\?\\.\\!]([\\s]+\\S)$/;
         function selection2statement(selection_range) {
             var statement_range = selection_range.cloneRange();
+            return statement_range;
 
             var found_start = false;
             var prev = statement_range.startContainer.previousSibling;
+            var last_working = statement_range.startContainer;
             while (1) { 
                 while (statement_range.startOffset > 0) {
                     var end_of_last_sentence = startPunct.exec(statement_range.toString());
                     if (end_of_last_sentence != null) {
-                        statement_range.setStart(statement_range.startContainer, statement_range.startOffset + end_of_last_sentence[1].length);
+                        var new_start_offset = statement_range.startOffset + end_of_last_sentence[1].length;
+                        if (new_start_offset > statement_range.startContainer.length - 1) {
+                            // we stepped into a previous sibling to find the end of the last statement
+                            // but the start of this statement is just past that edge
+                            statement_range.setStart(last_working, 0); 
+                        }
+                        else {
+                            statement_range.setStart(statement_range.startContainer, new_start_offset);
+                        }
                         found_start = true;
                         break;
                     }   
@@ -273,17 +306,27 @@ def selector_js(request):
                     found_start = true;
                     break;
                 }
+                last_working = statement_range.startContainer;
                 statement_range.setStart(prev, (prev.data.length > 0 ? prev.data.length - 1 : 0)); 
                 prev = prev.previousSibling;
             } 
 
             var found_end = false;
-            var next = statement_range.startContainer.nextSibling;
+            var next = statement_range.endContainer.nextSibling;
+            last_working = statement_range.endContainer;
             while(1) {
                 while (statement_range.endOffset < statement_range.endContainer.length) {
                     var beginning_of_next_sentence = endPunct.exec(statement_range.toString());
                     if( beginning_of_next_sentence != null ) { 
-                        statement_range.setEnd(statement_range.endContainer, statement_range.endOffset - beginning_of_next_sentence[1].length);
+                        var new_end_offset = statement_range.endOffset - beginning_of_next_sentence[1].length;
+                        if (new_end_offset < 0) {
+                            // we stepped into a next sibling to find the beginning of the next statement
+                            // but the end of this statement is just past that edge
+                            statement_range.setEnd(last_working, last_working.data.length-1); 
+                        }
+                        else {
+                            statement_range.setEnd(statement_range.endContainer, new_end_offset);
+                        }
                         found_end = true;
                         break;
                     }   
@@ -308,6 +351,7 @@ def selector_js(request):
                     found_end = true;
                     break;
                 }
+                last_working = statement_range.endContainer;
                 statement_range.setEnd(next, 0); 
                 next = next.nextSibling;
             }   
@@ -406,6 +450,184 @@ def pen_div_html():
     p += '    <div style="position:fixed; top:64px; right:32px; width:30%; height:90%; z-index:999999; opacity:.70" id="flinkt.org status">'
     p += '    </div>'
 
+def sha1_js():
+    p = '''
+/**
+*
+*  Secure Hash Algorithm (SHA1)
+*  http://www.webtoolkit.info/
+*
+**/
+ 
+function SHA1 (msg) {
+ 
+    function rotate_left(n,s) {
+        var t4 = ( n<<s ) | (n>>>(32-s));
+        return t4;
+    };
+ 
+    function lsb_hex(val) {
+        var str="";
+        var i;
+        var vh;
+        var vl;
+ 
+        for( i=0; i<=6; i+=2 ) {
+            vh = (val>>>(i*4+4))&0x0f;
+            vl = (val>>>(i*4))&0x0f;
+            str += vh.toString(16) + vl.toString(16);
+        }
+        return str;
+    };
+ 
+    function cvt_hex(val) {
+        var str="";
+        var i;
+        var v;
+ 
+        for( i=7; i>=0; i-- ) {
+            v = (val>>>(i*4))&0x0f;
+            str += v.toString(16);
+        }
+        return str;
+    };
+ 
+ 
+    function Utf8Encode(string) {
+        string = string.replace(/\r\n/g,"\n");
+        var utftext = "";
+ 
+        for (var n = 0; n < string.length; n++) {
+ 
+            var c = string.charCodeAt(n);
+ 
+            if (c < 128) {
+                utftext += String.fromCharCode(c);
+            }
+            else if((c > 127) && (c < 2048)) {
+                utftext += String.fromCharCode((c >> 6) | 192);
+                utftext += String.fromCharCode((c & 63) | 128);
+            }
+            else {
+                utftext += String.fromCharCode((c >> 12) | 224);
+                utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+                utftext += String.fromCharCode((c & 63) | 128);
+            }
+ 
+        }
+ 
+        return utftext;
+    };
+ 
+    var blockstart;
+    var i, j;
+    var W = new Array(80);
+    var H0 = 0x67452301;
+    var H1 = 0xEFCDAB89;
+    var H2 = 0x98BADCFE;
+    var H3 = 0x10325476;
+    var H4 = 0xC3D2E1F0;
+    var A, B, C, D, E;
+    var temp;
+ 
+    msg = Utf8Encode(msg);
+ 
+    var msg_len = msg.length;
+ 
+    var word_array = new Array();
+    for( i=0; i<msg_len-3; i+=4 ) {
+        j = msg.charCodeAt(i)<<24 | msg.charCodeAt(i+1)<<16 |
+        msg.charCodeAt(i+2)<<8 | msg.charCodeAt(i+3);
+        word_array.push( j );
+    }
+ 
+    switch( msg_len % 4 ) {
+        case 0:
+            i = 0x080000000;
+        break;
+        case 1:
+            i = msg.charCodeAt(msg_len-1)<<24 | 0x0800000;
+        break;
+ 
+        case 2:
+            i = msg.charCodeAt(msg_len-2)<<24 | msg.charCodeAt(msg_len-1)<<16 | 0x08000;
+        break;
+ 
+        case 3:
+            i = msg.charCodeAt(msg_len-3)<<24 | msg.charCodeAt(msg_len-2)<<16 | msg.charCodeAt(msg_len-1)<<8    | 0x80;
+        break;
+    }
+ 
+    word_array.push( i );
+ 
+    while( (word_array.length % 16) != 14 ) word_array.push( 0 );
+ 
+    word_array.push( msg_len>>>29 );
+    word_array.push( (msg_len<<3)&0x0ffffffff );
+ 
+ 
+    for ( blockstart=0; blockstart<word_array.length; blockstart+=16 ) {
+ 
+        for( i=0; i<16; i++ ) W[i] = word_array[blockstart+i];
+        for( i=16; i<=79; i++ ) W[i] = rotate_left(W[i-3] ^ W[i-8] ^ W[i-14] ^ W[i-16], 1);
+ 
+        A = H0;
+        B = H1;
+        C = H2;
+        D = H3;
+        E = H4;
+ 
+        for( i= 0; i<=19; i++ ) {
+            temp = (rotate_left(A,5) + ((B&C) | (~B&D)) + E + W[i] + 0x5A827999) & 0x0ffffffff;
+            E = D;
+            D = C;
+            C = rotate_left(B,30);
+            B = A;
+            A = temp;
+        }
+ 
+        for( i=20; i<=39; i++ ) {
+            temp = (rotate_left(A,5) + (B ^ C ^ D) + E + W[i] + 0x6ED9EBA1) & 0x0ffffffff;
+            E = D;
+            D = C;
+            C = rotate_left(B,30);
+            B = A;
+            A = temp;
+        }
+ 
+        for( i=40; i<=59; i++ ) {
+            temp = (rotate_left(A,5) + ((B&C) | (B&D) | (C&D)) + E + W[i] + 0x8F1BBCDC) & 0x0ffffffff;
+            E = D;
+            D = C;
+            C = rotate_left(B,30);
+            B = A;
+            A = temp;
+        }
+ 
+        for( i=60; i<=79; i++ ) {
+            temp = (rotate_left(A,5) + (B ^ C ^ D) + E + W[i] + 0xCA62C1D6) & 0x0ffffffff;
+            E = D;
+            D = C;
+            C = rotate_left(B,30);
+            B = A;
+            A = temp;
+        }
+ 
+        H0 = (H0 + A) & 0x0ffffffff;
+        H1 = (H1 + B) & 0x0ffffffff;
+        H2 = (H2 + C) & 0x0ffffffff;
+        H3 = (H3 + D) & 0x0ffffffff;
+        H4 = (H4 + E) & 0x0ffffffff;
+ 
+    }
+ 
+    var temp = cvt_hex(H0) + cvt_hex(H1) + cvt_hex(H2) + cvt_hex(H3) + cvt_hex(H4);
+ 
+    return temp.toLowerCase();
+ 
+}
+    '''
+
 def faq(request):
     p = '''
         <br>
@@ -427,7 +649,10 @@ def faq(request):
             <ul>
                 <li>No one wants to fill out a form.  It disrupts flow, and just sucks.</li>
                 <li>Tags put too much responsibility on the user.  They are a nit-wit solution to organization.  Remember search engine meta tags?  They're only worth remembering for the lesson.</li>
-                <li><a href="http://techcrunch.com/2008/10/16/fleck-headed-to-the-deadpool-because-nobody-wants-to-annotate-the-web/">article on fleck's demise</a>
+                <li>Too many steps required to start using the tool. Making accounts sucks.  Inventing passwords sucks.</li>
+                <li>Too many steps required to do something with the content.</li>
+                <li>To send your selections to others they need to either visit the tool's site, or you need another channel fb/twitter, etc.  These require configuration and limit reach.</li>
+                <li>All of them require mental investment before receiving value.</li>
             </ul>
         </li>
         <li>
@@ -441,62 +666,42 @@ def faq(request):
             A: You get to know the exact things on the page readers took interest in.  Because we protect reader anonymity, they can confidently share more from your site.
         </li>
         </ol>
+        <h3>Links</h3>
+        <ol> 
+            <li>fleck: <a href="http://techcrunch.com/2008/10/16/fleck-headed-to-the-deadpool-because-nobody-wants-to-annotate-the-web/">article on fleck's demise</a></li>
+            <li><a href="http://clipmarks.com">clipmarks</a></li>
+                <ul>
+                    <li>slick plugin, but a plugin is too cumbersome</li>
+                    <li>whole paragraph</li>
+                </ul>
+            </li>
+            <li><a href="http://amplify.com">amplify (by clipmarks people)</a>
+                <ul>
+                    <li>bookmarklet version of clipmarks, yea!  so it works in more than two browsers</li>
+                    <li>each user gets a wordpress site for thier posts, which was what I was going to do too but with something lighter weight</li>
+                    <li>also whole paragraph not line/word</li>
+                    <li>my first selection, when i tried to go to <a href="http://sakoht.amplify.com">my wordpress site on their server</a> just hung</li>
+                </ul>
+            </li>
+            <li><a href="http://www.google.com/sidewiki">google sidewiki</a>
+                <ul>
+                    <li>browser plugin</li>
+                    <li>no highlights, just comments</li>
+                </ul>
+            </li>
+            <li><a href="http://googlenotebookblog.blogspot.com/2009/01/stopping-development-on-google-notebook.html">google notebook stopped dev in 2009</a></li>
+            <li><a href="http://news.cnet.com/seven-worthy-google-notebook-replacements/">seven google notebook replacements</li>
+                <ul>
+                    <li>evernote</li>
+                    <li>zoho notebook: bookmarkelet takes selections, doesn't highlight them, puts them in your notebook, has lots of buttons and dials</li>
+                    <li>ubernote: if you find that they have a bookmarklet, you can use it to capture whole pages/li>
+                    <li>springnote: i was not able to determine if i could use it to highlight a web page line in 5 minutes</li>
+                    <li>magnolia: seems that the site is gone</li>
+                    <li>delicious: yahoo bought them: shared web bookmarks, requires an account, has a site</li>
+                </ul>
+            </li>
+        </ol>
         '''
     r = http.HttpResponse(p)
-    return r
-
-# old junk from the examples
-
-def hello_html(request):
-    "This view is a basic 'hello world' example in HTML."
-    return HttpResponse('<h1>Hello, world.</h1>')
-
-def hello_text(request):
-    "This view is a basic 'hello world' example in plain text."
-    return HttpResponse('Hello, world.', mimetype='text/plain')
-
-def hello_write(request):
-    "This view demonstrates how an HttpResponse object has a write() method."
-    r = HttpResponse()
-    r.write("<p>Here's a paragraph.</p>")
-    r.write("<p>Here's another paragraph.</p>")
-    return r
-
-def metadata(request):
-    "This view demonstrates how to retrieve request metadata, such as HTTP headers."
-    r = HttpResponse('<h1>All about you</h1>')
-    r.write("<p>Here's all known metadata about your request, according to <code>request.META</code>:</p>")
-    r.write('<table>')
-    meta_items = request.META.items()
-    meta_items.sort()
-    for k, v in meta_items:
-        r.write('<tr><th>%s</th><td>%r</td></tr>' % (k, v))
-    r.write('</table>')
-    return r
-
-def get_data(request):
-    "This view demonstrates how to retrieve GET data."
-    r = HttpResponse()
-    if request.GET:
-        r.write('<p>GET data found! Here it is:</p>')
-        r.write('<ul>%s</ul>' % ''.join(['<li><strong>%s:</strong> %r</li>' % (escape(k), escape(v)) for k, v in request.GET.items()]))
-    r.write('<form action="" method="get">')
-    r.write('<p>First name: <input type="text" name="first_name"></p>')
-    r.write('<p>Last name: <input type="text" name="last_name"></p>')
-    r.write('<p><input type="submit" value="Submit"></p>')
-    r.write('</form>')
-    return r
-
-def post_data(request):
-    "This view demonstrates how to retrieve POST data."
-    r = HttpResponse()
-    if request.POST:
-        r.write('<p>POST data found! Here it is:</p>')
-        r.write('<ul>%s</ul>' % ''.join(['<li><strong>%s:</strong> %r</li>' % (escape(k), escape(v)) for k, v in request.POST.items()]))
-    r.write('<form action="" method="post">')
-    r.write('<p>First name: <input type="text" name="first_name"></p>')
-    r.write('<p>Last name: <input type="text" name="last_name"></p>')
-    r.write('<p><input type="submit" value="Submit"></p>')
-    r.write('</form>')
     return r
 

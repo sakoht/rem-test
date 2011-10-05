@@ -11,7 +11,11 @@ urlpatterns = patterns('',
     (r'^testo$',                    'factmap.views.testo'),
     (r'^faq$',                      'factmap.views.faq'),
     (r'^js/selector.js',            'factmap.views.selector_js'),
-    
+    (r'^static/(?P<path>.*)$',      'django.views.static.serve',
+                                        {'document_root': '/var/www/www.flinkt.org/static/'}),
+    (r'^js/(?P<path>.*)$',          'django.views.static.serve',
+                                        {'document_root': '/var/www/www.flinkt.org/js/'}),
+
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
     # to INSTALLED_APPS to enable admin documentation:
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),

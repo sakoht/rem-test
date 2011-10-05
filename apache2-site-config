@@ -39,6 +39,11 @@
     <Location "/images">
         SetHandler None
     </Location>
+    
+    Alias /static/js "/var/www/www.flinkt.org/static/js"
+    <Location "/static/js">
+        SetHandler None
+    </Location>
 
 	ErrorLog /var/log/apache2/factmap.org-error.log
 

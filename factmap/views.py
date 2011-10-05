@@ -76,7 +76,7 @@ def selector_js(request):
         function pen_on() {
             document.getElementById('flinkt.org pen on').style.zIndex = 999998;
             document.getElementById('flinkt.org pen off').style.zIndex = 999996;
-            document.addEventListener('click',on_click, true);
+            //document.addEventListener('click',on_click, true);
             document.addEventListener('mousedown',on_mousedown, true);
             document.addEventListener('mousemove',on_mousemove, true);
             document.addEventListener('mouseup',on_mouseup, true);
@@ -88,7 +88,7 @@ def selector_js(request):
         function pen_off() {
             document.getElementById('flinkt.org pen off').style.zIndex = 99998;
             document.getElementById('flinkt.org pen on').style.zIndex = 99997;
-            document.removeEventListener('click',on_click, true);
+            //document.removeEventListener('click',on_click, true);
             document.removeEventListener('mousedown',on_mousedown, true);
             document.removeEventListener('mousemove',on_mousemove, true);
             document.removeEventListener('mouseup',on_mouseup, true);
@@ -98,7 +98,7 @@ def selector_js(request):
         }
 
         function close_click() {
-            document.removeEventListener('click',on_click, true);
+            //document.removeEventListener('click',on_click, true);
             document.removeEventListener('mousedown',on_mousedown, true);
             document.removeEventListener('mousemove',on_mousemove, true);
             document.removeEventListener('mouseup',on_mouseup, true);
@@ -161,18 +161,27 @@ def selector_js(request):
                 statement_select(target, event);
             }
         }
-            
-        function on_click(e) {
-            ///console.log("click with moving set to " + moving.toString());
-            if (!e) e = window.event;
-            e.preventDefault();
-            return;
-        }
 
         var select_count = 0;
         var selections = {};
-        var statements = {};
-        var artifacts = {}
+        
+        function on_selection_click(e) {
+            if (!e) e = window.event;
+            var o = e.target;
+            if (!o) o = e.target;
+            e.preventDefault();
+            
+            var prev_selection = selections[o.id];
+            if (!prev_selection) {
+                console.log("no selection for " + o.id);
+                console.log(o);
+            }
+            else {
+                console.log("selection for " + o.id);
+                selection_unselect(prev_selection);
+            }
+        }
+            
         function statement_select(obj, e) {
             if (true) {
                 if (obj == null) {
@@ -189,19 +198,18 @@ def selector_js(request):
                     return;
                 }
                 
+                var prev_statement = selections[obj.id];
+                if (prev_statement && prev_statement != null) {
+                    return;
+                }
+
                 //e.cancelBubble = true;  //ie
                 //e.stopPropagation();    //w3c
                 e.preventDefault();    //w3c
                 
                 if (obj.tagName == 'IMG') {
                     // can't select images
-                    return;
-                }
-
-                var prev_statement = selections[obj.id];
-                if (prev_statement && prev_statement != null) {
-                    statement_unselect(prev_statement);
-                    return;
+                    // return;
                 }
 
                 var selection = window.getSelection();
@@ -249,6 +257,8 @@ def selector_js(request):
                     span.id = id; 
                     range.surroundContents(span);
                     var text = span.toString();
+                    
+                    span.addEventListener('click',on_selection_click,true);
 
                     var item = {
                         // storable
@@ -280,6 +290,7 @@ def selector_js(request):
                 
                 var statement_range = selection2statement(selection_range);
                 var statement_item = add_flinkt_item('statement', statement_range, '#FFFFDD', .1, 'flinkt.org statement ' + select_count);
+                selection_item.parent = statement_item;
 
                 selections[selection_item.id] = selection_item;
 
@@ -293,6 +304,24 @@ def selector_js(request):
 
             //catch(e) { alert("error capturing selection: " + e); }
             return false;
+        }
+
+        function selection_unselect(selection) {
+            var span = selection.span;
+            parent = span.parentNode;
+            while (span.firstChild) {
+                parent.insertBefore(span.firstChild, span);
+            }
+            parent.removeChild(span);
+            delete selections[selection.id];
+            var parent = selection.parent;
+            if (parent != null) {
+                selection_unselect(parent);
+            }
+            for (var key in selection) {
+                delete selection[key]; 
+            }
+
         }
 
         var startPunct = /^([\\?\.\\!][\\s]+)/;    
@@ -396,19 +425,6 @@ def selector_js(request):
             return statement_range;
         }
 
-        function statement_unselect(statement) {
-            var span = statement.span;
-            parent = span.parentNode;
-            while (span.firstChild) {
-                parent.insertBefore(span.firstChild, span);
-            }
-            parent.removeChild(span);
-            delete selections[statement.id];
-            for (var key in statement) {
-                delete statement[key]; 
-            }
-        }
-
         function to_path (container) {
             if (container == document) {
                 return "document";
@@ -423,42 +439,6 @@ def selector_js(request):
                 }
             }
             alert("How did I get here?")
-        }
-
-        function to_path2 (container) {
-            if (container == document) {
-                return "document";
-            }
-        
-            var parent_node = container.parentNode;
-            if (parent_node == null) {
-                alert("I'm an orphan??");
-            }
-        
-            var parent_path = to_path(parent_node);
-        
-            var child_nodes = parent_node.childNodes;
-            for (var n = 0; n < child_nodes.length; n++) {
-                if (child_nodes[n] == container) {
-                    var path = parent_path + ".childNodes[" + n + "]";
-                    //alert("got path " + path);
-                    var another_me = eval(path);
-                    if (another_me == container) {
-                        //alert("Verified");
-                        return path;
-                    }
-                    else {
-                        alert("Not found?  Another me is " + another_me);
-                    }
-                }
-            }
-        
-            if (n == child_nodes.length) {
-                alert("Never found myself in my parents list of children!");
-            }
-            else {
-                alert("How did I get here?")
-            }
         }
 
         pen_on()
@@ -496,9 +476,10 @@ def faq(request):
         One of the handiest things you can do is get a URL which contains the highlighted line and email it around or post it.
         </p>
         <p> 
-        More importantly, flinkt remembers the line, the page, and the context for you, so you can later get back to things you read.
+        More importantly, <a href="http://www.flinkt.org/demo">flinkt</a> remembers the line, the page, and the context for you, so you can later get back to things you read.
         The flinkt site gives you your own private database, for keeping your thoughts organized ...without making you do a lot of work to organize them.
         <p>
+        <img src="/images/pen32left.jpg" href="http://www.flinkt.org/faq">
         <h3>FAQ</h3>
         <ol>
         <li>

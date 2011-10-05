@@ -253,6 +253,25 @@ def selector_js(request):
                 selection_range.surroundContents(selection_span);
                 var selection_text = selection_span.toString();
 
+                selections[selection_id] = {
+                    // storable
+                    id: selection_id,
+                    url: document.URL,
+                    last_modified: document.lastModified,
+
+                    startContainer_dompath: to_path(selection_range.startContainer),
+                    endContainer_dompath: to_path(selection_range.endContainer),
+                    startOffset: selection_range.startOffset,
+                    endOffset: selection_range.endOffset,
+                    text: selection_text,
+                    sha1: Crypto.SHA1("blob " + selection_text.length + "\0" + selection_text), //git std
+                 
+                    // transient
+                    obj: obj,
+                    span: selection_span,
+                    range: selection_range,
+                };
+
                 // it's important to build this new range _after_ making
                 // the above surroundContents or firefox will shrink this down to the left half of itself
 

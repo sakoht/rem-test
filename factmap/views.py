@@ -293,6 +293,10 @@ def selector_js(request):
         };
 
         function remove_flinkt_item(item) {
+            var parent = item.parent;
+            if (parent != null) {
+                remove_flinkt_item(parent);
+            }
             var span = item.span;
             if (!span) return;
             parent = span.parentNode;
@@ -300,10 +304,6 @@ def selector_js(request):
                 parent.insertBefore(span.firstChild, span);
             }
             parent.removeChild(span);
-            var parent = item.parent;
-            if (parent != null) {
-                remove_flinkt_item(parent);
-            }
             for (var key in item) {
                 delete item[key]; 
             }

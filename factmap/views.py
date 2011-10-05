@@ -13,10 +13,6 @@ def under_construction(request):
 # ^demo$
 def main(request):
     r = http.HttpResponse()
-    add_points(r)
-    return r
-
-def add_points(r):
     r.write('<h1>flinkt</h1>')
     r.write('<ol>')
     r.write('<li><a href="' + bookmarklet_text() + '">flinkt</a>   <==========   drag this link onto your bookmarks bar!</li>')
@@ -28,6 +24,7 @@ def add_points(r):
     r.write('<li>when you come back to the site, turn on the pen again to see your previous highlights</li>')
     r.write('<li>click on the green arrow to see all of your highlights, see a capture of the page, and send them around</li>')
     r.write('</ol>')
+    return r
 
 def bookmarklet_text():
     flinkt_id = uuid1()

@@ -55,8 +55,23 @@ def selector_js(request):
     r.write("p.innerHTML = '" + pen_div_html() + "';\n")
     r.write("try { document.body.appendChild(p); } catch(e) { alert(e) };\n")
 
+
     s = '''
+
         var pen_status = 'off'
+
+        var scripts = ['2.3.0-crypto-sha1.js'];
+        for (n in scripts) {
+            var name = scripts[n];
+            if (! document.getElementById('flinkt.org ' + name)) {
+                s=document.createElement('script');
+                s.setAttribute('type','text/javascript');
+                s.setAttribute('charset','UTF-8');
+                s.setAttribute('src','http://flinkt.org/static/js/' + name);
+                s.setAttribute('id','flinkt.org ' + name);
+                document.body.appendChild(s);
+            }
+        }
 
         function pen_on() {
             document.getElementById('flinkt.org pen on').style.zIndex = 999998;
@@ -106,16 +121,16 @@ def selector_js(request):
         }
 
         function on_mousedown() {
-            console.log("down");
+            //console.log("down");
         }
 
         function on_mousemove(e) {
-            console.log("move");
+            //console.log("move");
             moving = true;
         }
 
         function on_mouseup(e) {
-            console.log("up with moving set to " + moving.toString());
+            //console.log("up with moving set to " + moving.toString());
             if (!e) e = window.event;
             var o = e.target;
             if (!o) o = e.target;
@@ -148,14 +163,16 @@ def selector_js(request):
         }
             
         function on_click(e) {
-            console.log("click with moving set to " + moving.toString());
+            ///console.log("click with moving set to " + moving.toString());
             if (!e) e = window.event;
             e.preventDefault();
             return;
         }
 
         var select_count = 0;
+        var selections = {};
         var statements = {};
+        var artifacts = {}
         function statement_select(obj, e) {
             if (true) {
                 if (obj == null) {
@@ -181,7 +198,7 @@ def selector_js(request):
                     return;
                 }
 
-                var prev_statement = statements[obj.id];
+                var prev_statement = selections[obj.id];
                 if (prev_statement && prev_statement != null) {
                     statement_unselect(prev_statement);
                     return;
@@ -222,33 +239,36 @@ def selector_js(request):
                     selection_pos = selection_range.startOffset;
                 }
                 
-                if (selection_range_text.length != 0) {
-                    //ignore regular highlights, just capture zero-width selections (clicks)
-                }
-                
-                var statement_range = selection2statement(selection_range);
-
                 select_count++;
-                var id = 'flinkt.org selection ' + select_count;
                 
-                var statement_span = document.createElement("statement_span");
-                statement_span.style.backgroundColor = '#FFFFAA';
-                statement_span.style.backgroundColor.opacity = .3;
-                statement_span.id = id; 
+                var orig_range = selection_range;
+                
+                var selection_range = orig_range.cloneRange();
+                var selection_id = 'flinkt.org selection ' + select_count;
+                var selection_span = document.createElement("span");
+                selection_span.style.backgroundColor = 'yellow';
+                selection_span.style.backgroundColor.opacity = .9;
+                //selection_span.style.zIndex = 9999;
+                selection_span.id = 'flinkt.org selection ' + select_count; 
+                selection_range.surroundContents(selection_span);
+                var selection_text = selection_span.toString();
+
+                // it's important to build this new range _after_ making
+                // the above surroundContents or firefox will shrink this down to the left half of itself
+
+                var statement_range = selection2statement(orig_range);
+                var statement_id = 'flinkt.org statement ' + select_count;
+                var statement_span = document.createElement("span");
+                statement_span.style.backgroundColor = '#FFFFDD';
+                statement_span.style.backgroundColor.opacity = .1;
+                //statement_span.style.zIndex = 9998;
+                statement_span.id = 'flinkt.org statement' + select_count; 
                 statement_range.surroundContents(statement_span);
-                
-                statements[id] = {
-                    // storable
-                    id: id,
-                    path: to_path(obj),
-                    startOffset: statement_range.startOffset,
-                    endOffset: statement_range.endOffset,
-                    // transient
-                    obj: obj,
-                    span: statement_span,
-                    range: statement_range,
-                };
-                console.log(statements[id]);
+                var statement_text = statement_span.toString();
+
+                console.log(selections[selection_id]);
+                console.log(statement_range);
+                document.flinkt_r = statement_range;
 
                 // this is just debugging code as we work toward statement extraction and processing
                 //document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + selection_pos + '<br><pre>' + obj.innerHTML + '</pre>';
@@ -261,7 +281,7 @@ def selector_js(request):
         var endPunct = /[\\?\\.\\!]([\\s]+\\S)$/;
         function selection2statement(selection_range) {
             var statement_range = selection_range.cloneRange();
-            return statement_range;
+            //return statement_range;
 
             var found_start = false;
             var prev = statement_range.startContainer.previousSibling;
@@ -284,7 +304,7 @@ def selector_js(request):
                     }   
                     statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1); 
                 }
-                if (prev != null && statements[prev.id]) {
+                if (prev != null && selections[prev.id]) {
                     // we adjoin another selected statement
                     found_start = true;
                 }
@@ -329,7 +349,7 @@ def selector_js(request):
                     }   
                     statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1); 
                 }
-                if (next != null && statements[next.id]) {
+                if (next != null && selections[next.id]) {
                     // we adjoin another selected statement
                     found_end = true;
                 }
@@ -365,7 +385,7 @@ def selector_js(request):
                 parent.insertBefore(span.firstChild, span);
             }
             parent.removeChild(span);
-            delete statements[statement.id];
+            delete selections[statement.id];
             for (var key in statement) {
                 delete statement[key]; 
             }
@@ -447,183 +467,6 @@ def pen_div_html():
     p += '    <div style="position:fixed; top:64px; right:32px; width:30%; height:90%; z-index:999999; opacity:.70" id="flinkt.org status">'
     p += '    </div>'
 
-def sha1_js():
-    p = '''
-/**
-*
-*  Secure Hash Algorithm (SHA1)
-*  http://www.webtoolkit.info/
-*
-**/
- 
-function SHA1 (msg) {
- 
-    function rotate_left(n,s) {
-        var t4 = ( n<<s ) | (n>>>(32-s));
-        return t4;
-    };
- 
-    function lsb_hex(val) {
-        var str="";
-        var i;
-        var vh;
-        var vl;
- 
-        for( i=0; i<=6; i+=2 ) {
-            vh = (val>>>(i*4+4))&0x0f;
-            vl = (val>>>(i*4))&0x0f;
-            str += vh.toString(16) + vl.toString(16);
-        }
-        return str;
-    };
- 
-    function cvt_hex(val) {
-        var str="";
-        var i;
-        var v;
- 
-        for( i=7; i>=0; i-- ) {
-            v = (val>>>(i*4))&0x0f;
-            str += v.toString(16);
-        }
-        return str;
-    };
- 
- 
-    function Utf8Encode(string) {
-        string = string.replace(/\r\n/g,"\n");
-        var utftext = "";
- 
-        for (var n = 0; n < string.length; n++) {
- 
-            var c = string.charCodeAt(n);
- 
-            if (c < 128) {
-                utftext += String.fromCharCode(c);
-            }
-            else if((c > 127) && (c < 2048)) {
-                utftext += String.fromCharCode((c >> 6) | 192);
-                utftext += String.fromCharCode((c & 63) | 128);
-            }
-            else {
-                utftext += String.fromCharCode((c >> 12) | 224);
-                utftext += String.fromCharCode(((c >> 6) & 63) | 128);
-                utftext += String.fromCharCode((c & 63) | 128);
-            }
- 
-        }
- 
-        return utftext;
-    };
- 
-    var blockstart;
-    var i, j;
-    var W = new Array(80);
-    var H0 = 0x67452301;
-    var H1 = 0xEFCDAB89;
-    var H2 = 0x98BADCFE;
-    var H3 = 0x10325476;
-    var H4 = 0xC3D2E1F0;
-    var A, B, C, D, E;
-    var temp;
- 
-    msg = Utf8Encode(msg);
- 
-    var msg_len = msg.length;
- 
-    var word_array = new Array();
-    for( i=0; i<msg_len-3; i+=4 ) {
-        j = msg.charCodeAt(i)<<24 | msg.charCodeAt(i+1)<<16 |
-        msg.charCodeAt(i+2)<<8 | msg.charCodeAt(i+3);
-        word_array.push( j );
-    }
- 
-    switch( msg_len % 4 ) {
-        case 0:
-            i = 0x080000000;
-        break;
-        case 1:
-            i = msg.charCodeAt(msg_len-1)<<24 | 0x0800000;
-        break;
- 
-        case 2:
-            i = msg.charCodeAt(msg_len-2)<<24 | msg.charCodeAt(msg_len-1)<<16 | 0x08000;
-        break;
- 
-        case 3:
-            i = msg.charCodeAt(msg_len-3)<<24 | msg.charCodeAt(msg_len-2)<<16 | msg.charCodeAt(msg_len-1)<<8    | 0x80;
-        break;
-    }
- 
-    word_array.push( i );
- 
-    while( (word_array.length % 16) != 14 ) word_array.push( 0 );
- 
-    word_array.push( msg_len>>>29 );
-    word_array.push( (msg_len<<3)&0x0ffffffff );
- 
- 
-    for ( blockstart=0; blockstart<word_array.length; blockstart+=16 ) {
- 
-        for( i=0; i<16; i++ ) W[i] = word_array[blockstart+i];
-        for( i=16; i<=79; i++ ) W[i] = rotate_left(W[i-3] ^ W[i-8] ^ W[i-14] ^ W[i-16], 1);
- 
-        A = H0;
-        B = H1;
-        C = H2;
-        D = H3;
-        E = H4;
- 
-        for( i= 0; i<=19; i++ ) {
-            temp = (rotate_left(A,5) + ((B&C) | (~B&D)) + E + W[i] + 0x5A827999) & 0x0ffffffff;
-            E = D;
-            D = C;
-            C = rotate_left(B,30);
-            B = A;
-            A = temp;
-        }
- 
-        for( i=20; i<=39; i++ ) {
-            temp = (rotate_left(A,5) + (B ^ C ^ D) + E + W[i] + 0x6ED9EBA1) & 0x0ffffffff;
-            E = D;
-            D = C;
-            C = rotate_left(B,30);
-            B = A;
-            A = temp;
-        }
- 
-        for( i=40; i<=59; i++ ) {
-            temp = (rotate_left(A,5) + ((B&C) | (B&D) | (C&D)) + E + W[i] + 0x8F1BBCDC) & 0x0ffffffff;
-            E = D;
-            D = C;
-            C = rotate_left(B,30);
-            B = A;
-            A = temp;
-        }
- 
-        for( i=60; i<=79; i++ ) {
-            temp = (rotate_left(A,5) + (B ^ C ^ D) + E + W[i] + 0xCA62C1D6) & 0x0ffffffff;
-            E = D;
-            D = C;
-            C = rotate_left(B,30);
-            B = A;
-            A = temp;
-        }
- 
-        H0 = (H0 + A) & 0x0ffffffff;
-        H1 = (H1 + B) & 0x0ffffffff;
-        H2 = (H2 + C) & 0x0ffffffff;
-        H3 = (H3 + D) & 0x0ffffffff;
-        H4 = (H4 + E) & 0x0ffffffff;
- 
-    }
- 
-    var temp = cvt_hex(H0) + cvt_hex(H1) + cvt_hex(H2) + cvt_hex(H3) + cvt_hex(H4);
- 
-    return temp.toLowerCase();
- 
-}
-    '''
 
 def faq(request):
     p = '''

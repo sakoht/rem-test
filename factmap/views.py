@@ -177,8 +177,8 @@ def selector_js(request):
                 console.log(o);
             }
             else {
-                console.log("selection for " + o.id);
-                selection_unselect(prev_selection);
+                remove_flinkt_item(prev_selection);
+                delete selections[prev_selection.id];
             }
         }
             
@@ -205,7 +205,7 @@ def selector_js(request):
 
                 //e.cancelBubble = true;  //ie
                 //e.stopPropagation();    //w3c
-                e.preventDefault();    //w3c
+                //e.preventDefault();    //w3c
                 
                 if (obj.tagName == 'IMG') {
                     // can't select images
@@ -214,12 +214,9 @@ def selector_js(request):
 
                 var selection = window.getSelection();
                 var selection_range;
-                var selection_range_text;
-                var selection_pos; 
                 if (!selection) {
                     // old IE
                     selection_range = document.selection.createRange();
-                    selection_range_text = selection_range.text;
                 }
                 else {
                     // not old IE
@@ -243,46 +240,7 @@ def selector_js(request):
                             selection_range = selection.getRangeAt(0);
                         }
                     }
-                    selection_range_text = selection_range.toString();
-                    selection_pos = selection_range.startOffset;
                 }
-                
-                
-                function add_flinkt_item(itype, prange, color, opacity, id) {
-                    var range = prange.cloneRange();
-                    var span = document.createElement("span");
-                    span.style.backgroundColor = color;
-                    span.style.backgroundColor.opacity = opacity;
-                    //span.style.zIndex = 9999;
-                    span.id = id; 
-                    range.surroundContents(span);
-                    var text = span.toString();
-                    
-                    span.addEventListener('click',on_selection_click,true);
-
-                    var item = {
-                        // storable
-                        id: id,
-                        itype: itype,
-
-                        url: document.URL,
-                        last_modified: document.lastModified,
-
-                        startContainer_dompath: to_path(range.startContainer),
-                        endContainer_dompath: to_path(range.endContainer),
-                        startOffset: range.startOffset,
-                        endOffset: range.endOffset,
-                        text: text,
-                        sha1: Crypto.SHA1("blob " + text.length + "\0" + text), //git std
-                    
-                        // transient
-                        obj: obj,
-                        span: span,
-                        range: range,
-                    };
-
-                    return item;
-                };
                 
                 select_count++;
                 
@@ -293,35 +251,62 @@ def selector_js(request):
                 selection_item.parent = statement_item;
 
                 selections[selection_item.id] = selection_item;
-
-                //console.log(selections[selection_id]);
-                //onsole.log(statement_range);
-                //document.flinkt_r = statement_range;
-
-                // this is just debugging code as we work toward statement extraction and processing
-                //document.getElementById('flinkt.org status').innerHTML = select_count + '<br>' + selection_pos + '<br><pre>' + obj.innerHTML + '</pre>';
             }
 
             //catch(e) { alert("error capturing selection: " + e); }
             return false;
         }
 
-        function selection_unselect(selection) {
-            var span = selection.span;
+        function add_flinkt_item(itype, prange, color, opacity, id) {
+            var range = prange.cloneRange();
+            var span = document.createElement("span");
+            span.style.backgroundColor = color;
+            span.style.backgroundColor.opacity = opacity;
+            //span.style.zIndex = 9999;
+            span.id = id; 
+            range.surroundContents(span);
+            var text = span.toString();
+            
+            span.addEventListener('click',on_selection_click,true);
+
+            var item = {
+                // storable
+                id: id,
+                itype: itype,
+
+                url: document.URL,
+                last_modified: document.lastModified,
+
+                startContainer_dompath: to_path(range.startContainer),
+                endContainer_dompath: to_path(range.endContainer),
+                startOffset: range.startOffset,
+                endOffset: range.endOffset,
+                text: text,
+                sha1: Crypto.SHA1("blob " + text.length + "\0" + text), //git std
+            
+                // transient
+                span: span,
+                range: range,
+            };
+
+            return item;
+        };
+
+        function remove_flinkt_item(item) {
+            var span = item.span;
+            if (!span) return;
             parent = span.parentNode;
             while (span.firstChild) {
                 parent.insertBefore(span.firstChild, span);
             }
             parent.removeChild(span);
-            delete selections[selection.id];
-            var parent = selection.parent;
+            var parent = item.parent;
             if (parent != null) {
-                selection_unselect(parent);
+                remove_flinkt_item(parent);
             }
-            for (var key in selection) {
-                delete selection[key]; 
+            for (var key in item) {
+                delete item[key]; 
             }
-
         }
 
         var startPunct = /^([\\?\.\\!][\\s]+)/;    

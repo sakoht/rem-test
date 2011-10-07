@@ -168,7 +168,11 @@ def selector_js(request):
         function on_selection_click(e) {
             // currently, clicking on an existing selection removes it
             // later we will give a list of options on the right
-            
+           
+            if (pen_status == 'off') {
+                return;
+            }
+
             if (!e) e = window.event;
             
             var o = e.target;

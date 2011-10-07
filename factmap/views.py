@@ -258,40 +258,64 @@ def selector_js(request):
             return false;
         }
 
-        function add_flinkt_item(itype, prange, color, opacity, id) {
-            var range = prange.cloneRange();
-            var span = document.createElement("span");
-            span.style.backgroundColor = color;
-            span.style.backgroundColor.opacity = opacity;
-            //span.style.zIndex = 9999;
-            span.id = id; 
-            range.surroundContents(span);
-            var text = span.toString();
-            
-            span.addEventListener('click',on_selection_click,true);
-
+        function add_flinkt_item(itype, irange, color, opacity, id) {
+            // one item comes from a single range, but will contain multiple spans to preserve document shape
+            var text = irange.toString();
             var item = {
-                // storable
                 id: id,
                 itype: itype,
+                color: color,
+                opacity: opacity,
 
+                text: text,
+                sha1: Crypto.SHA1("blob " + text.length + "\0" + text), //git std
+                
                 url: document.URL,
                 last_modified: document.lastModified,
 
-                startContainer_dompath: to_path(range.startContainer),
-                endContainer_dompath: to_path(range.endContainer),
-                startOffset: range.startOffset,
-                endOffset: range.endOffset,
-                text: text,
-                sha1: Crypto.SHA1("blob " + text.length + "\0" + text), //git std
+                // capture the range data for reconstruction
+                startContainer_dompath: to_path(irange.startContainer),
+                endContainer_dompath: to_path(irange.endContainer),
+                startOffset: irange.startOffset,
+                endOffset: irange.endOffset,
             
-                // transient
-                span: span,
-                range: range,
             };
 
+            // wrap each element in the range in a highlighted span
+            var elements = resolve_range_elements(irange);
+            var spans = [];
+            for (var n=0; n<elements.length; n++) {
+                var e = elements[n];
+
+                var span = document.createElement("span");
+                span.style.backgroundColor = color;
+                span.style.backgroundColor.opacity = opacity;
+                span.id = id + '.' + n;
+
+                var range = irange.cloneRange();
+                range.setStart(e, 0);
+                range.setEnd(e, (e.length || e.childNodes.length));
+
+                range.surroundContents(span);
+
+                span.addEventListener('click',on_selection_click,true);
+
+                spans.push(span);
+            }
+
+            item.spans = spans;
+            
             return item;
         };
+
+        function resolve_range_elements(r) {
+            // todo: make this use a treeWalker
+            var e = [r.startContainer];
+            if (r.endContainer != r.startContainer) {
+                e.push(r.endContainer)
+            }
+            return e;
+        }
 
         function remove_flinkt_item(item) {
             var span = item.span;
@@ -304,107 +328,6 @@ def selector_js(request):
             for (var key in item) {
                 delete item[key]; 
             }
-        }
-
-        var startPunct = /^([\\?\.\\!][\\s]+)/;    
-        var endPunct = /[\\?\\.\\!]([\\s]+\\S)$/;
-        function selection2statement(selection_range) {
-            var statement_range = selection_range.cloneRange();
-            //return statement_range;
-
-            var found_start = false;
-            var prev = statement_range.startContainer.previousSibling;
-            var last_working = statement_range.startContainer;
-            while (1) { 
-                while (statement_range.startOffset > 0) {
-                    var end_of_last_sentence = startPunct.exec(statement_range.toString());
-                    if (end_of_last_sentence != null) {
-                        var new_start_offset = statement_range.startOffset + end_of_last_sentence[1].length;
-                        if (new_start_offset > statement_range.startContainer.length - 1) {
-                            // we stepped into a previous sibling to find the end of the last statement
-                            // but the start of this statement is just past that edge
-                            statement_range.setStart(last_working, 0); 
-                        }
-                        else {
-                            statement_range.setStart(statement_range.startContainer, new_start_offset);
-                        }
-                        found_start = true;
-                        break;
-                    }   
-                    statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1); 
-                }
-                if (prev != null && selections[prev.id]) {
-                    // we adjoin another selected statement
-                    found_start = true;
-                }
-                if (found_start) {
-                    break;
-                }
-                
-                while (prev && prev.nodeName != '#text' && prev.previousSibling) {
-                    prev = prev.previousSibling;
-                }
-                if (!prev) {
-                    break;
-                }
-                if (prev.nodeName != '#text') {
-                    statement_range.setStart(prev, 0);
-                    found_start = true;
-                    break;
-                }
-                last_working = statement_range.startContainer;
-                statement_range.setStart(prev, (prev.data.length > 0 ? prev.data.length - 1 : 0)); 
-                prev = prev.previousSibling;
-            } 
-
-            var found_end = false;
-            var next = statement_range.endContainer.nextSibling;
-            last_working = statement_range.endContainer;
-            while(1) {
-                while (statement_range.endOffset < statement_range.endContainer.length) {
-                    var beginning_of_next_sentence = endPunct.exec(statement_range.toString());
-                    if( beginning_of_next_sentence != null ) { 
-                        var new_end_offset = statement_range.endOffset - beginning_of_next_sentence[1].length;
-                        if (new_end_offset < 0) {
-                            // we stepped into a next sibling to find the beginning of the next statement
-                            // but the end of this statement is just past that edge
-                            statement_range.setEnd(last_working, last_working.data.length-1); 
-                        }
-                        else {
-                            statement_range.setEnd(statement_range.endContainer, new_end_offset);
-                        }
-                        found_end = true;
-                        break;
-                    }   
-                    statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1); 
-                }
-                if (next != null && selections[next.id]) {
-                    // we adjoin another selected statement
-                    found_end = true;
-                }
-                if (found_end) {
-                    break;
-                }
-
-                while (next && next.nodeName != '#text' && next.nextSibling) {
-                    next = next.nextSibling;
-                }
-                if (!next) {
-                    break;
-                }
-                if (next.nodeName != '#text') {
-                    statement_range.setEnd(next, 0);
-                    found_end = true;
-                    break;
-                }
-                last_working = statement_range.endContainer;
-                statement_range.setEnd(next, 0); 
-                next = next.nextSibling;
-            }   
-
-            //statement_range.setStart(statement_range.startContainer, statement_range.startOffset - 1);
-            //statement_range.setEnd(statement_range.endContainer, statement_range.endOffset + 1);
-            return statement_range;
         }
 
         function to_path (container) {

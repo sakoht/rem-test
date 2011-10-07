@@ -251,6 +251,7 @@ def selector_js(request):
                 selection_item.parent = statement_item;
 
                 selections[selection_item.id] = selection_item;
+                document.flinkt_selections = selections;
             }
 
             //catch(e) { alert("error capturing selection: " + e); }

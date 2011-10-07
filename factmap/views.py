@@ -246,9 +246,9 @@ def selector_js(request):
                 
                 var selection_item = add_flinkt_item('selection', selection_range, 'yellow', .9, 'flinkt.org selection ' + select_count);
                 
-                var statement_range = selection2statement(selection_range);
-                var statement_item = add_flinkt_item('statement', statement_range, '#FFFFDD', .1, 'flinkt.org statement ' + select_count);
-                selection_item.parent = statement_item;
+                //var statement_range = selection2statement(selection_range);
+                //var statement_item = add_flinkt_item('statement', statement_range, '#FFFFDD', .1, 'flinkt.org statement ' + select_count);
+                //selection_item.parent = statement_item;
 
                 selections[selection_item.id] = selection_item;
                 document.flinkt_selections = selections;
@@ -294,10 +294,6 @@ def selector_js(request):
         };
 
         function remove_flinkt_item(item) {
-            var parent = item.parent;
-            if (parent != null) {
-                remove_flinkt_item(parent);
-            }
             var span = item.span;
             if (!span) return;
             parent = span.parentNode;

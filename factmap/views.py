@@ -166,23 +166,33 @@ def selector_js(request):
         var selections = {};
         
         function on_selection_click(e) {
-            if (!e) e = window.event;
-            var o = e.target;
-            if (!o) o = e.target;
-            e.preventDefault();
+            // currently, clicking on an existing selection removes it
+            // later we will give a list of options on the right
             
-            var prev_selection = selections[o.id];
+            if (!e) e = window.event;
+            
+            var o = e.target;
+            if (!o) {
+                alert("no target on event ?" + e);
+                return;
+            }
+            
+            var prev_selection = o.flinkt_item;
             if (!prev_selection) {
-                console.log("no selection for " + o.id);
+                console.log("no selection for " + flinkt_item_id);
                 console.log(o);
             }
             else {
                 remove_flinkt_item(prev_selection);
                 delete selections[prev_selection.id];
             }
+            
+            e.preventDefault();
         }
             
         function statement_select(obj, e) {
+            // selecting a region when the pen is on creates a "selection"
+
             if (true) {
                 if (obj == null) {
                     alert('selecting null object?' + e);
@@ -286,6 +296,10 @@ def selector_js(request):
             var spans = [];
             for (var n=0; n<elements.length; n++) {
                 var e = elements[n];
+                if (e.nodeName != '#text') {
+                    console.log(e.nodeName + ' skipped');
+                    continue;
+                }
 
                 var span = document.createElement("span");
                 span.style.backgroundColor = color;
@@ -293,12 +307,13 @@ def selector_js(request):
                 span.id = id + '.' + n;
 
                 var range = irange.cloneRange();
-                range.setStart(e, 0);
-                range.setEnd(e, (e.length || e.childNodes.length));
+                range.setStart(e, (e == irange.startContainer ? irange.startOffset : 0));
+                range.setEnd(e, (e == irange.endContainer ? irange.endOffset : (e.length || e.childNodes.length)));
 
                 range.surroundContents(span);
 
                 span.addEventListener('click',on_selection_click,true);
+                span.flinkt_item = item;
 
                 spans.push(span);
             }
@@ -308,23 +323,17 @@ def selector_js(request):
             return item;
         };
 
-        function resolve_range_elements(r) {
-            // todo: make this use a treeWalker
-            var e = [r.startContainer];
-            if (r.endContainer != r.startContainer) {
-                e.push(r.endContainer)
-            }
-            return e;
-        }
-
         function remove_flinkt_item(item) {
-            var span = item.span;
-            if (!span) return;
-            parent = span.parentNode;
-            while (span.firstChild) {
-                parent.insertBefore(span.firstChild, span);
+            var spans = item.spans;
+            if (!spans) return;
+            for (var span_n in spans) {
+                var span = spans[span_n];
+                var parent = span.parentNode;
+                while (span.firstChild) {
+                    parent.insertBefore(span.firstChild, span);
+                }
+                parent.removeChild(span);
             }
-            parent.removeChild(span);
             for (var key in item) {
                 delete item[key]; 
             }
@@ -345,6 +354,50 @@ def selector_js(request):
             }
             alert("How did I get here?")
         }
+       
+        // modified from stackoverflow question 1482832 solution 1 (Tim Down) 
+        function resolve_range_elements(range) {
+            var elmlist, treeWalker, containerElement;
+            containerElement = range.commonAncestorContainer;
+            if (containerElement.nodeType != 1) {
+                containerElement = containerElement.parentNode;
+            }
+
+            treeWalker = document.createTreeWalker(
+                containerElement,
+                NodeFilter.SHOW_TEXT,
+                function(node) { return rangeIntersectsNode(range, node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; },
+                false
+            );
+
+            elmlist = [treeWalker.currentNode];
+            while (treeWalker.nextNode()) {
+                elmlist.push(treeWalker.currentNode);
+            }
+
+            console.log(elmlist);
+            return elmlist;
+        }
+
+        // taken verbatim from stackoverflow question 1482832 solution 1 (Tim Down) 
+        function rangeIntersectsNode(range, node) {
+            console.log("checking " + node.toString());
+            var nodeRange;
+            if (range.intersectsNode) {
+                return range.intersectsNode(node);
+            } else {
+                nodeRange = node.ownerDocument.createRange();
+                try {
+                    nodeRange.selectNode(node);
+                } catch (e) {
+                    nodeRange.selectNodeContents(node);
+                }
+
+                return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
+                    range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
+            }
+        }
+
 
         pen_on()
     '''

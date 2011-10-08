@@ -12,27 +12,10 @@ for (n in scripts) {
     }
 }
 
-var p = document.createElement('div');
-var s =  "<div style='position:fixed; top:32px; right:32px; z-index:999997;' id='flinkt.org pen off'>\n";
-s += "   <img onclick='pen_on()' src='http://www.flinkt.org/images/pen32right.jpg'>\n";
-s += "</div>";
-s += "<div style='position:fixed; top:32px; right:32px; z-index:999998;' id='flinkt.org pen on'>\n";
-s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.jpg'>\n";
-s += "</div>\n";
-s += "<div style='position:fixed; top:32px; right:12px; z-index:999999;'>\n";
-s += "   <img onclick='close_click()' src='http://www.flinkt.org/images/x12.jpg'>\n";
-s += "</div>\n";
-s += "<div style='position:fixed; top:48px; right:8px; z-index:999999;'>\n";
-s += "<img onclick='site_click()' src='http://www.flinkt.org/images/right20.jpg'>\n";
-s += "</div>";
-p.innerHTML = s; 
-p.setAttribute('id','flinkt.org app')
-try { document.body.appendChild(p); } catch(e) { alert(e) };
-
 var bookmarklet     = document.getElementById("flinkt.org bookmarklet");
-var bookmarklet_id  = bookmarklet.flinkt_init_bookmarklet_id;
+var bookmarklet_id  = bookmarklet.flinkt_init_bookmarklet_id;   // this identifies the browser instance
 var session_id      = bookmarklet.flinkt_init_session_id;       // todo: ensure the diff vs Date() is reasonable
-var user_id         = bookmarklet_id;                           // todo: get this from a cookie
+var user_id         = bookmarklet_id;                           // todo: get a real user id from a cookie set the first time the app is used
 
 if (!bookmarklet_id) {
     alert("Your testing bookmarklet is out of date!\nPlease reinstall it from www.flinkt.org/demo!");
@@ -41,6 +24,36 @@ if (!bookmarklet_id) {
 }
 
 var pen_status = 'off';
+var select_count = 0;
+var selections = {};
+
+start_app();
+
+////////////////////////////
+
+function start_app() {
+    // the div at the top has elements which are internally at a fixed position
+    // they should probably be relative to their parent div, which should itself be fixed
+    var p = document.createElement('div');
+    var s =  "<div style='position:fixed; top:32px; right:32px; z-index:999997;' id='flinkt.org pen off'>\n";
+    s += "   <img onclick='pen_on()' src='http://www.flinkt.org/images/pen32right.jpg'>\n";
+    s += "</div>";
+    s += "<div style='position:fixed; top:32px; right:32px; z-index:999998;' id='flinkt.org pen on'>\n";
+    s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.jpg'>\n";
+    s += "</div>\n";
+    s += "<div style='position:fixed; top:32px; right:12px; z-index:999999;'>\n";
+    s += "   <img onclick='close_click()' src='http://www.flinkt.org/images/x12.jpg'>\n";
+    s += "</div>\n";
+    s += "<div style='position:fixed; top:48px; right:8px; z-index:999999;'>\n";
+    s += "   <img onclick='site_click()' src='http://www.flinkt.org/images/right20.jpg'>\n";
+    s += "</div>";
+    p.innerHTML = s; 
+    p.setAttribute('id','flinkt.org app')
+    try { document.body.appendChild(p); } catch(e) { alert(e) };
+
+    // start with the pen on by default
+    pen_on();
+}
 
 function pen_on() {
     document.getElementById('flinkt.org pen on').style.zIndex = 999998;
@@ -131,8 +144,6 @@ function on_touchend() {
     }
 }
 
-var select_count = 0;
-var selections = {};
 
 function on_selection_click(e) {
     // currently, clicking on an existing selection removes it
@@ -218,7 +229,6 @@ function statement_select(obj, e) {
         }
         
         select_count++;
-        
         var selection_item = add_flinkt_item('selection', selection_range, 'yellow', .9, 'flinkt.org selection ' + select_count);
         
         //var statement_range = selection2statement(selection_range);
@@ -363,6 +373,4 @@ function rangeIntersectsNode(range, node) {
     }
 }
 
-
-pen_on()
 

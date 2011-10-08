@@ -15,7 +15,7 @@ def main(request):
     r = http.HttpResponse()
     r.write('<h1>flinkt</h1>')
     r.write('<ol>')
-    r.write('<li><a href="' + bookmarklet_text() + '">flinkt</a>   <==========   drag this link onto your bookmarks bar!</li>')
+    r.write('<li><a href="' + bookmarklet_text('') + '">flinkt</a>   <==========   drag this link onto your bookmarks bar!</li>')
     r.write('<li>go to any web site (or stay right here to try it)</li>')
     r.write('<li>click the bookmark to turn on the flinkt pen ...it appears on the right</li>')
     r.write('<li>click on any statement to highlight it</li>')
@@ -26,389 +26,25 @@ def main(request):
     r.write('</ol>')
     return r
 
-def bookmarklet_text():
-    flinkt_id = uuid1()
-    flinkt_id_str = str(flinkt_id)
+def bookmarklet_text(flinkt_id_str):
+    if (flinkt_id_str == ''):
+        flinkt_id = uuid1()
+        flinkt_id_str = str(flinkt_id)
+
     b = "javascript:(function(){"
     b += "  if(document.getElementById('flinkt.org bookmarklet') == null) {"
     b += "    s=document.createElement('script');"
+    b += "    s.flinkt_init_bookmarklet_id = '" + flinkt_id_str + "';"
+    b += "    s.flinkt_init_session_id = Date();" 
     b += "    s.setAttribute('type','text/javascript');"
     b += "    s.setAttribute('charset','UTF-8');"
-    b += "    s.setAttribute('src','http://flinkt.org/js/selector.js');"
+    b += "    s.setAttribute('src','http://www.flinkt.org/static/js/selector.js?id=" + flinkt_id_str + "&date=' + s.flinkt_init_session_id);"
     b += "    s.setAttribute('id','flinkt.org bookmarklet');"
-    b += "    s.flinkt_id = '" + flinkt_id_str + "';"
     b += "    document.body.appendChild(s);"
     b += "  }"
     b += "})();"
     return b
 
-# ^js/selector.js'
-# TODO: this is only in django for composability
-# ...we want to just have a static js file for the real site
-def selector_js(request):
-    r = http.HttpResponse('',mimetype='text/javascript')
-
-    #r.write("alert('injecting pen')\n")
-    r.write("p = document.createElement('div');\n")
-    r.write("p.setAttribute('id','flinkt.org app')\n")
-    #r.write("p.setAttribute('style','position:fixed; right:32px; top:32px;');\n")
-    r.write("p.innerHTML = '" + pen_div_html() + "';\n")
-    r.write("try { document.body.appendChild(p); } catch(e) { alert(e) };\n")
-
-
-    s = '''
-
-        var pen_status = 'off'
-
-        var scripts = ['2.3.0-crypto-sha1.js'];
-        for (n in scripts) {
-            var name = scripts[n];
-            if (! document.getElementById('flinkt.org ' + name)) {
-                s=document.createElement('script');
-                s.setAttribute('type','text/javascript');
-                s.setAttribute('charset','UTF-8');
-                s.setAttribute('src','http://flinkt.org/static/js/' + name);
-                s.setAttribute('id','flinkt.org ' + name);
-                document.body.appendChild(s);
-            }
-        }
-
-        function pen_on() {
-            document.getElementById('flinkt.org pen on').style.zIndex = 999998;
-            document.getElementById('flinkt.org pen off').style.zIndex = 999996;
-            //document.addEventListener('click',on_click, true);
-            document.addEventListener('mousedown',on_mousedown, true);
-            document.addEventListener('mousemove',on_mousemove, true);
-            document.addEventListener('mouseup',on_mouseup, true);
-            document.addEventListener('touchend',on_touchend, true);
-            document.addEventListener('touchmove',on_touchmove, true);
-            pen_status = 'on';
-        }
-
-        function pen_off() {
-            document.getElementById('flinkt.org pen off').style.zIndex = 99998;
-            document.getElementById('flinkt.org pen on').style.zIndex = 99997;
-            //document.removeEventListener('click',on_click, true);
-            document.removeEventListener('mousedown',on_mousedown, true);
-            document.removeEventListener('mousemove',on_mousemove, true);
-            document.removeEventListener('mouseup',on_mouseup, true);
-            document.removeEventListener('touchend',on_touchend, true);
-            document.removeEventListener('touchmove',on_touchmove, true);
-            pen_status = 'off';
-        }
-
-        function close_click() {
-            //document.removeEventListener('click',on_click, true);
-            document.removeEventListener('mousedown',on_mousedown, true);
-            document.removeEventListener('mousemove',on_mousemove, true);
-            document.removeEventListener('mouseup',on_mouseup, true);
-            document.removeEventListener('touchend',on_touchend, true);
-            document.removeEventListener('touchmove',on_touchmove, true);
-            var a = document.getElementById('flinkt.org app');
-            var b = document.getElementById('flinkt.org bookmarklet');
-            if (a != null) { a.parentNode.removeChild(a); }
-            if (b != null) { b.parentNode.removeChild(b); }
-        }
-
-        function site_click() {
-            alert('site click');
-        }
-
-        var moving = false;
-
-        function on_touchmove() {
-            moving = true;
-        }
-
-        function on_mousedown() {
-            //console.log("down");
-        }
-
-        function on_mousemove(e) {
-            //console.log("move");
-            moving = true;
-        }
-
-        function on_mouseup(e) {
-            //console.log("up with moving set to " + moving.toString());
-            if (!e) e = window.event;
-            var o = e.target;
-            if (!o) o = e.target;
-            e.preventDefault();
-            statement_select(o, e);
-        }
-
-        function on_touchend() {
-            if (event.touches != null && event.touches.length != 0) {
-                // if fingers are down, ignore this event
-                // we only act upon touchend
-                return;
-            }
-            if (moving) {
-                moving = false;
-                return;
-            }
-            var target = (event.changedTouches.length ? event.changedTouches[0].target : null);
-            if (target == null) {
-                alert('Error getting the touch target, counts are:' + event.touches.length + ' ' + event.changedTouches.length + ' ' + event.targetTouches.length);
-                return;
-            }
-            
-            if (target.innertHTML == null) {
-                statement_select(target.parentElement, event);
-            }
-            else {
-                statement_select(target, event);
-            }
-        }
-
-        var select_count = 0;
-        var selections = {};
-        
-        function on_selection_click(e) {
-            // currently, clicking on an existing selection removes it
-            // later we will give a list of options on the right
-           
-            if (pen_status == 'off') {
-                return;
-            }
-
-            if (!e) e = window.event;
-            
-            var o = e.target;
-            if (!o) {
-                alert("no target on event ?" + e);
-                return;
-            }
-            
-            var prev_selection = o.flinkt_item;
-            if (!prev_selection) {
-                console.log("no selection for " + flinkt_item_id);
-                console.log(o);
-            }
-            else {
-                remove_flinkt_item(prev_selection);
-                delete selections[prev_selection.id];
-            }
-            
-            e.preventDefault();
-        }
-            
-        function statement_select(obj, e) {
-            // selecting a region when the pen is on creates a "selection"
-
-            if (true) {
-                if (obj == null) {
-                    alert('selecting null object?' + e);
-                    return;
-                }
-                if (obj.parentElement && obj.parentElement.id == 'flinkt.org app') {
-                    // ignore this app's control set
-                    alert("app");
-                    return;
-                }
-                if (pen_status != 'on') {
-                    alert('the selection event occurred with the pen off?');
-                    return;
-                }
-                
-                var prev_statement = selections[obj.id];
-                if (prev_statement && prev_statement != null) {
-                    return;
-                }
-
-                //e.cancelBubble = true;  //ie
-                //e.stopPropagation();    //w3c
-                //e.preventDefault();    //w3c
-                
-                if (obj.tagName == 'IMG') {
-                    // can't select images
-                    // return;
-                }
-
-                var selection = window.getSelection();
-                var selection_range;
-                if (!selection) {
-                    // old IE
-                    selection_range = document.selection.createRange();
-                }
-                else {
-                    // not old IE
-                    if (!selection.getRangeAt) {
-                        // old safari
-                        selection_range = document.createRange();
-                        selection_range.setStart(selection.anchorNode,selection.anchorOffset);
-                        selection_range.setEnd(selection.focusNode,selection.focusOffset);
-                    }
-                    else {
-                        // everything else
-                        if (selection.rangeCount == 0) {
-                            // touch ...but on the iphone only the first touch hits here 
-                            selection_range = document.createRange();
-                            selection.addRange(selection_range);
-                            selection_range.setStart(obj,0);
-                            selection_range.setEnd(obj,0);
-                        }
-                        else {
-                            // default mouse interface or touch on 2nd+ hit
-                            selection_range = selection.getRangeAt(0);
-                        }
-                    }
-                }
-                
-                select_count++;
-                
-                var selection_item = add_flinkt_item('selection', selection_range, 'yellow', .9, 'flinkt.org selection ' + select_count);
-                
-                //var statement_range = selection2statement(selection_range);
-                //var statement_item = add_flinkt_item('statement', statement_range, '#FFFFDD', .1, 'flinkt.org statement ' + select_count);
-                //selection_item.parent = statement_item;
-
-                selections[selection_item.id] = selection_item;
-                document.flinkt_selections = selections;
-            }
-
-            //catch(e) { alert("error capturing selection: " + e); }
-            return false;
-        }
-
-        function add_flinkt_item(itype, irange, color, opacity, id) {
-            // one item comes from a single range, but will contain multiple spans to preserve document shape
-            var text = irange.toString();
-            var item = {
-                id: id,
-                itype: itype,
-                color: color,
-                opacity: opacity,
-
-                text: text,
-                sha1: Crypto.SHA1("blob " + text.length + "\0" + text), //git std
-                
-                url: document.URL,
-                last_modified: document.lastModified,
-
-                // capture the range data for reconstruction
-                startContainer_dompath: to_path(irange.startContainer),
-                endContainer_dompath: to_path(irange.endContainer),
-                startOffset: irange.startOffset,
-                endOffset: irange.endOffset,
-            
-            };
-
-            // wrap each element in the range in a highlighted span
-            var elements = resolve_range_elements(irange);
-            var spans = [];
-            for (var n=0; n<elements.length; n++) {
-                var e = elements[n];
-                if (e.nodeName != '#text') {
-                    console.log(e.nodeName + ' skipped');
-                    continue;
-                }
-
-                var span = document.createElement("span");
-                span.style.backgroundColor = color;
-                span.style.backgroundColor.opacity = opacity;
-                span.id = id + '.' + n;
-
-                var range = irange.cloneRange();
-                range.setStart(e, (e == irange.startContainer ? irange.startOffset : 0));
-                range.setEnd(e, (e == irange.endContainer ? irange.endOffset : (e.length || e.childNodes.length)));
-
-                range.surroundContents(span);
-
-                span.addEventListener('click',on_selection_click,true);
-                span.flinkt_item = item;
-
-                spans.push(span);
-            }
-
-            item.spans = spans;
-            
-            return item;
-        };
-
-        function remove_flinkt_item(item) {
-            var spans = item.spans;
-            if (!spans) return;
-            for (var span_n in spans) {
-                var span = spans[span_n];
-                var parent = span.parentNode;
-                while (span.firstChild) {
-                    parent.insertBefore(span.firstChild, span);
-                }
-                parent.removeChild(span);
-            }
-            for (var key in item) {
-                delete item[key]; 
-            }
-        }
-
-        function to_path (container) {
-            if (container == document) {
-                return "document";
-            }
-            var parent_node = container.parentNode;
-            var child_nodes = parent_node.childNodes;
-            var parent_path = to_path(parent_node);
-            for (var n = 0; n < child_nodes.length; n++) {
-                if (child_nodes[n] == container) {
-                    var path = parent_path + ".childNodes[" + n + "]";
-                    return path;
-                }
-            }
-            alert("How did I get here?")
-        }
-       
-        // modified from stackoverflow question 1482832 solution 1 (Tim Down) 
-        function resolve_range_elements(range) {
-            var elmlist, treeWalker, containerElement;
-            containerElement = range.commonAncestorContainer;
-            if (containerElement.nodeType != 1) {
-                containerElement = containerElement.parentNode;
-            }
-
-            treeWalker = document.createTreeWalker(
-                containerElement,
-                NodeFilter.SHOW_TEXT,
-                function(node) { return rangeIntersectsNode(range, node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; },
-                false
-            );
-
-            elmlist = [treeWalker.currentNode];
-            while (treeWalker.nextNode()) {
-                elmlist.push(treeWalker.currentNode);
-            }
-
-            console.log(elmlist);
-            return elmlist;
-        }
-
-        // taken verbatim from stackoverflow question 1482832 solution 1 (Tim Down) 
-        function rangeIntersectsNode(range, node) {
-            console.log("checking " + node.toString());
-            var nodeRange;
-            if (range.intersectsNode) {
-                return range.intersectsNode(node);
-            } else {
-                nodeRange = node.ownerDocument.createRange();
-                try {
-                    nodeRange.selectNode(node);
-                } catch (e) {
-                    nodeRange.selectNodeContents(node);
-                }
-
-                return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
-                    range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
-            }
-        }
-
-
-        pen_on()
-    '''
-
-    r.write(s);
-    #r.write("alert('pen injected')\n")
-    return r
 
 def pen_div_html():
     p =  '    <div style="position:fixed; top:32px; right:32px; z-index:999997;" id="flinkt.org pen off">'
@@ -505,4 +141,9 @@ def faq(request):
         '''
     r = http.HttpResponse(p)
     return r
+
+# the old version made the js dynamically, just give an error if we go to this URL
+def selector_js(request):
+    return http.HttpResponse('alert("Your test bookmarklet needs to be replaced!\\n\\nPlease go to flinkt.org/demo to get the latest one.");')
+    #return http.HttpResponse('alert("Your test bookmarklet needs to be replaced!\\n\\nPlease go to flinkt.org/demo to get the latest one."); function removeme() { document.documentElement.removeChild(document.getElementById("flinkt.org bookmarklet")); }; setTimeout(removeme,3000); ')
 

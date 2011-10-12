@@ -8,7 +8,7 @@ urlpatterns = patterns('',
     # Example:
     (r'^$',                         'factmap.views.under_construction'),
     (r'^demo$',                     'factmap.views.main'),
-    (r'^testo$',                    'factmap.views.testo'),
+    (r'^jsonobj$',                    'factmap.views.jsonobj'),
     (r'^faq$',                      'factmap.views.faq'),
     (r'^js/selector.js',            'factmap.views.selector_js'),
     (r'^static/(?P<path>.*)$',      'django.views.static.serve',

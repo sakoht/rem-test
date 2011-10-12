@@ -1,14 +1,25 @@
 
-var scripts = ['2.3.0-crypto-sha1.js'];
+var site = 'www.flinkt.org';
+
+function add_js(p,n) {
+    if (!n) {
+        n = 'flinkt.org ' + p;
+    }
+    s=document.createElement('script');
+    s.setAttribute('type','text/javascript');
+    s.setAttribute('charset','UTF-8');
+    s.setAttribute('src','http://' + site + '/' + p);
+    s.setAttribute('id',n);
+    document.body.appendChild(s);
+    return(s);
+}
+
+//var scripts = ['/static/js/2.3.0-crypto-sha1.js','/_utils/script/jquery.js','/_utils/script/jquery.couch.js'];
+var scripts = ['/static/js/2.3.0-crypto-sha1.js','/_utils/script/jquery.js', '/static/js/jquery.ba-postmessage.js'];
 for (n in scripts) {
-    var name = scripts[n];
-    if (! document.getElementById('flinkt.org ' + name)) {
-        s=document.createElement('script');
-        s.setAttribute('type','text/javascript');
-        s.setAttribute('charset','UTF-8');
-        s.setAttribute('src','http://flinkt.org/static/js/' + name);
-        s.setAttribute('id','flinkt.org ' + name);
-        document.body.appendChild(s);
+    var path = scripts[n];
+    if (! document.getElementById('flinkt.org ' + path)) {
+        add_js(path);
     }
 }
 
@@ -17,17 +28,16 @@ var bookmarklet_id  = bookmarklet.flinkt_init_bookmarklet_id;   // this identifi
 var session_id      = bookmarklet.flinkt_init_session_id;       // todo: ensure the diff vs Date() is reasonable
 var user_id         = bookmarklet_id;                           // todo: get a real user id from a cookie set the first time the app is used
 
-if (!bookmarklet_id) {
+if (bookmarklet_id) {
+    start_app();
+}
+else {
     alert("Your testing bookmarklet is out of date!\nPlease reinstall it from www.flinkt.org/demo!");
-    close_click();
-    return;
 }
 
-var pen_status = 'off';
+var pen_status;
 var select_count = 0;
 var selections = {};
-
-start_app();
 
 ////////////////////////////
 
@@ -42,7 +52,7 @@ function start_app() {
     s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.jpg'>\n";
     s += "</div>\n";
     s += "<div style='position:fixed; top:32px; right:12px; z-index:999999;'>\n";
-    s += "   <img onclick='close_click()' src='http://www.flinkt.org/images/x12.jpg'>\n";
+    s += "   <img onclick='stop_app()' src='http://www.flinkt.org/images/x12.jpg'>\n";
     s += "</div>\n";
     s += "<div style='position:fixed; top:48px; right:8px; z-index:999999;'>\n";
     s += "   <img onclick='site_click()' src='http://www.flinkt.org/images/right20.jpg'>\n";
@@ -53,6 +63,15 @@ function start_app() {
 
     // start with the pen on by default
     pen_on();
+}
+
+function stop_app() {
+    // turning this off before stopping unhooks all of the event listeners
+    pen_off();
+    var a = document.getElementById('flinkt.org app');
+    var b = document.getElementById('flinkt.org bookmarklet');
+    if (a != null) { a.parentNode.removeChild(a); }
+    if (b != null) { b.parentNode.removeChild(b); }
 }
 
 function pen_on() {
@@ -71,25 +90,12 @@ function pen_off() {
     document.getElementById('flinkt.org pen off').style.zIndex = 99998;
     document.getElementById('flinkt.org pen on').style.zIndex = 99997;
     //document.removeEventListener('click',on_click, true);
-    ocument.removeEventListener('mousedown',on_mousedown, true);
-    document.removeEventListener('mousemove',on_mousemove, true);
-    document.removeEventListener('mouseup',on_mouseup, true);
-    document.removeEventListener('touchend',on_touchend, true);
-    document.removeEventListener('touchmove',on_touchmove, true);
-    pen_status = 'off';
-}
-
-function close_click() {
-    //document.removeEventListener('click',on_click, true);
     document.removeEventListener('mousedown',on_mousedown, true);
     document.removeEventListener('mousemove',on_mousemove, true);
     document.removeEventListener('mouseup',on_mouseup, true);
     document.removeEventListener('touchend',on_touchend, true);
     document.removeEventListener('touchmove',on_touchmove, true);
-    var a = document.getElementById('flinkt.org app');
-    var b = document.getElementById('flinkt.org bookmarklet');
-    if (a != null) { a.parentNode.removeChild(a); }
-    if (b != null) { b.parentNode.removeChild(b); }
+    pen_status = 'off';
 }
 
 function site_click() {
@@ -102,13 +108,12 @@ function on_touchmove() {
     moving = true;
 }
 
-function on_mousedown() {
-    //console.log("down");
+function on_mousemove(e) {
+    moving = true;
 }
 
-function on_mousemove(e) {
-    //console.log("move");
-    moving = true;
+function on_mousedown() {
+    //console.log("down");
 }
 
 function on_mouseup(e) {
@@ -272,7 +277,7 @@ function add_flinkt_item(itype, irange, color, opacity, id) {
     for (var n=0; n<elements.length; n++) {
         var e = elements[n];
         if (e.nodeName != '#text') {
-            console.log(e.nodeName + ' skipped');
+            //console.log(e.nodeName + ' skipped');
             continue;
         }
 
@@ -332,31 +337,28 @@ function to_path (container) {
 
 // modified from stackoverflow question 1482832 solution 1 (Tim Down) 
 function resolve_range_elements(range) {
-    var elmlist, treeWalker, containerElement;
-    containerElement = range.commonAncestorContainer;
+    var containerElement = range.commonAncestorContainer;
     if (containerElement.nodeType != 1) {
         containerElement = containerElement.parentNode;
     }
 
-    treeWalker = document.createTreeWalker(
+    var treeWalker = document.createTreeWalker(
         containerElement,
         NodeFilter.SHOW_TEXT,
         function(node) { return rangeIntersectsNode(range, node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; },
         false
     );
 
-    elmlist = [treeWalker.currentNode];
+    var elmlist = [treeWalker.currentNode];
     while (treeWalker.nextNode()) {
         elmlist.push(treeWalker.currentNode);
     }
-
-    console.log(elmlist);
     return elmlist;
 }
 
 // taken verbatim from stackoverflow question 1482832 solution 1 (Tim Down) 
 function rangeIntersectsNode(range, node) {
-    console.log("checking " + node.toString());
+    //console.log("checking " + node.toString());
     var nodeRange;
     if (range.intersectsNode) {
         return range.intersectsNode(node);

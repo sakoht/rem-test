@@ -23,9 +23,25 @@
 	Redirect / http://www.flinkt.org/
 </VirtualHost>
 
+LoadModule  proxy_module         /usr/lib/apache2/modules/mod_proxy.so
+LoadModule  proxy_http_module    /usr/lib/apache2/modules/mod_proxy_http.so
+LoadModule  headers_module       /usr/lib/apache2/modules/mod_headers.so
+LoadModule  deflate_module       /usr/lib/apache2/modules/mod_deflate.so
+LoadFile    /usr/lib/libxml2.so
+
 <VirtualHost *:80>
 	ServerName www.flinkt.org
 	ServerAdmin scottsmith1@gmail.com
+    
+    ProxyRequests Off
+    <Proxy *>
+        Order deny,allow
+        Allow from all
+    </Proxy>
+    ProxyPass /flinktdb http://localhost:5983/flinktdb
+    ProxyPassReverse /flinktdb http://localhost:5983/flinktdb
+    ProxyPass /_utils/script http://localhost:5983/_utils/script
+    ProxyPassReverse /_utils/script http://localhost:5983/_utils/script
 
 	<Location "/">
 	    SetHandler python-program

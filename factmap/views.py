@@ -2,6 +2,8 @@ from django import http
 from django.http import HttpResponse
 from django.utils.html import escape
 import pprint
+import datetime
+import time
 from hashlib import sha1
 from uuid import uuid1
 
@@ -13,18 +15,28 @@ def under_construction(request):
 # ^demo$
 def main(request):
     r = http.HttpResponse()
+    #r.write('<head><script src="/_utils/script/jquery.couch.js"></script><script src="/_utils/script/jquery.js"></script></head><body>');
+    #r.write('<head><script src="/static/js//jq.js"></script></head><body>');
     r.write('<h1>flinkt</h1>')
     r.write('<ol>')
     r.write('<li><a href="' + bookmarklet_text('') + '">flinkt</a>   <==========   drag this link onto your bookmarks bar!</li>')
     r.write('<li>go to any web site (or stay right here to try it)</li>')
     r.write('<li>click the bookmark to turn on the flinkt pen ...it appears on the right</li>')
-    r.write('<li>click on any statement to highlight it</li>')
-    r.write('<li>hover over the highlighted statement to see options like email, digg, facebook, google+, and twitter</li>')
-    r.write('<li>turn the pen on and off whenever you want by clicking on the image on the right</li>')
-    r.write('<li>when you come back to the site, turn on the pen again to see your previous highlights</li>')
-    r.write('<li>click on the green arrow to see all of your highlights, see a capture of the page, and send them around</li>')
+    r.write('<li>select any statement to highlight it</li>')
+    r.write('<li>click any highlighted statement to see options like email, digg, facebook, google+, and twitter (NOT IMPLEMENTED)</li>')
+    r.write('<li>turn the pen on and off whenever you want by clicking on the image on the right (NOT IMPEMENTED)</li>')
+    r.write('<li>when you come back to the site, turn on the pen again to see your previous highlights (NOT IMPLEMENTED)</li>')
+    r.write('<li>click on the green arrow to see all of your highlights, see a capture of the page, and send them around (NOT IMPLEMENTED)</li>')
     r.write('</ol>')
     return r
+
+def jsonobj(request):
+    jsid = request.REQUEST['jsid'];
+    j = 'document.response.push({ "testid": "' + str(uuid1()) + '", "date": "' + str(datetime.datetime.now()) + '" });'
+    j += "\nvar js = document.getElementById('" + jsid + "'); js.parentElement.removeChild(js);"
+    r = http.HttpResponse(j)
+    time.sleep(10);
+    return r    
 
 def bookmarklet_text(flinkt_id_str):
     if (flinkt_id_str == ''):
@@ -59,9 +71,9 @@ def pen_div_html():
     p += '    <div style="position:fixed; top:48px; right:8px; z-index:999999;">'
     p += '      <img onclick="site_click()" src="http://www.flinkt.org/images/right20.jpg">'
     p += '    </div>'
-    return p
-    p += '    <div style="position:fixed; top:64px; right:32px; width:30%; height:90%; z-index:999999; opacity:.70" id="flinkt.org status">'
+    p += '    <div style="position:fixed; top:64px; right:32px; width:30%; height:90%; z-index:999999; opacity:.70" id="flinkt.org status">HI'
     p += '    </div>'
+    return p
 
 
 def faq(request):

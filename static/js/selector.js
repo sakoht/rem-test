@@ -1,6 +1,23 @@
 
 var site = 'www.flinkt.org';
 
+function get(id) {
+
+}
+
+function put(id,obj) {
+    var f = document.createElement("form");
+    f.action = "http://www.flinkt.org/flinktdb/" + id;
+    f.method = 'PUT';
+    for (k in obj) {
+        var i = document.createElement("input");
+        i.name = k;
+        i.value = obj[k]
+        f.appendChild(i)
+    }
+    f.submit()
+}
+
 function add_js(p,n) {
     if (!n) {
         n = 'flinkt.org ' + p;

@@ -4,6 +4,7 @@ from django.utils.html import escape
 import pprint
 import datetime
 import time
+import re
 from hashlib import sha1
 from uuid import uuid1
 
@@ -30,12 +31,31 @@ def main(request):
     r.write('</ol>')
     return r
 
+p = re.compile('^/noajax/([^/]+)/(.*)')
+def noajax(request):
+    r = http.HttpResponse()
+    m = match(request.path)
+    if (not m):
+        r.write("alert('bad path: " + request.path  + "')")
+    else:
+        jsid = m.group(1)
+        path = m.group(2)
+        j = 'document.response.push({ "path": "' + path + '", "date": "' + str(datetime.datetime.now()) + '" });'
+        j += "\nvar js = document.getElementById('" + jsid + "'); js.parentElement.removeChild(js);"
+        time.sleep(10);
+        r.write(j)
+    return r    
+
+
 def jsonobj(request):
-    jsid = request.REQUEST['jsid'];
-    j = 'document.response.push({ "testid": "' + str(uuid1()) + '", "date": "' + str(datetime.datetime.now()) + '" });'
-    j += "\nvar js = document.getElementById('" + jsid + "'); js.parentElement.removeChild(js);"
-    r = http.HttpResponse(j)
-    time.sleep(10);
+    #jsid = request.REQUEST['jsid'];
+
+    j = '{ testid: "' + str(uuid1()) + '", date: "' + str(datetime.datetime.now()) + '" }'
+    j = 'var d = { foo: 111, bar: 222 }'
+    #j = 'document.response.push({ "testid": "' + str(uuid1()) + '", "date": "' + str(datetime.datetime.now()) + '" });'
+    #j += "\nvar js = document.getElementById('" + jsid + "'); js.parentElement.removeChild(js);"
+    r = http.HttpResponse(j, mimetype='text/javascript')
+    #time.sleep(10);
     return r    
 
 def bookmarklet_text(flinkt_id_str):

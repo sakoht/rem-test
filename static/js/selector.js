@@ -8,7 +8,7 @@ function get(id) {
 function put(id,obj) {
     var f = document.createElement("form");
     f.action = "http://www.flinkt.org/flinktdb/" + id;
-    f.method = 'PUT';
+    f.method = 'POST';
     for (k in obj) {
         var i = document.createElement("input");
         i.name = k;

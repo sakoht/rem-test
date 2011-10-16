@@ -51,13 +51,22 @@ LoadFile    /usr/lib/libxml2.so
     ProxyPass /images http://localhost:5983/flinktdb/_design/webclient/
     ProxyPassReverse /images http://localhost:5983/flinktdb/_design/webclient/
 	
-    <Location "/">
-	    SetHandler python-program
-	    PythonHandler django.core.handlers.modpython
-	    PythonDebug On
-	    PythonPath "['/var/www/www.flinkt.org/'] + sys.path "
-	    SetEnv DJANGO_SETTINGS_MODULE factmap.settings
-	</Location>
+    ProxyPass /demo http://localhost:5983/flinktdb/_design/webclient/_show/demo
+    ProxyPassReverse /demo http://localhost:5983/flinktdb/_design/webclient/_show/demo
+
+    ProxyPass /faq http://localhost:5983/flinktdb/_design/webclient/faq.html
+    ProxyPassReverse /faq http://localhost:5983/flinktdb/_design/webclient/faq.html
+
+    ProxyPass / http://localhost:5983/flinktdb/_design/webclient/index.html
+    ProxyPassReverse / http://localhost:5983/flinktdb/_design/webclient/index.html
+
+    #<Location "/">
+	#    SetHandler python-program
+	#    PythonHandler django.core.handlers.modpython
+	#    PythonDebug On
+	#    PythonPath "['/var/www/www.flinkt.org/'] + sys.path "
+	#    SetEnv DJANGO_SETTINGS_MODULE factmap.settings
+	#</Location>
 	
     #Alias /images "/var/www/www.flinkt.org/images"
     #<Location "/images">

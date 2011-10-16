@@ -48,7 +48,10 @@ LoadFile    /usr/lib/libxml2.so
     ProxyPass /static/js/ http://localhost:5983/flinktdb/_design/webclient/
     ProxyPassReverse /static/js/ http://localhost:5983/flinktdb/_design/webclient/
 
-	<Location "/">
+    ProxyPass /images http://localhost:5983/flinktdb/_design/webclient/
+    ProxyPassReverse /images http://localhost:5983/flinktdb/_design/webclient/
+	
+    <Location "/">
 	    SetHandler python-program
 	    PythonHandler django.core.handlers.modpython
 	    PythonDebug On
@@ -56,10 +59,10 @@ LoadFile    /usr/lib/libxml2.so
 	    SetEnv DJANGO_SETTINGS_MODULE factmap.settings
 	</Location>
 	
-    Alias /images "/var/www/www.flinkt.org/images"
-    <Location "/images">
-        SetHandler None
-    </Location>
+    #Alias /images "/var/www/www.flinkt.org/images"
+    #<Location "/images">
+    #    SetHandler None
+    #</Location>
     
     #Alias /static/js "/var/www/www.flinkt.org/static/js"
     #<Location "/static/js">

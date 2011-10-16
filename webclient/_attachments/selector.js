@@ -32,8 +32,8 @@ function add_js(p,n) {
 }
 
 //var scripts = ['/static/js/2.3.0-crypto-sha1.js','/_utils/script/jquery.js','/_utils/script/jquery.couch.js'];
-//var scripts = ['/static/js/2.3.0-crypto-sha1.js','/_utils/script/jquery.js', '/static/js/jquery.ba-postmessage.js'];
-var scripts = [];
+var scripts = ['/flinktdb/_design/webclient/2.3.0-crypto-sha1.js'];
+//,'/_utils/script/jquery.js', '/static/js/jquery.ba-postmessage.js'];
 for (var n in scripts) {
     var path = scripts[n];
     if (! document.getElementById('flinkt.org ' + path)) {

@@ -5,9 +5,9 @@ function get(id) {
 
 }
 
-function put(id,obj) {
+function put(obj, callback) {
     var f = document.createElement("form");
-    f.action = "http://www.flinkt.org/flinktdb/" + id;
+    f.action = 'http://' + site + '/flinktdb/_design/webclient/_update/put';
     f.method = 'POST';
     for (k in obj) {
         var i = document.createElement("input");
@@ -15,7 +15,7 @@ function put(id,obj) {
         i.value = obj[k]
         f.appendChild(i)
     }
-    f.submit()
+    f.submit();
 }
 
 function add_js(p,n) {
@@ -389,7 +389,7 @@ function rangeIntersectsNode(range, node) {
 
         return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
             range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
-    }
+   }
 }
 
 

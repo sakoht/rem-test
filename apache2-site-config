@@ -48,17 +48,20 @@ LoadFile    /usr/lib/libxml2.so
     ProxyPass /_uuids http://localhost:5983/_uuids
     ProxyPassReverse /_uuids http://localhost:5983/_uuids
     
-    ProxyPass /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
-    ProxyPassReverse /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
+    ProxyPass /js/ http://localhost:5983/flinktdb/_design/webclient/js/
+    ProxyPassReverse /js/ http://localhost:5983/flinktdb/_design/webclient/js/
 
     ProxyPass /images http://localhost:5983/flinktdb/_design/webclient/images/
     ProxyPassReverse /images http://localhost:5983/flinktdb/_design/webclient/images/
 	
-    ProxyPass /demo http://localhost:5983/flinktdb/_design/webclient/_show/demo
-    ProxyPassReverse /demo http://localhost:5983/flinktdb/_design/webclient/_show/demo
-
+    ProxyPass /demo http://localhost:5983/flinktdb/_design/webclient/demo.html
+    ProxyPassReverse /demo http://localhost:5983/flinktdb/_design/webclient/demo.html
+    
     ProxyPass /faq http://localhost:5983/flinktdb/_design/webclient/faq.html
     ProxyPassReverse /faq http://localhost:5983/flinktdb/_design/webclient/faq.html
+
+    ProxyPass /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
+    ProxyPassReverse /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
 
     ProxyPass / http://localhost:5983/flinktdb/_design/webclient/under-construction.html
     ProxyPassReverse / http://localhost:5983/flinktdb/_design/webclient/under-construction.html

@@ -31,7 +31,6 @@ function add_js(p,n) {
     return(s);
 }
 
-//var scripts = ['/static/js/2.3.0-crypto-sha1.js','/_utils/script/jquery.js','/_utils/script/jquery.couch.js'];
 var scripts = ['/flinktdb/_design/webclient/js/2.3.0-crypto-sha1.js'];
 //,'/_utils/script/jquery.js', '/static/js/jquery.ba-postmessage.js'];
 for (var n in scripts) {
@@ -41,16 +40,19 @@ for (var n in scripts) {
     }
 }
 
-var bookmarklet     = document.getElementById("flinkt.org bookmarklet");
-var bookmarklet_id  = bookmarklet.flinkt_init_bookmarklet_id;   // this identifies the browser instance
-var session_id      = bookmarklet.flinkt_init_session_id;       // todo: ensure the diff vs Date() is reasonable
-var user_id         = bookmarklet_id;                           // todo: get a real user id from a cookie set the first time the app is used
+var bookmarklet         = document.getElementById("flinkt.org bookmarklet");
+var bookmarklet_id      = bookmarklet.flinkt_init_bookmarklet_id;       // this identifies the browser instance
+var bookmarklet_version = bookmarklet.flinkt_init_bookmarklet_version;  // we rarely updated the bookmarklet, but when we do it's important
+var session_id          = bookmarklet.flinkt_init_session_id;           // todo: ensure the diff vs Date() is reasonable
+var user_id             = bookmarklet_id;                               // todo: get a real user id from a cookie set the first time the app is used
 
-if (bookmarklet_id) {
+if (bookmarklet_id && bookmarklet_version == 3) {
     start_app();
 }
 else {
     alert("Your testing bookmarklet is out of date!\nPlease reinstall it from www.flinkt.org/demo!");
+    var b = document.getElementById('flinkt.org bookmarklet');
+    if (b != null) { b.parentNode.removeChild(b); }
 }
 
 var pen_status;
@@ -90,6 +92,13 @@ function stop_app() {
     var b = document.getElementById('flinkt.org bookmarklet');
     if (a != null) { a.parentNode.removeChild(a); }
     if (b != null) { b.parentNode.removeChild(b); }
+}
+
+function flinkt_bookmarklet_click() {
+    // by default we just stop the app if they re-click the bookmarklet
+    // this may change over time, and we don't want to have to replace the bookmarklet, 
+    // so re-clicks are caught here
+    stop_app();
 }
 
 function pen_on() {

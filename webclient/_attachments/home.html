@@ -5,27 +5,7 @@
     <link rel="stylesheet" href="style/main.css" type="text/css">
     <script type="text/javascript" src="/_utils/script/jquery.js"></script>
     <script type="text/javascript" src="/_utils/script/jquery.couch.js"></script>
-    <script>
-        $(document).ready(
-            function() {
-                var flinkt_id_str = $.couch.newUUID();
-                var b = "javascript:(function(){";
-                b += "  if(document.getElementById('flinkt.org bookmarklet') == null) {";
-                b += "    s=document.createElement('script');";
-                b += "    s.flinkt_init_bookmarklet_id = '" + flinkt_id_str + "';";
-                b += "    s.flinkt_init_session_id = Date();";
-                b += "    s.setAttribute('type','text/javascript');";
-                b += "    s.setAttribute('charset','UTF-8');";
-                b += "    s.setAttribute('src','http://www.flinkt.org/static/js/selector.js?id=" + flinkt_id_str + "&date=' + s.flinkt_init_session_id);";
-                b += "    s.setAttribute('id','flinkt.org bookmarklet');";
-                b += "    document.body.appendChild(s);";
-                b += "  }";
-                b += "})();";
-                var a = document.getElementById('flinkt.org bookmarklet link');
-                a.href=b;
-            }
-        );
-    </script>
+    <script type="text/javascript" src="/flinktdb/_design/webclient/js/decorate-bookmarklet-link.js"></script>
   </head>
   <body>
     <div id="account"></div>

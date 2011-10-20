@@ -4,9 +4,12 @@ function (doc, req) {
         doc = { _id: req.id };
         msg = 'created';
     }   
+    else {
+        msg = 'updated';
+    }
     for (k in req.form) {
         doc[k] = req.form[k]
     }
-    return [doc, 'updated']
+    return [doc, msg]
 }
 

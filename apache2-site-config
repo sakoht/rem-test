@@ -45,11 +45,14 @@ LoadFile    /usr/lib/libxml2.so
     ProxyPass /_utils/script http://localhost:5983/_utils/script
     ProxyPassReverse /_utils/script http://localhost:5983/_utils/script
     
-    ProxyPass /static/js/ http://localhost:5983/flinktdb/_design/webclient/
-    ProxyPassReverse /static/js/ http://localhost:5983/flinktdb/_design/webclient/
+    ProxyPass /_uuids http://localhost:5983/_uuids
+    ProxyPassReverse /_uuids http://localhost:5983/_uuids
+    
+    ProxyPass /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
+    ProxyPassReverse /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
 
-    ProxyPass /images http://localhost:5983/flinktdb/_design/webclient/
-    ProxyPassReverse /images http://localhost:5983/flinktdb/_design/webclient/
+    ProxyPass /images http://localhost:5983/flinktdb/_design/webclient/images/
+    ProxyPassReverse /images http://localhost:5983/flinktdb/_design/webclient/images/
 	
     ProxyPass /demo http://localhost:5983/flinktdb/_design/webclient/_show/demo
     ProxyPassReverse /demo http://localhost:5983/flinktdb/_design/webclient/_show/demo
@@ -57,8 +60,8 @@ LoadFile    /usr/lib/libxml2.so
     ProxyPass /faq http://localhost:5983/flinktdb/_design/webclient/faq.html
     ProxyPassReverse /faq http://localhost:5983/flinktdb/_design/webclient/faq.html
 
-    ProxyPass / http://localhost:5983/flinktdb/_design/webclient/index.html
-    ProxyPassReverse / http://localhost:5983/flinktdb/_design/webclient/index.html
+    ProxyPass / http://localhost:5983/flinktdb/_design/webclient/under-construction.html
+    ProxyPassReverse / http://localhost:5983/flinktdb/_design/webclient/under-construction.html
 
     #<Location "/">
 	#    SetHandler python-program

@@ -10,6 +10,6 @@ function (doc, req) {
     for (k in req.form) {
         doc[k] = req.form[k]
     }
-    return [doc, msg]
+    return [doc, '<script src="/_utils/script/jquery.js"></script><script src="/js/jquery.ba-postmessage.js"></script><script>var p = $.postMessage("ok"); alert(p);</script>'];
 }
 

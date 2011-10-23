@@ -23,6 +23,10 @@ var item_count = 0;
 var items = {};
 var views = {};
 
+// for debugging
+document.flinkt_items = items;
+document.flinkt_views = views;
+
 ////////////////////////////
 
 function load_supporting_js(everything_loaded_callback) {
@@ -238,7 +242,6 @@ function on_selection_click(e) {
     }
     else {
         remove_flinkt_item(prev_selection);
-        delete items[prev_selection.id];
     }
     
     e.preventDefault();
@@ -300,9 +303,8 @@ function add_selection(obj, e) {
             }
         }
         
-        var selection_item = add_flinkt_item_from_range(selection_range, 'selection', 'yellow', .9);
+        add_flinkt_item_from_range(selection_range, 'selection', 'yellow', .9);
         
-        document.flinkt_items = items;
     }
 
     //catch(e) { alert("error capturing selection: " + e); }
@@ -335,6 +337,14 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
     
     };
 
+    show_flinkt_item(item,irange);
+
+    items[item.id] = item;
+    return item;
+};
+
+function show_flinkt_item(item, irange) {
+
     // wrap each element in the range in a highlighted span
     var elements = resolve_range_elements(irange);
     var spans = [];
@@ -346,9 +356,9 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
         }
 
         var span = document.createElement("span");
-        span.style.backgroundColor = color;
-        span.style.backgroundColor.opacity = opacity;
-        span.id = id + '.' + n;
+        span.style.backgroundColor = item.color;
+        span.style.backgroundColor.opacity = item.opacity;
+        span.id = item.id + '.' + n;
 
         var range = irange.cloneRange();
         range.setStart(e, (e == irange.startContainer ? irange.startOffset : 0));
@@ -362,26 +372,28 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
         spans.push(span);
     }
 
-    item.spans = spans;
-    items[item.id] = item;
-    
-    return item;
-};
+    views[item.id] = spans;
+    return spans;
+}
 
 function remove_flinkt_item(item) {
-    var spans = item.spans;
-    if (!spans) return;
-    for (var span_n in spans) {
-        var span = spans[span_n];
-        var parent = span.parentNode;
-        while (span.firstChild) {
-            parent.insertBefore(span.firstChild, span);
+    var id = item.id;
+    var spans = views[id];
+    if (spans) { 
+        for (var span_n in spans) {
+            var span = spans[span_n];
+            var parent = span.parentNode;
+            while (span.firstChild) {
+                parent.insertBefore(span.firstChild, span);
+            }
+            parent.removeChild(span);
         }
-        parent.removeChild(span);
+        for (var key in item) {
+            delete item[key]; 
+        }
     }
-    for (var key in item) {
-        delete item[key]; 
-    }
+    delete views[id];
+    delete items[id];
 }
 
 function to_path (container) {

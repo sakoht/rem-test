@@ -1,93 +1,6 @@
 
 var site = 'www.flinkt.org';
 
-function get(id) {
-    //
-}
-
-
-var put_n = 0;
-var put_callbacks = {};
-function put(obj, callback) {
-    put_n++;
-
-    var t = document.createElement("iframe");
-    t.name = 'flinkt.org put target ' + put_n;
-    t.id = t.name;
-    document.documentElement.appendChild(t);
-
-
-    var f = document.createElement("form");
-    f.action = 'http://' + site + '/flinktdb/_design/webclient/_update/put#sending';
-    f.method = 'POST';
-    f.target = t.name;
-    for (k in obj) {
-        var i = document.createElement("input");
-        i.name = k;
-        i.value = obj[k]
-        f.appendChild(i)
-    }
-
-    put_callbacks[t.id] = { obj: obj, callback: callback, iframe: t, last_status: 'sending' };
-    
-    f.submit();
-}
-
-function _put_check() {
-    for (var id in put_callbacks) {
-        var callback_data = put_callbacks[id];
-
-        var obj = callback_data.obj; 
-        var callback = callback_data.callback;
-        var iframe = callback_data.iframe;
-        var last_status = callback_data.last_status;
-        
-        console.log(iframe.window.location.href);
-        
-        var current_status = callback_data.iframe.window.location.hash;
-        if (current_status != last_status) {
-            callback(current_status);
-            callback_data.last_status = current_status;
-            iframe.parentElement.removeChild(iframe);
-            delete put_callbacks[id];
-        }
-    }
-}
-
-function add_js(p,callback) {
-    var n = 'flinkt.org js ' + p;
-    
-    s = document.createElement('script');
-    s.setAttribute('type','text/javascript');
-    s.setAttribute('charset','UTF-8');
-    s.setAttribute('src','http://' + site + '/' + p);
-    s.setAttribute('id',n);
-
-    s.onload = callback;
-    s.onreadystatechange= function (s) {
-        if (s.readyState == 'complete' ||  s.readyState = 'loaded') callback();
-    };
-
-    document.body.appendChild(s);
-    return(s);
-}
-
-var n_loaded = 0;
-function _add_js_complete() {
-    n_loaded++;
-    if (n_loaded == scripts.length) {
-        init_app();
-    }
-}
-
-var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/jquery.ba-postmessage.js'];
-for (var n in scripts) {
-    var path = scripts[n];
-    if (! document.getElementById('flinkt.org ' + path)) {
-        add_js(path, _add_js_complete);
-    }
-}
-
 var bookmarklet         = document.getElementById("flinkt.org bookmarklet");
 var bookmarklet_id      = bookmarklet.flinkt_init_bookmarklet_id;       // this identifies the browser instance
 var bookmarklet_version = bookmarklet.flinkt_init_bookmarklet_version;  // we rarely updated the bookmarklet, but when we do it's important
@@ -95,7 +8,7 @@ var session_id          = bookmarklet.flinkt_init_session_id;           // todo:
 var user_id             = bookmarklet_id;                               // todo: get a real user id from a cookie set the first time the app is used
 
 if (bookmarklet_id && bookmarklet_version == 3) {
-    start_app();
+    load_supporting_js(start_app);
 }
 else {
     alert("Your testing bookmarklet is out of date!\nPlease reinstall it from www.flinkt.org/demo!");
@@ -105,8 +18,52 @@ else {
 
 var server;
 var db;
+var pen_status;
+var select_count = 0;
+var selections = {};
 
-function init_app() {
+
+////////////////////////////
+
+function load_supporting_js(everything_loaded_callback) {
+    var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/jquery.ba-postmessage.js'];
+    var n_loaded = 0;
+    
+    // this could be done with jQuery.getScript, but we need it to get jQuery in the first place..
+    function add_js(p,callback) {
+        var n = 'flinkt.org js ' + p;
+        
+        s = document.createElement('script');
+        s.setAttribute('type','text/javascript');
+        s.setAttribute('charset','UTF-8');
+        s.setAttribute('src','http://' + site + '/' + p);
+        s.setAttribute('id',n);
+
+        s.onload = callback;
+        s.onreadystatechange= function (s) {
+            if (s.readyState == 'complete' ||  s.readyState = 'loaded') callback();
+        };
+
+        document.body.appendChild(s);
+        return(s);
+    }
+
+    function _add_js_complete() {
+        n_loaded++;
+        if (n_loaded == scripts.length) {
+            everything_loaded_callback();
+        }
+    }
+
+    for (var n in scripts) {
+        var path = scripts[n];
+        if (! document.getElementById('flinkt.org ' + path)) {
+            add_js(path, _add_js_complete);
+        }
+    }
+}
+
+function start_app() {
     try { 
         Couch.init(
             function() {
@@ -116,21 +73,9 @@ function init_app() {
         );
     }
     catch(e) {
-        alert('error starting flinkt webclient: ' + e);
+        alert('Error starting the web client from ' + site + ': ' + e);
     }
-}
 
-function save() {
-    alert(db);
-}
-
-var pen_status;
-var select_count = 0;
-var selections = {};
-
-////////////////////////////
-
-function start_app() {
     // the div at the top has elements which are internally at a fixed position
     // they should probably be relative to their parent div, which should itself be fixed
     var p = document.createElement('div');
@@ -471,4 +416,34 @@ function rangeIntersectsNode(range, node) {
    }
 }
 
+/////////////////
+
+var formpost_n = 0;
+function formpost(obj, callback) {
+    formpost_n++;
+
+    var t = document.createElement("iframe");
+    t.name = 'temp iframe for form post ' + formpost_n;
+    t.id = t.name;
+    document.documentElement.appendChild(t);
+
+    var f = document.createElement("form");
+    f.action = 'http://' + site + '/flinktdb/_design/webclient/_update/formpost';
+    f.method = 'POST';
+    f.target = t.name;
+    for (k in obj) {
+        var i = document.createElement("input");
+        i.name = k;
+        i.value = obj[k]
+        f.appendChild(i)
+    }
+
+    var done = function(o) {
+        alert('loading signal ' + o.readyState + ' from ' + o);
+    };
+    t.onload = done;
+    t.onreadystatechange = done;
+
+    f.submit();
+}
 

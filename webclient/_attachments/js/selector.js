@@ -344,7 +344,6 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
 };
 
 function show_flinkt_item(item, irange) {
-
     // wrap each element in the range in a highlighted span
     var elements = resolve_range_elements(irange);
     var spans = [];
@@ -376,9 +375,8 @@ function show_flinkt_item(item, irange) {
     return spans;
 }
 
-function remove_flinkt_item(item) {
-    var id = item.id;
-    var spans = views[id];
+function hide_flinkt_item(item) {
+    var spans = views[item.id];
     if (spans) { 
         for (var span_n in spans) {
             var span = spans[span_n];
@@ -388,11 +386,17 @@ function remove_flinkt_item(item) {
             }
             parent.removeChild(span);
         }
-        for (var key in item) {
-            delete item[key]; 
-        }
     }
-    delete views[id];
+    delete views[item.id];
+    return;
+}
+
+function remove_flinkt_item(item) {
+    hide_flinkt_item(item);
+    var id = item.id;
+    for (var key in item) {
+        delete item[key]; 
+    }
     delete items[id];
 }
 

@@ -54,24 +54,37 @@ function _put_check() {
     }
 }
 
-function add_js(p,n) {
-    if (!n) {
-        n = 'flinkt.org ' + p;
-    }
-    s=document.createElement('script');
+function add_js(p,callback) {
+    var n = 'flinkt.org js ' + p;
+    
+    s = document.createElement('script');
     s.setAttribute('type','text/javascript');
     s.setAttribute('charset','UTF-8');
     s.setAttribute('src','http://' + site + '/' + p);
     s.setAttribute('id',n);
+
+    s.onload = callback;
+    s.onreadystatechange= function (s) {
+        if (s.readyState == 'complete' ||  s.readyState = 'loaded') callback();
+    };
+
     document.body.appendChild(s);
     return(s);
+}
+
+var n_loaded = 0;
+function _add_js_complete() {
+    n_loaded++;
+    if (n_loaded == scripts.length) {
+        init_app();
+    }
 }
 
 var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/jquery.ba-postmessage.js'];
 for (var n in scripts) {
     var path = scripts[n];
     if (! document.getElementById('flinkt.org ' + path)) {
-        add_js(path);
+        add_js(path, _add_js_complete);
     }
 }
 
@@ -92,19 +105,24 @@ else {
 
 var server;
 var db;
-function db_init() {
+
+function init_app() {
     try { 
-        Couch.init(); 
-        server = new Couch.Server('http://' + site);
-        db = new Couch.Database(server, 'flinktdb');
-        alert("db is " + db);
+        Couch.init(
+            function() {
+                server = new Couch.Server('http://' + site);
+                db = new Couch.Database(server, 'flinktdb');
+            }
+        );
     }
     catch(e) {
-        alert(e);
+        alert('error starting flinkt webclient: ' + e);
     }
 }
-setTimeout(3000, db_init);
-db_init();
+
+function save() {
+    alert(db);
+}
 
 var pen_status;
 var select_count = 0;

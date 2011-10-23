@@ -92,7 +92,7 @@ function start_app() {
     s += "   <img onclick='site_click()' src='http://www.flinkt.org/images/right20.jpg'>\n";
     s += "</div>";
     s += "<div style='position:fixed; top:64px; right:32px; z-index:999997;' id='flinkt.org bulb off'>\n";
-    s += "   <img offclick='bulb_off()' src='http://www.flinkt.org/images/lightbulb_off32.png'>\n";
+    s += "   <img onclick='bulb_on()' src='http://www.flinkt.org/images/lightbulb_off32.png'>\n";
     s += "</div>\n";
     s += "<div style='position:fixed; top:64px; right:32px; z-index:999998;' id='flinkt.org bulb on'>\n";
     s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/lightbulb_on32.png'>\n";
@@ -103,11 +103,13 @@ function start_app() {
 
     // start with the pen on by default
     pen_on();
+    bulb_on();
 }
 
 function stop_app() {
     // turning this off before stopping unhooks all of the event listeners
     pen_off();
+    bulb_off();
     var a = document.getElementById('flinkt.org app');
     var b = document.getElementById('flinkt.org bookmarklet');
     if (a != null) { a.parentNode.removeChild(a); }
@@ -121,9 +123,22 @@ function flinkt_bookmarklet_click() {
     stop_app();
 }
 
+var ztop = 999998;
+var zbottom = 999996;
+
+function bulb_on() {
+    document.getElementById('flinkt.org bulb on').style.zIndex = ztop;
+    document.getElementById('flinkt.org bulb off').style.zIndex = zbottom;
+}
+
+function bulb_off() {
+    document.getElementById('flinkt.org bulb off').style.zIndex = ztop+1;
+    document.getElementById('flinkt.org bulb on').style.zIndex = zbottom-1;
+}
+
 function pen_on() {
-    document.getElementById('flinkt.org pen on').style.zIndex = 999998;
-    document.getElementById('flinkt.org pen off').style.zIndex = 999996;
+    document.getElementById('flinkt.org pen on').style.zIndex = ztop;
+    document.getElementById('flinkt.org pen off').style.zIndex = zbottom;
     //document.addEventListener('click',on_click, true);
     document.addEventListener('mousedown',on_mousedown, true);
     document.addEventListener('mousemove',on_mousemove, true);
@@ -134,8 +149,8 @@ function pen_on() {
 }
 
 function pen_off() {
-    document.getElementById('flinkt.org pen off').style.zIndex = 99998;
-    document.getElementById('flinkt.org pen on').style.zIndex = 99997;
+    document.getElementById('flinkt.org pen off').style.zIndex = ztop;
+    document.getElementById('flinkt.org pen on').style.zIndex = zbottom;
     //document.removeEventListener('click',on_click, true);
     document.removeEventListener('mousedown',on_mousedown, true);
     document.removeEventListener('mousemove',on_mousemove, true);

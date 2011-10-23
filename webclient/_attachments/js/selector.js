@@ -19,9 +19,9 @@ else {
 var server;
 var db;
 var pen_status;
-var select_count = 0;
-var selections = {};
-
+var item_count = 0;
+var items = {};
+var views = {};
 
 ////////////////////////////
 
@@ -123,6 +123,8 @@ function flinkt_bookmarklet_click() {
     stop_app();
 }
 
+// events for the flinkt controls
+
 var ztop = 999998;
 var zbottom = 999996;
 
@@ -164,6 +166,8 @@ function site_click() {
     alert('site click');
 }
 
+// events for the pen
+
 var moving = false;
 
 function on_touchmove() {
@@ -184,7 +188,7 @@ function on_mouseup(e) {
     var o = e.target;
     if (!o) o = e.target;
     e.preventDefault();
-    statement_select(o, e);
+    add_selection(o, e);
 }
 
 function on_touchend() {
@@ -204,13 +208,12 @@ function on_touchend() {
     }
     
     if (target.innertHTML == null) {
-        statement_select(target.parentElement, event);
+        add_selection(target.parentElement, event);
     }
     else {
-        statement_select(target, event);
+        add_selection(target, event);
     }
 }
-
 
 function on_selection_click(e) {
     // currently, clicking on an existing selection removes it
@@ -235,13 +238,15 @@ function on_selection_click(e) {
     }
     else {
         remove_flinkt_item(prev_selection);
-        delete selections[prev_selection.id];
+        delete items[prev_selection.id];
     }
     
     e.preventDefault();
 }
-    
-function statement_select(obj, e) {
+
+// operations behind the events
+
+function add_selection(obj, e) {
     // selecting a region when the pen is on creates a "selection"
 
     // try {    // disabled for now to ensure exceptions are caught at the convienent location
@@ -260,7 +265,7 @@ function statement_select(obj, e) {
             return;
         }
         
-        var prev_statement = selections[obj.id];
+        var prev_statement = items[obj.id];
         if (prev_statement && prev_statement != null) {
             return;
         }
@@ -295,23 +300,21 @@ function statement_select(obj, e) {
             }
         }
         
-        select_count++;
-        var selection_item = add_flinkt_item('selection', selection_range, 'yellow', .9, 'flinkt.org selection ' + select_count);
+        var selection_item = add_flinkt_item_from_range(selection_range, 'selection', 'yellow', .9);
         
-        //var statement_range = selection2statement(selection_range);
-        //var statement_item = add_flinkt_item('statement', statement_range, '#FFFFDD', .1, 'flinkt.org statement ' + select_count);
-        //selection_item.parent = statement_item;
-
-        selections[selection_item.id] = selection_item;
-        document.flinkt_selections = selections;
+        items[selection_item.id] = selection_item;
+        document.flinkt_items = items;
     }
 
     //catch(e) { alert("error capturing selection: " + e); }
     return false;
 }
 
-function add_flinkt_item(itype, irange, color, opacity, id) {
+function add_flinkt_item_from_range(irange, itype, color, opacity) {
     // one item comes from a single range, but will contain multiple spans to preserve document shape
+    item_count++;
+    var id = 'flinkt.org ' + itype + ' ' + item_count;
+    
     var text = irange.toString();
     var item = {
         id: id,

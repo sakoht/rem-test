@@ -302,7 +302,6 @@ function add_selection(obj, e) {
         
         var selection_item = add_flinkt_item_from_range(selection_range, 'selection', 'yellow', .9);
         
-        items[selection_item.id] = selection_item;
         document.flinkt_items = items;
     }
 
@@ -364,6 +363,7 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
     }
 
     item.spans = spans;
+    items[item.id] = item;
     
     return item;
 };

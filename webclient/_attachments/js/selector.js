@@ -90,6 +90,22 @@ else {
     if (b != null) { b.parentNode.removeChild(b); }
 }
 
+var server;
+var db;
+function db_init() {
+    try { 
+        Couch.init(); 
+        server = new Couch.Server('http://' + site);
+        db = new Couch.Database(server, 'flinktdb');
+        alert("db is " + db);
+    }
+    catch(e) {
+        alert(e);
+    }
+}
+setTimeout(3000, db_init);
+db_init();
+
 var pen_status;
 var select_count = 0;
 var selections = {};

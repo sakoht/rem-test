@@ -7,18 +7,29 @@ var bookmarklet_version = bookmarklet.flinkt_init_bookmarklet_version;  // we ra
 var session_id          = bookmarklet.flinkt_init_session_id;           // todo: ensure the diff vs Date() is reasonable
 var user_id             = bookmarklet_id;                               // todo: get a real user id from a cookie set the first time the app is used
 
-if (bookmarklet_id && bookmarklet_version == 3) {
-    load_supporting_js(start_app);
-}
-else {
-    alert("Your testing bookmarklet is out of date!\nPlease reinstall it from www.flinkt.org/demo!");
+function nostart() {
     var b = document.getElementById('flinkt.org bookmarklet');
     if (b != null) { b.parentNode.removeChild(b); }
 }
 
+if (!document.implementation.hasFeature("Range", "2.0")) {
+    alert("This browser is too old to use the flinkt tool. :(\n\nTell grandma to upgrade, browsers are free!");
+    nostart();
+}
+else if (bookmarklet_version != 3) {
+    alert("Your testing bookmarklet is out of date!\nPlease reinstall it from www.flinkt.org/demo!");
+    nostart();
+}
+else {
+    load_supporting_js(start_app);
+}
+
 var server;
 var db;
+
 var pen_status;
+var bulb_status;
+
 var item_count = 0;
 var items = {};
 var views = {};
@@ -45,7 +56,7 @@ function load_supporting_js(everything_loaded_callback) {
 
         s.onload = callback;
         s.onreadystatechange= function (s) {
-            if (s.readyState == 'complete' ||  s.readyState = 'loaded') callback();
+            if (s.readyState == 'complete' ||  s.readyState == 'loaded') callback();
         };
 
         document.body.appendChild(s);
@@ -135,11 +146,13 @@ var zbottom = 999996;
 function bulb_on() {
     document.getElementById('flinkt.org bulb on').style.zIndex = ztop;
     document.getElementById('flinkt.org bulb off').style.zIndex = zbottom;
+    show_all();
 }
 
 function bulb_off() {
     document.getElementById('flinkt.org bulb off').style.zIndex = ztop+1;
     document.getElementById('flinkt.org bulb on').style.zIndex = zbottom-1;
+    hide_all();
 }
 
 function pen_on() {
@@ -303,8 +316,14 @@ function add_selection(obj, e) {
             }
         }
         
-        add_flinkt_item_from_range(selection_range, 'selection', 'yellow', .9);
-        
+        if (
+                (selection_range.startContainer != selection_range.endContainer)
+                || 
+                (selection_range.startOffset != selection_range.endOffset)
+        ) {
+            // avoid zero-width selections
+            add_flinkt_item_from_range(selection_range, 'selection', 'yellow', .9);
+        }    
     }
 
     //catch(e) { alert("error capturing selection: " + e); }
@@ -337,20 +356,31 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
     
     };
 
-    show_flinkt_item(item,irange);
+    show_flinkt_item(item);
 
     items[item.id] = item;
     return item;
 };
 
-function show_flinkt_item(item, irange) {
+function show_flinkt_item(item) {
+
+    var prev_view = views[item.id];
+    if (prev_view) {
+        hide_flinkt_item(item);
+    }
+
+    var s = eval(item.startContainer_dompath);
+    var e = eval(item.endContainer_dompath);
+    var irange = document.createRange();
+    irange.setStart(s, item.startOffset);
+    irange.setEnd(e, item.endOffset);
+
     // wrap each element in the range in a highlighted span
     var elements = resolve_range_elements(irange);
     var spans = [];
     for (var n=0; n<elements.length; n++) {
         var e = elements[n];
         if (e.nodeName != '#text') {
-            //console.log(e.nodeName + ' skipped');
             continue;
         }
 
@@ -375,14 +405,40 @@ function show_flinkt_item(item, irange) {
     return spans;
 }
 
+function remove_flinkt_item(item) {
+    hide_flinkt_item(item);
+    var id = item.id;
+    for (var key in item) {
+        delete item[key]; 
+    }
+    delete items[id];
+}
+
 function hide_flinkt_item(item) {
     var spans = views[item.id];
     if (spans) { 
         for (var span_n in spans) {
             var span = spans[span_n];
             var parent = span.parentNode;
+            var c;
             while (span.firstChild) {
-                parent.insertBefore(span.firstChild, span);
+                c = span.firstChild;
+                parent.insertBefore(c, span);
+                if (c.nodeName == '#text') {
+                    var left = c.previousSibling;
+                    if (left && left.nodeName == '#text') {
+                        left.textContent += c.textContent;
+                        parent.removeChild(c);
+                        c = left;
+                    }
+                }
+            }
+            var prev = span.previousSibling;
+            var next = span.nextSibling
+            if (prev && next && prev.nodeName == '#text' && next.nodeName == '#text') {
+                var old = prev.textContent;
+                prev.textContent += next.textContent;
+                parent.removeChild(next);  
             }
             parent.removeChild(span);
         }
@@ -391,13 +447,18 @@ function hide_flinkt_item(item) {
     return;
 }
 
-function remove_flinkt_item(item) {
-    hide_flinkt_item(item);
-    var id = item.id;
-    for (var key in item) {
-        delete item[key]; 
+function show_all() {
+    for (var id in items) {
+        show_flinkt_item(items[id]);
     }
-    delete items[id];
+    bulb_status = 'on';
+}
+
+function hide_all() {
+    for (var id in items) {
+        hide_flinkt_item(items[id]);
+    }
+    bulb_status = 'off';
 }
 
 function to_path (container) {
@@ -439,7 +500,6 @@ function resolve_range_elements(range) {
 
 // taken verbatim from stackoverflow question 1482832 solution 1 (Tim Down) 
 function rangeIntersectsNode(range, node) {
-    //console.log("checking " + node.toString());
     var nodeRange;
     if (range.intersectsNode) {
         return range.intersectsNode(node);

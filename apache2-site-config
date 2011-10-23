@@ -42,6 +42,9 @@ LoadFile    /usr/lib/libxml2.so
     ProxyPass /flinktdb http://localhost:5983/flinktdb
     ProxyPassReverse /flinktdb http://localhost:5983/flinktdb
     
+    ProxyPass /couchdb-xd http://localhost:5983/couchdb-xd
+    ProxyPassReverse /couchdb-xd http://localhost:5983/couchdb-xd
+    
     ProxyPass /_utils/script http://localhost:5983/_utils/script
     ProxyPassReverse /_utils/script http://localhost:5983/_utils/script
     

@@ -5,17 +5,53 @@ function get(id) {
     //
 }
 
+
+var put_n = 0;
+var put_callbacks = {};
 function put(obj, callback) {
+    put_n++;
+
+    var t = document.createElement("iframe");
+    t.name = 'flinkt.org put target ' + put_n;
+    t.id = t.name;
+    document.documentElement.appendChild(t);
+
+
     var f = document.createElement("form");
-    f.action = 'http://' + site + '/flinktdb/_design/webclient/_update/put';
+    f.action = 'http://' + site + '/flinktdb/_design/webclient/_update/put#sending';
     f.method = 'POST';
+    f.target = t.name;
     for (k in obj) {
         var i = document.createElement("input");
         i.name = k;
         i.value = obj[k]
         f.appendChild(i)
     }
+
+    put_callbacks[t.id] = { obj: obj, callback: callback, iframe: t, last_status: 'sending' };
+    
     f.submit();
+}
+
+function _put_check() {
+    for (var id in put_callbacks) {
+        var callback_data = put_callbacks[id];
+
+        var obj = callback_data.obj; 
+        var callback = callback_data.callback;
+        var iframe = callback_data.iframe;
+        var last_status = callback_data.last_status;
+        
+        console.log(iframe.window.location.href);
+        
+        var current_status = callback_data.iframe.window.location.hash;
+        if (current_status != last_status) {
+            callback(current_status);
+            callback_data.last_status = current_status;
+            iframe.parentElement.removeChild(iframe);
+            delete put_callbacks[id];
+        }
+    }
 }
 
 function add_js(p,n) {
@@ -31,8 +67,7 @@ function add_js(p,n) {
     return(s);
 }
 
-var scripts = ['/flinktdb/_design/webclient/js/2.3.0-crypto-sha1.js'];
-//,'/_utils/script/jquery.js', '/static/js/jquery.ba-postmessage.js'];
+var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/jquery.ba-postmessage.js'];
 for (var n in scripts) {
     var path = scripts[n];
     if (! document.getElementById('flinkt.org ' + path)) {

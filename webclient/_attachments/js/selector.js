@@ -41,7 +41,7 @@ document.flinkt_views = views;
 ////////////////////////////
 
 function load_supporting_js(everything_loaded_callback) {
-    var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/jquery.ba-postmessage.js'];
+    var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/Math.uuid.js'];
     var n_loaded = 0;
     
     // this could be done with jQuery.getScript, but we need it to get jQuery in the first place..

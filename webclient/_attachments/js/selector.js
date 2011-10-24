@@ -106,10 +106,10 @@ function start_app() {
     s += "<div style='position:fixed; top:48px; right:8px; z-index:999999;'>\n";
     s += "   <img onclick='site_click()' src='http://www.flinkt.org/images/right20.jpg'>\n";
     s += "</div>";
-    s += "<div style='position:fixed; top:64px; right:32px; z-index:999997;' id='flinkt.org bulb off'>\n";
+    s += "<div style='position:fixed; top:72px; right:32px; z-index:999997;' id='flinkt.org bulb off'>\n";
     s += "   <img onclick='bulb_on()' src='http://www.flinkt.org/images/lightbulb_off32.png'>\n";
     s += "</div>\n";
-    s += "<div style='position:fixed; top:64px; right:32px; z-index:999998;' id='flinkt.org bulb on'>\n";
+    s += "<div style='position:fixed; top:72px; right:32px; z-index:999998;' id='flinkt.org bulb on'>\n";
     s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/lightbulb_on32.png'>\n";
     s += "</div>\n";
     p.innerHTML = s; 
@@ -424,7 +424,7 @@ function remove_flinkt_item(item) {
 function hide_flinkt_item(item) {
     var spans = views[item.id];
     if (spans) { 
-        for (var span_n in spans) {
+        for (var span_n = 0; span_n < spans.length; span_n++) {
             var span = spans[span_n];
             var parent = span.parentNode;
             var c;

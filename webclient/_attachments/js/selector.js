@@ -250,7 +250,7 @@ function on_selection_click(e) {
     
     var prev_selection = o.flinkt_item;
     if (!prev_selection) {
-        console.log("no selection for " + flinkt_item_id);
+        console.log("no selection for " + flinkt_item);
         console.log(o);
     }
     else {
@@ -281,7 +281,7 @@ function add_selection(obj, e) {
             return;
         }
         
-        var prev_statement = items[obj.id];
+        var prev_statement = items[obj._id];
         if (prev_statement && prev_statement != null) {
             return;
         }
@@ -352,7 +352,6 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
     var id = user_id + '/' + url_encoded + '/' + encodeURIComponent(text);
 
     var item = {
-        id: id,
         _id: id,
 
         itype: itype,
@@ -375,13 +374,13 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
 
     show_flinkt_item(item);
 
-    items[item.id] = item;
+    items[item._id] = item;
     return item;
 };
 
 function show_flinkt_item(item) {
 
-    var prev_view = views[item.id];
+    var prev_view = views[item._id];
     if (prev_view) {
         hide_flinkt_item(item);
     }
@@ -411,7 +410,7 @@ function show_flinkt_item(item) {
         var span = document.createElement("span");
         span.style.backgroundColor = item.color;
         span.style.backgroundColor.opacity = item.opacity;
-        span.id = item.id + '.' + n;
+        span.id = item._id + '/' + n;
 
         var range = irange.cloneRange();
         range.setStart(e, (e == irange.startContainer ? irange.startOffset : 0));
@@ -425,13 +424,13 @@ function show_flinkt_item(item) {
         spans.push(span);
     }
 
-    views[item.id] = spans;
+    views[item._id] = spans;
     return spans;
 }
 
 function remove_flinkt_item(item) {
     hide_flinkt_item(item);
-    var id = item.id;
+    var id = item._id;
     for (var key in item) {
         delete item[key]; 
     }
@@ -439,7 +438,7 @@ function remove_flinkt_item(item) {
 }
 
 function hide_flinkt_item(item) {
-    var spans = views[item.id];
+    var spans = views[item._id];
     if (spans) { 
         for (var span_n = 0; span_n < spans.length; span_n++) {
             var span = spans[span_n];
@@ -467,7 +466,7 @@ function hide_flinkt_item(item) {
             parent.removeChild(span);
         }
     }
-    delete views[item.id];
+    delete views[item._id];
     return;
 }
 

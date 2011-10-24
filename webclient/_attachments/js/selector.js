@@ -340,27 +340,37 @@ function add_selection(obj, e) {
 function add_flinkt_item_from_range(irange, itype, color, opacity) {
     // one item comes from a single range, but will contain multiple spans to preserve document shape
     item_count++;
-    var id = 'flinkt.org ' + itype + ' ' + item_count;
+    var idx = 'flinkt.org ' + itype + ' ' + item_count;
     
     var text = irange.toString();
+    var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
+
+    var url_encoded = encodeURIComponent(document.URL);
+    var start_path = to_path(irange.startContainer);
+    var end_path = to_path(irange.endContainer);
+
+    var id = user_id + '/' + url_encoded + '/' + encodeURIComponent(text);
+
     var item = {
         id: id,
+        _id: id,
+
         itype: itype,
         color: color,
         opacity: opacity,
 
         text: text,
-        sha1: Crypto.SHA1("blob " + text.length + "" + text), //git std
-        
-        url: document.URL,
+        text_sha1: text_sha1,
+
+        user_id: user_id,
+        url: url_encoded,
         last_modified: document.lastModified,
 
         // capture the range data for reconstruction
-        startContainer_dompath: to_path(irange.startContainer),
-        endContainer_dompath: to_path(irange.endContainer),
+        startContainer_dompath: start_path, 
+        endContainer_dompath: end_path,
         startOffset: irange.startOffset,
         endOffset: irange.endOffset,
-    
     };
 
     show_flinkt_item(item);
@@ -380,7 +390,14 @@ function show_flinkt_item(item) {
     var e = eval(item.endContainer_dompath);
     var irange = document.createRange();
     irange.setStart(s, item.startOffset);
-    irange.setEnd(e, item.endOffset);
+    try { 
+        irange.setEnd(e, item.endOffset); }
+    catch (er) {
+        console.log(er);
+        console.log("error setting endOffset to " + item.endOffset);
+        console.log(e);
+        irange.setEnd(e.textContent ? e.textContent.length : e.childNodes.length);
+    };
 
     // wrap each element in the range in a highlighted span
     var elements = resolve_range_elements(irange);

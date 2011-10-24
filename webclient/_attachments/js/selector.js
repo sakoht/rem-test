@@ -348,7 +348,7 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
     var text = irange.toString();
     var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
 
-    var url_encoded = encodeURIComponent(document.URL);
+    var url = document.URL;
 
     if (!orig_inner_html) {
         orig_inner_html = document.body.innerHTML;
@@ -372,7 +372,7 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
 
         user_id: user_id,
 
-        url: url_encoded,
+        url: url,
         last_modified: document.lastModified,
         page_sha1: orig_inner_html_sha1,
 

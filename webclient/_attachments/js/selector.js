@@ -322,7 +322,14 @@ function add_selection(obj, e) {
                 (selection_range.startOffset != selection_range.endOffset)
         ) {
             // avoid zero-width selections
-            add_flinkt_item_from_range(selection_range, 'selection', 'yellow', .9);
+            if (
+                    (selection_range.startContainer != selection_range.endContainer)
+                    || 
+                    (selection_range.startOffset != selection_range.endOffset)
+            ) {
+                // avoid zero-width selections
+                add_flinkt_item_from_range(selection_range, 'selection', 'yellow', .9);
+            }    
         }    
     }
 

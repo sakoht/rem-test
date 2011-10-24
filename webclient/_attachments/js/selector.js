@@ -337,6 +337,9 @@ function add_selection(obj, e) {
     return false;
 }
 
+var orig_inner_html;
+var orig_inner_html_sha1;
+
 function add_flinkt_item_from_range(irange, itype, color, opacity) {
     // one item comes from a single range, but will contain multiple spans to preserve document shape
     item_count++;
@@ -346,10 +349,16 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
     var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
 
     var url_encoded = encodeURIComponent(document.URL);
+
+    if (!orig_inner_html) {
+        orig_inner_html = document.body.innerHTML;
+        orig_inner_html_sha1 = Crypto.SHA1("blob " + orig_inner_html.length + "" + orig_inner_html);
+    }
+
     var start_path = to_path(irange.startContainer);
     var end_path = to_path(irange.endContainer);
 
-    var id = user_id + '/' + url_encoded + '/' + encodeURIComponent(text);
+    var id = user_id + '/' + orig_inner_html_sha1 + '/' + text_sha1; 
 
     var item = {
         _id: id,
@@ -362,8 +371,10 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
         text_sha1: text_sha1,
 
         user_id: user_id,
+
         url: url_encoded,
         last_modified: document.lastModified,
+        page_sha1: orig_inner_html_sha1,
 
         // capture the range data for reconstruction
         startContainer_dompath: start_path, 
@@ -372,6 +383,7 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
         endOffset: irange.endOffset,
     };
 
+    save_item(item);
     show_flinkt_item(item);
 
     items[item._id] = item;
@@ -537,6 +549,21 @@ function rangeIntersectsNode(range, node) {
         return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
             range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
    }
+}
+
+document.flinkt_saved_items = [];
+function save_item(item) {
+    db.post(
+        item, 
+        function (result) {
+            console.log(result);
+            item._rev = result.rev;
+        }
+    );
+}
+
+function load_items() {
+    
 }
 
 /////////////////

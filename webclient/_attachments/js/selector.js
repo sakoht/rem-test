@@ -287,49 +287,42 @@ function add_selection(obj, e) {
         }
 
         var selection = window.getSelection();
-        var selection_range;
+        var range;
         if (!selection) {
             // old IE
-            selection_range = document.selection.createRange();
+            range = document.selection.createRange();
         }
         else {
             // not old IE
             if (!selection.getRangeAt) {
                 // old safari
-                selection_range = document.createRange();
-                selection_range.setStart(selection.anchorNode,selection.anchorOffset);
-                selection_range.setEnd(selection.focusNode,selection.focusOffset);
+                range = document.createRange();
+                range.setStart(selection.anchorNode,selection.anchorOffset);
+                range.setEnd(selection.focusNode,selection.focusOffset);
             }
             else {
                 // everything else
                 if (selection.rangeCount == 0) {
                     // touch ...but on the iphone only the first touch hits here 
-                    selection_range = document.createRange();
-                    selection.addRange(selection_range);
-                    selection_range.setStart(obj,0);
-                    selection_range.setEnd(obj,0);
+                    range = document.createRange();
+                    selection.addRange(range);
+                    range.setStart(obj,0);
+                    range.setEnd(obj,0);
                 }
                 else {
                     // default mouse interface or touch on 2nd+ hit
-                    selection_range = selection.getRangeAt(0);
+                    range = selection.getRangeAt(0);
                 }
             }
         }
-        
+         
         if (
-                (selection_range.startContainer != selection_range.endContainer)
+                (range.startContainer != range.endContainer)
                 || 
-                (selection_range.startOffset != selection_range.endOffset)
+                (range.startOffset != range.endOffset)
         ) {
             // avoid zero-width selections
-            if (
-                    (selection_range.startContainer != selection_range.endContainer)
-                    || 
-                    (selection_range.startOffset != selection_range.endOffset)
-            ) {
-                // avoid zero-width selections
-                add_flinkt_item_from_range(selection_range, 'selection', 'yellow', .9);
-            }    
+            add_flinkt_item_from_range(range, 'selection');
         }    
     }
 
@@ -340,10 +333,9 @@ function add_selection(obj, e) {
 var orig_inner_html;
 var orig_inner_html_sha1;
 
-function add_flinkt_item_from_range(irange, itype, color, opacity) {
+function add_flinkt_item_from_range(irange, itype) {
     // one item comes from a single range, but will contain multiple spans to preserve document shape
     item_count++;
-    var idx = 'flinkt.org ' + itype + ' ' + item_count;
     
     var text = irange.toString();
     var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
@@ -358,14 +350,14 @@ function add_flinkt_item_from_range(irange, itype, color, opacity) {
     var start_path = to_path(irange.startContainer);
     var end_path = to_path(irange.endContainer);
 
-    var id = user_id + '/' + orig_inner_html_sha1 + '/' + text_sha1; 
+    // this leaves it to the client to generate the UUID
+    // some investigation is worthwhile into whether couchdb uuids are "better"
+    var id = Math.uuid().toLowerCase().replace(/-/g,''); 
 
     var item = {
         _id: id,
 
         itype: itype,
-        color: color,
-        opacity: opacity,
 
         text: text,
         text_sha1: text_sha1,
@@ -397,12 +389,20 @@ function show_flinkt_item(item) {
         hide_flinkt_item(item);
     }
 
+    var color;
+    var opacity;
+    if (item.itype == 'selection') {
+        color = 'yellow';
+        opacity = .9;
+    }
+
     var s = eval(item.startContainer_dompath);
     var e = eval(item.endContainer_dompath);
     var irange = document.createRange();
     irange.setStart(s, item.startOffset);
     try { 
-        irange.setEnd(e, item.endOffset); }
+        irange.setEnd(e, item.endOffset); 
+    }
     catch (er) {
         console.log(er);
         console.log("error setting endOffset to " + item.endOffset);
@@ -420,8 +420,8 @@ function show_flinkt_item(item) {
         }
 
         var span = document.createElement("span");
-        span.style.backgroundColor = item.color;
-        span.style.backgroundColor.opacity = item.opacity;
+        span.style.backgroundColor = color;
+        span.style.backgroundColor.opacity = opacity;
         span.id = item._id + '/' + n;
 
         var range = irange.cloneRange();
@@ -551,7 +551,6 @@ function rangeIntersectsNode(range, node) {
    }
 }
 
-document.flinkt_saved_items = [];
 function save_item(item) {
     db.post(
         item, 
@@ -563,37 +562,6 @@ function save_item(item) {
 }
 
 function load_items() {
-    
-}
 
-/////////////////
-
-var formpost_n = 0;
-function formpost(obj, callback) {
-    formpost_n++;
-
-    var t = document.createElement("iframe");
-    t.name = 'temp iframe for form post ' + formpost_n;
-    t.id = t.name;
-    document.documentElement.appendChild(t);
-
-    var f = document.createElement("form");
-    f.action = 'http://' + site + '/flinktdb/_design/webclient/_update/formpost';
-    f.method = 'POST';
-    f.target = t.name;
-    for (k in obj) {
-        var i = document.createElement("input");
-        i.name = k;
-        i.value = obj[k]
-        f.appendChild(i)
-    }
-
-    var done = function(o) {
-        alert('loading signal ' + o.readyState + ' from ' + o);
-    };
-    t.onload = done;
-    t.onreadystatechange = done;
-
-    f.submit();
 }
 

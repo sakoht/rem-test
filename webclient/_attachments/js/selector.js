@@ -84,6 +84,18 @@ function start_app() {
             function() {
                 server = new Couch.Server('http://' + site);
                 db = new Couch.Database(server, 'flinktdb');
+                url = document.URL;
+                db.get(
+                    '_design/webclient/_view/user_id_and_url?key=\["' + user_id + '","' + url + '"\]', 
+                    function(result) {
+                        console.log("pulled selections for user " + user_id + " for url " + url);
+                        console.log(result.rows);
+                        for (var n = 0; n < result.rows.length; n++) {
+                            var id = result.rows[n].id;
+                            console.log(id);
+                        }
+                    }
+                );
             }
         );
     }

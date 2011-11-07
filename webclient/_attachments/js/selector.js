@@ -78,10 +78,16 @@ function load_supporting_js(everything_loaded_callback) {
     }
 }
 
+var loaded = 0;
 function start_app() {
     try { 
         Couch.init(
             function() {
+                if (loaded == 1) {
+                    console.log("skipping reload");
+                    return true;
+                }
+                loaded = 1;
                 server = new Couch.Server('http://' + site);
                 db = new Couch.Database(server, 'flinktdb');
                 url = document.URL;
@@ -90,10 +96,26 @@ function start_app() {
                     function(result) {
                         console.log("pulled selections for user " + user_id + " for url " + url);
                         console.log(result.rows);
-                        for (var n = 0; n < result.rows.length; n++) {
-                            var id = result.rows[n].id;
-                            console.log(id);
+                        try {
+                            for (var n = 0; n < result.rows.length; n++) {
+                                var id = result.rows[n].id;
+                                console.log(id);
+                                db.get(
+                                    id,
+                                    function(item) {
+                                        console.log('result for id ' + id);
+                                        console.log(item);
+                                        show_flinkt_item(item);
+                                        items[item._id] = item;
+                                    }
+                                );
+                            };
                         }
+                        catch(e) {
+                            console.log('error loading user page data');
+                            console.log(e);
+                        }
+                        return true;
                     }
                 );
             }
@@ -410,6 +432,13 @@ function show_flinkt_item(item) {
 
     var s = eval(item.startContainer_dompath);
     var e = eval(item.endContainer_dompath);
+    if (!s || !e) {
+        console.log("failed to find start or end containers for item!");
+        console.log(item);
+        console.log(s);
+        console.log(e);
+        return;
+    }
     var irange = document.createRange();
     irange.setStart(s, item.startOffset);
     try { 

@@ -47,17 +47,28 @@ function load_supporting_js(everything_loaded_callback) {
     // this could be done with jQuery.getScript, but we need it to get jQuery in the first place..
     function add_js(p,callback) {
         var n = 'flinkt.org js ' + p;
-        
-        s = document.createElement('script');
-        s.setAttribute('type','text/javascript');
-        s.setAttribute('charset','UTF-8');
-        s.setAttribute('src','http://' + site + '/' + p);
-        s.setAttribute('id',n);
 
-        s.onload = callback;
-        s.onreadystatechange= function (s) {
-            if (s.readyState == 'complete' ||  s.readyState == 'loaded') callback();
-        };
+        var s = document.getElementById(n);
+        if (s) {
+            callback();
+        }
+        else {
+            s = document.createElement('script');
+            s.setAttribute('type','text/javascript');
+            s.setAttribute('charset','UTF-8');
+            s.setAttribute('src','http://' + site + '/' + p);
+            s.setAttribute('id',n);
+
+            s.onload = callback;
+            s.onreadystatechange= function (s) {
+                console.log("ready state change");
+                console.log(s);
+                if (s.readyState == 'complete' ||  s.readyState == 'loaded') {
+                    console.log('complete or loaded');
+                    callback();
+                }
+            };
+        }
 
         document.body.appendChild(s);
         return(s);
@@ -80,12 +91,13 @@ function load_supporting_js(everything_loaded_callback) {
 
 var loaded = 0;
 function start_app() {
+    console.log("start app");
     try { 
         Couch.init(
             function() {
                 if (loaded == 1) {
                     console.log("skipping reload");
-                    return true;
+                    return;
                 }
                 loaded = 1;
                 server = new Couch.Server('http://' + site);
@@ -115,7 +127,7 @@ function start_app() {
                             console.log('error loading user page data');
                             console.log(e);
                         }
-                        return true;
+                        return;
                     }
                 );
             }

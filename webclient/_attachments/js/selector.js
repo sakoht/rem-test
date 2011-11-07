@@ -393,8 +393,8 @@ function add_flinkt_item_from_range(irange, itype) {
         orig_inner_html_sha1 = Crypto.SHA1("blob " + orig_inner_html.length + "" + orig_inner_html);
     }
 
-    var start_path = to_path(irange.startContainer);
-    var end_path = to_path(irange.endContainer);
+    var start_path = to_path_pos(irange.startContainer);
+    var end_path = to_path_pos(irange.endContainer);
 
     // this leaves it to the client to generate the UUID
     // some investigation is worthwhile into whether couchdb uuids are "better"
@@ -415,8 +415,8 @@ function add_flinkt_item_from_range(irange, itype) {
         page_sha1: orig_inner_html_sha1,
 
         // capture the range data for reconstruction
-        startContainer_dompath: start_path, 
-        endContainer_dompath: end_path,
+        startContainer_dompath_pos: start_path, 
+        endContainer_dompath_pos: end_path,
         startOffset: irange.startOffset,
         endOffset: irange.endOffset,
     };
@@ -442,8 +442,8 @@ function show_flinkt_item(item) {
         opacity = .9;
     }
 
-    var s = eval(item.startContainer_dompath);
-    var e = eval(item.endContainer_dompath);
+    var s = eval(path_pos_to_js(item.startContainer_dompath_pos));
+    var e = eval(path_pos_to_js(item.endContainer_dompath_pos));
     if (!s || !e) {
         console.log("failed to find start or end containers for item!");
         console.log(item);
@@ -535,18 +535,54 @@ function hide_flinkt_item(item) {
     return;
 }
 
-function show_all() {
+function items_sorted() {
+    var a = [];
     for (var id in items) {
-        show_flinkt_item(items[id]);
+        a.push(items[id]);
+    }
+    a.sort();
+    return a;
+}
+
+function show_all() {
+    var a = items_sorted();
+    for (var n = 0; n < a.length; n++) {
+        show_flinkt_item(a[n]);
     }
     bulb_status = 'on';
 }
 
 function hide_all() {
-    for (var id in items) {
-        hide_flinkt_item(items[id]);
+    var a = items_sorted();
+    for (var n = a.length-1; n >= 0; n--) {
+        hide_flinkt_item(a[n]);
     }
     bulb_status = 'off';
+}
+
+function to_path_pos (container) {
+    if (container == document) {
+        return [];
+    }
+    var parent_node = container.parentNode;
+    var child_nodes = parent_node.childNodes;
+    var parent_path = to_path_pos(parent_node);
+    for (var n = 0; n < child_nodes.length; n++) {
+        if (child_nodes[n] == container) {
+            parent_path.push(n);
+            return parent_path;
+        }
+    }
+    alert("How did I get here?")
+
+}
+
+function path_pos_to_js(p) {
+    var js = 'document';
+    for (var n = 0; n < p.length; n++) {
+        js += '.childNodes[' + p[n] + "]";
+    }
+    return js;
 }
 
 function to_path (container) {

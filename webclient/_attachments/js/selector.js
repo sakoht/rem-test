@@ -117,7 +117,7 @@ function start_app() {
                                     function(item) {
                                         console.log('result for id ' + id);
                                         console.log(item);
-                                        show_flinkt_item(item);
+                                        show_item(item);
                                         items[item._id] = item;
                                     }
                                 );
@@ -368,7 +368,7 @@ function add_selection(obj, e) {
                 (range.startOffset != range.endOffset)
         ) {
             // avoid zero-width selections
-            add_flinkt_item_from_range(range, 'selection');
+            add_item_from_range(range, 'selection');
         }    
     }
 
@@ -379,7 +379,7 @@ function add_selection(obj, e) {
 var orig_inner_html;
 var orig_inner_html_sha1;
 
-function add_flinkt_item_from_range(irange, itype) {
+function add_item_from_range(irange, itype) {
     // one item comes from a single range, but will contain multiple spans to preserve document shape
     item_count++;
     
@@ -422,26 +422,57 @@ function add_flinkt_item_from_range(irange, itype) {
     };
 
     save_item(item);
-    show_flinkt_item(item);
+    show_item(item);
 
     items[item._id] = item;
     return item;
 };
 
-function show_flinkt_item(item) {
-
-    var prev_view = views[item._id];
-    if (prev_view) {
-        hide_flinkt_item(item);
+function items_list() {
+    var list = [];
+    for (var id in items) {
+        list.push(items[id]);
     }
+    return list;
+}
 
-    var color;
-    var opacity;
-    if (item.itype == 'selection') {
-        color = 'yellow';
-        opacity = .9;
+function items_sorted() {
+    var list = items_list();
+    list.sort(
+        function (a,b) {
+            var a_start = a.startContainer_dompath_pos;
+            var b_start = b.startContainer_dompath_pos;
+            var min_length;
+            if (a_start.length < b_start.length) {
+                min_length = a_start.length;
+            }
+            else {
+                min_length = b_start.length
+            }
+            for (var n = 0; n < min_length; n++) {
+                var diff = a_start[n] - b_start[n];
+                if (diff < 0) {
+                    return -1;
+                }
+                else if (diff > 0) {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+    );
+    return list;
+}
+
+function _recalculate_positions() {
+    var list = items_list();
+    for (var n = 0; n < list.length; n++) {
+        
     }
+    return true;
+}
 
+function resolve_range_for_item(item,e) {
     var s = eval(path_pos_to_js(item.startContainer_dompath_pos));
     var e = eval(path_pos_to_js(item.endContainer_dompath_pos));
     if (!s || !e) {
@@ -462,6 +493,34 @@ function show_flinkt_item(item) {
         console.log(e);
         irange.setEnd(e.textContent ? e.textContent.length : e.childNodes.length);
     };
+    return irange;
+}
+
+function show_all() {
+    var a = items_sorted();
+    for (var n = 0; n < a.length; n++) {
+        _show_item(a[n]);
+    }
+    bulb_status = 'on';
+}
+
+function hide_all() {
+    var a = items_sorted();
+    for (var n = a.length-1; n >= 0; n--) {
+        hide_item(a[n]);
+    }
+    bulb_status = 'off';
+}
+
+function show_item(item) {
+    var color;
+    var opacity;
+    if (item.itype == 'selection') {
+        color = 'yellow';
+        opacity = .9;
+    }
+
+    var irange = resolve_range_for_item(item,document.documentElement);
 
     // wrap each element in the range in a highlighted span
     var elements = resolve_range_elements(irange);
@@ -493,16 +552,7 @@ function show_flinkt_item(item) {
     return spans;
 }
 
-function remove_flinkt_item(item) {
-    hide_flinkt_item(item);
-    var id = item._id;
-    for (var key in item) {
-        delete item[key]; 
-    }
-    delete items[id];
-}
-
-function hide_flinkt_item(item) {
+function hide_item(item) {
     var spans = views[item._id];
     if (spans) { 
         for (var span_n = 0; span_n < spans.length; span_n++) {
@@ -535,30 +585,15 @@ function hide_flinkt_item(item) {
     return;
 }
 
-function items_sorted() {
-    var a = [];
-    for (var id in items) {
-        a.push(items[id]);
+function remove_flinkt_item(item) {
+    hide_item(item);
+    var id = item._id;
+    for (var key in item) {
+        delete item[key]; 
     }
-    a.sort();
-    return a;
+    delete items[id];
 }
 
-function show_all() {
-    var a = items_sorted();
-    for (var n = 0; n < a.length; n++) {
-        show_flinkt_item(a[n]);
-    }
-    bulb_status = 'on';
-}
-
-function hide_all() {
-    var a = items_sorted();
-    for (var n = a.length-1; n >= 0; n--) {
-        hide_flinkt_item(a[n]);
-    }
-    bulb_status = 'off';
-}
 
 function to_path_pos (container) {
     if (container == document) {

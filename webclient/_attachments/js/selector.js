@@ -467,7 +467,6 @@ function items_sorted() {
 function _recalculate_positions() {
     var list = items_list();
     for (var n = 0; n < list.length; n++) {
-        
     }
     return true;
 }
@@ -495,11 +494,16 @@ function resolve_range_for_item(item,e) {
     };
     return irange;
 }
+        //var r = resolve_range_for_item(item,document.documentElement);
+        //item.startContainer_dompath_pos = to_path_pos(r.startContainer);
+        //item.endContainer_dompath_pos = to_path_pos(r.endContainer);
+        //item.startOffset = r.startOffset;
+        //item.endOffset = r.endOffset;
 
 function show_all() {
     var a = items_sorted();
     for (var n = 0; n < a.length; n++) {
-        _show_item(a[n]);
+        show_item(a[n]);
     }
     bulb_status = 'on';
 }

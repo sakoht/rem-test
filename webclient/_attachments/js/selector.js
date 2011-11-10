@@ -585,21 +585,6 @@ function path_pos_to_js(p) {
     return js;
 }
 
-function to_path (container) {
-    if (container == document) {
-        return "document";
-    }
-    var parent_node = container.parentNode;
-    var child_nodes = parent_node.childNodes;
-    var parent_path = to_path(parent_node);
-    for (var n = 0; n < child_nodes.length; n++) {
-        if (child_nodes[n] == container) {
-            var path = parent_path + ".childNodes[" + n + "]";
-            return path;
-        }
-    }
-    alert("How did I get here?")
-}
 
 // modified from stackoverflow question 1482832 solution 1 (Tim Down) 
 function resolve_range_elements(range) {

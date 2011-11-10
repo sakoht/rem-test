@@ -117,7 +117,7 @@ function start_app() {
                                     function(item) {
                                         console.log('result for id ' + id);
                                         console.log(item);
-                                        show_item(item);
+                                        //show_item(item);
                                         items[item._id] = item;
                                     }
                                 );
@@ -471,7 +471,44 @@ function _recalculate_positions() {
     return true;
 }
 
-function resolve_range_for_item(item,e) {
+function resolve_range_for_item(item, e) {
+    if (!e.innerText) {
+        return;   
+    }
+    if (e.innerText.indexOf(item.text) == -1) {
+        return;
+    }
+    var c = e.childNodes;
+    var r;
+    try {
+        if (c && c.length && c.length > 0) {
+            // the text is under this node: see if it is completely under some child node
+            for (var n = 0; n < c.length; n++) {
+                r = resolve_range_for_item(item, c[n]);
+                if (r) {
+                    return r;
+                }
+            }
+            // the text is under this node, but is not also completely under any single child node
+            // make the range cover the entire set of child nodes initially, then shrink it gradually
+            r = document.createRange();
+            r.setStart(c[0],0);
+            r.setEnd(c[c.length-1],c[c.length-1].length-1);
+        }
+        else {
+            // the text is under this node, and there are no children
+            r = document.createRange();
+            r.setStart(e, e.innerText.indexOf(item.text))
+            r.setEnd(e, e.innerText.indexOf(item.text) + item.text.length-1)
+        }
+    }
+    catch (e) {
+        console.log(e);
+    }
+    return r;
+}
+
+function Xresolve_range_for_item(item,e) {
     var s = eval(path_pos_to_js(item.startContainer_dompath_pos));
     var e = eval(path_pos_to_js(item.endContainer_dompath_pos));
     if (!s || !e) {
@@ -492,13 +529,16 @@ function resolve_range_for_item(item,e) {
         console.log(e);
         irange.setEnd(e.textContent ? e.textContent.length : e.childNodes.length);
     };
+
+    // no-op
+    var r = irange; 
+    item.startContainer_dompath_pos = to_path_pos(r.startContainer);
+    item.endContainer_dompath_pos = to_path_pos(r.endContainer);
+    item.startOffset = r.startOffset;
+    item.endOffset = r.endOffset;
+    
     return irange;
 }
-        //var r = resolve_range_for_item(item,document.documentElement);
-        //item.startContainer_dompath_pos = to_path_pos(r.startContainer);
-        //item.endContainer_dompath_pos = to_path_pos(r.endContainer);
-        //item.startOffset = r.startOffset;
-        //item.endOffset = r.endOffset;
 
 function show_all() {
     var a = items_sorted();

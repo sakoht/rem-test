@@ -1,84 +1,4 @@
 
-function resolve_range_for_item(item, e) {
-    if (!e.innerHTML) {
-        return;   
-    }
-    if (e.innerHTML.indexOf(item.text) == -1) {
-        return;
-    }
-    var c = e.childNodes;
-    var r;
-    try {
-        if (c && c.length && c.length > 0) {
-            // the text is under this node: see if it is completely under some child node
-            for (var n = 0; n < c.length; n++) {
-                r = resolve_range_for_item(item, c[n]);
-                if (r) {
-                    return r;
-                }
-            }
-            // the text is under this node, but is not also completely under any single child node
-            // make the range cover the entire set of child nodes initially, then shrink it gradually
-            r = document.createRange();
-            var se = c[0];
-            var ee = c[c.length-1];
-            r.setStart(se,0);
-            r.setEnd(ee,ee.length);
-
-            // trim nodes from the beginning 
-            var sn;
-            var so;
-            var en;
-            var eo;
-
-            for (sn = 0; sn < c.length-1; sn++) {
-                r.setStart(c[sn+1],0);
-                if (r.toString().indexOf(item.text) == -1) {
-                    break;
-                }
-            }
-            r.setStart(c[sn],0);
-            
-            // trim text from the beginning
-            for (so = 0; so < c[sn].length-1; so++) {
-                r.setStart(c[sn],so+1);
-                if (r.toString().indexOf(item.text) == -1) {
-                    break;
-                }
-            }
-            r.setStart(c[sn],so);
-
-            // trim nodes from the end
-            for (en = c.length-1; en > 0; en--) {
-                r.setEnd(c[en-1],c[en-1].length-1);
-                if (r.toString().indexOf(item.text) == -1) {
-                    break;
-                }
-            }
-            r.setEnd(c[en],c[en].length-1);
-
-            // trim text from the end 
-            for (eo = c[en].length; eo > 0; eo--) {
-                r.setEnd(c[en],eo-1);
-                if (r.toString().indexOf(item.text) == -1) {
-                    break;
-                }
-            }
-            r.setEnd(c[en],eo);
-            r.setStart(c[sn],so);
-        }
-        else {
-            // the text is under this node, and there are no children
-            r = document.createRange();
-            r.setStart(e, e.innerHTML.indexOf(item.text))
-            r.setEnd(e, e.innerHTML.indexOf(item.text) + item.text.length-1)
-        }
-    }
-    catch (e) {
-        console.log(e);
-    }
-    return r;
-}
 var site = 'www.flinkt.org';
 
 var bookmarklet         = document.getElementById("flinkt.org bookmarklet");
@@ -762,7 +682,83 @@ function save_item(item) {
     );
 }
 
-function load_items() {
+function resolve_range_for_item(item, e) {
+    if (!e.innerHTML) {
+        return;   
+    }
+    if (e.innerHTML.indexOf(item.text) == -1) {
+        return;
+    }
+    var c = e.childNodes;
+    var r;
+    try {
+        if (c && c.length && c.length > 0) {
+            // the text is under this node: see if it is completely under some child node
+            for (var n = 0; n < c.length; n++) {
+                r = resolve_range_for_item(item, c[n]);
+                if (r) {
+                    return r;
+                }
+            }
+            // the text is under this node, but is not also completely under any single child node
+            // make the range cover the entire set of child nodes initially, then shrink it gradually
+            r = document.createRange();
+            var se = c[0];
+            var ee = c[c.length-1];
+            r.setStart(se,0);
+            r.setEnd(ee,ee.length);
 
+            // trim nodes from the beginning 
+            var sn;
+            var so;
+            var en;
+            var eo;
+
+            for (sn = 0; sn < c.length-1; sn++) {
+                r.setStart(c[sn+1],0);
+                if (r.toString().indexOf(item.text) == -1) {
+                    break;
+                }
+            }
+            r.setStart(c[sn],0);
+            
+            // trim text from the beginning
+            for (so = 0; so < c[sn].length-1; so++) {
+                r.setStart(c[sn],so+1);
+                if (r.toString().indexOf(item.text) == -1) {
+                    break;
+                }
+            }
+            r.setStart(c[sn],so);
+
+            // trim nodes from the end
+            for (en = c.length-1; en > 0; en--) {
+                r.setEnd(c[en-1],c[en-1].length-1);
+                if (r.toString().indexOf(item.text) == -1) {
+                    break;
+                }
+            }
+            r.setEnd(c[en],c[en].length-1);
+
+            // trim text from the end 
+            for (eo = c[en].length; eo > 0; eo--) {
+                r.setEnd(c[en],eo-1);
+                if (r.toString().indexOf(item.text) == -1) {
+                    break;
+                }
+            }
+            r.setEnd(c[en],eo);
+            r.setStart(c[sn],so);
+        }
+        else {
+            // the text is under this node, and there are no children
+            r = document.createRange();
+            r.setStart(e, e.innerHTML.indexOf(item.text))
+            r.setEnd(e, e.innerHTML.indexOf(item.text) + item.text.length-1)
+        }
+    }
+    catch (e) {
+        console.log(e);
+    }
+    return r;
 }
-

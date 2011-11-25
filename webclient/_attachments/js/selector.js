@@ -1,5 +1,5 @@
 
-(function() {
+//(function() {
 
     var site = 'www.flinkt.org';
 
@@ -450,29 +450,6 @@
 
     function items_sorted() {
         var list = items_list();
-        list.sort(
-            function (a,b) {
-                var a_start = a.startContainer_dompath_pos;
-                var b_start = b.startContainer_dompath_pos;
-                var min_length;
-                if (a_start.length < b_start.length) {
-                    min_length = a_start.length;
-                }
-                else {
-                    min_length = b_start.length
-                }
-                for (var n = 0; n < min_length; n++) {
-                    var diff = a_start[n] - b_start[n];
-                    if (diff < 0) {
-                        return -1;
-                    }
-                    else if (diff > 0) {
-                        return 1;
-                    }
-                }
-                return 0;
-            }
-        );
         return list;
     }
 
@@ -770,4 +747,4 @@
         }
         return r;
     }
-})();
+//})();

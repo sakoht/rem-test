@@ -724,6 +724,7 @@
                     }
                 }
                 r.setEnd(c[en],c[en].length-1);
+                r.setStart(c[sn],so);
 
                 // trim text from the end 
                 for (eo = c[en].length; eo > 0; eo--) {

@@ -38,10 +38,14 @@
     if (!document.flinkt_items) {
         document.flinkt_items = {};
     }
+    if (!document.flinkt_pages_by_content) {
+        document.flinkt_pages_by_content = {};
+    }
     if (!document.flinkt_views) {
         document.flinkt_views = {};
     }
     var items = document.flinkt_items;
+    var pages_by_content = document.flinkt_pages_by_content;
     var views = document.flinkt_views;
 
     ////////////////////////////
@@ -388,9 +392,6 @@
         return false;
     }
 
-    var orig_inner_html;
-    var orig_inner_html_sha1;
-
     function add_item_from_range(irange, itype) {
         // one item comes from a single range, but will contain multiple spans to preserve document shape
         item_count++;
@@ -400,13 +401,55 @@
 
         var url = document.URL;
 
-        if (!orig_inner_html) {
-            orig_inner_html = document.body.innerHTML;
-            orig_inner_html_sha1 = Crypto.SHA1("blob " + orig_inner_html.length + "" + orig_inner_html);
-        }
+        // hide all selections temporarily while snapshotting the page
+        // NOTE: we don't worry about the toolbar here
+        var prev_html = document.body.innerHTML;
+        prev_html = sanitize_html(prev_html);
+        
+        hide_all();
+        
+        var page_inner_html = document.body.innerHTML;
+        page_inner_html = sanitize_html(page_inner_html);
 
+        if (page_inner_html == prev_html) {
+            console.log("pages match after hide!");
+        }
+        else {
+            console.log("pages differ!");
+            cdiff(prev_html,page_inner_html);
+        }
         var start_path = to_path_pos(irange.startContainer);
         var end_path = to_path_pos(irange.endContainer);
+        show_all();
+
+        var sha1 = Crypto.SHA1("blob " + page_inner_html.length + "" + page_inner_html);
+        var page = pages_by_content[page_inner_html];
+        if (!page) {
+            // save the page the first time we highlight on it
+            page = {
+                _id: sha1,
+                content: page_inner_html,
+            };
+            pages_by_content[page_inner_html] = page;
+            console.log("saving the page with key " + sha1);
+            db.post(
+                page, 
+                function (result) {
+                    console.log(result);
+                    page._rev = result.rev;
+                }
+            );
+        }
+        else {
+            console.log("found the page with id " + page.id + " revision " + page._rev);
+            if (page.id != sha1) {
+                console.log(page.id);
+                console.log(sha1);
+            }
+            else {
+                console.log("page id matches sha1");
+            }
+        }
 
         // this leaves it to the client to generate the UUID
         // some investigation is worthwhile into whether couchdb uuids are "better"
@@ -424,7 +467,7 @@
 
             url: url,
             last_modified: document.lastModified,
-            page_sha1: orig_inner_html_sha1,
+            page_sha1: page.id,
 
             // capture the range data for reconstruction
             startContainer_dompath_pos: start_path, 
@@ -434,11 +477,31 @@
         };
 
         save_item(item);
+        console.log(item);
         show_item(item);
 
         items[item._id] = item;
         return item;
     };
+
+    function sanitize_html(before) {
+        var strings = [
+            bookmarklet_id,
+            session_id,
+        ];
+        for (var n = 0; n < strings.length; n++) {
+            var s = strings[n];
+            for(;;) {
+                after = before.replace(s,"XXXX");
+                console.log("replaced " + s);
+                if (after == before) {
+                    break;
+                }
+                before = after;
+            }
+        }
+        return after;
+    }
 
     function items_list() {
         var list = [];
@@ -461,7 +524,7 @@
     }
 
 
-    function Xresolve_range_for_item(item,e) {
+    function resolve_range_for_item_by_position(item,e) {
         var s = eval(path_pos_to_js(item.startContainer_dompath_pos));
         var e = eval(path_pos_to_js(item.endContainer_dompath_pos));
         if (!s || !e) {
@@ -517,7 +580,7 @@
             opacity = .9;
         }
 
-        var irange = resolve_range_for_item(item,document.documentElement);
+        var irange = resolve_range_for_item_by_content(item,document.documentElement);
 
         // wrap each element in the range in a highlighted span
         var elements = resolve_range_elements(irange);
@@ -654,7 +717,7 @@
 
             return range.compareBoundaryPoints(Range.END_TO_START, nodeRange) == -1 &&
                 range.compareBoundaryPoints(Range.START_TO_END, nodeRange) == 1;
-    }
+        }
     }
 
     function save_item(item) {
@@ -667,7 +730,7 @@
         );
     }
 
-    function resolve_range_for_item(item, e) {
+    function resolve_range_for_item_by_content(item, e) {
         if (!e.innerHTML) {
             return;   
         }
@@ -680,7 +743,7 @@
             if (c && c.length && c.length > 0) {
                 // the text is under this node: see if it is completely under some child node
                 for (var n = 0; n < c.length; n++) {
-                    r = resolve_range_for_item(item, c[n]);
+                    r = resolve_range_for_item_by_content(item, c[n]);
                     if (r) {
                         return r;
                     }
@@ -748,4 +811,19 @@
         }
         return r;
     }
+
+    function cdiff(a,b) {
+        var alines = a.split("\n");
+        var blines = b.split("\n");
+        for (var n = 0; n < alines.length; n++) {
+            if (alines[n] != blines[n]) {
+                console.log(n);
+                console.log(alines[n]);
+                console.log(blines[n]);
+                return;
+            }
+        }
+        console.log("same!");
+    }
+
 //})();

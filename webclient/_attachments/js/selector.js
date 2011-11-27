@@ -32,8 +32,6 @@
     var pen_status;
     var bulb_status;
 
-    var item_count = 0;
-
     // for debugging
     if (!document.flinkt_items) {
         document.flinkt_items = {};
@@ -49,6 +47,8 @@
     var pages_by_content = document.flinkt_pages_by_content;
     var views = document.flinkt_views;
 
+    var deleted_items = {};
+    
     ////////////////////////////
 
     function load_supporting_js(everything_loaded_callback) {
@@ -402,7 +402,6 @@
 
     function add_item_from_range(irange, itype) {
         // one item comes from a single range, but will contain multiple spans to preserve document shape
-        item_count++;
         
         var text = irange.toString();
         var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
@@ -643,7 +642,6 @@
         return;
     }
 
-    var deleted_items = {};
     function delete_item(item) {
         hide_item(item);
         var id = item._id;

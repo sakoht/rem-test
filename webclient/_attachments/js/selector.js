@@ -643,15 +643,30 @@
         return;
     }
 
+    var deleted_items = {};
     function delete_item(item) {
         hide_item(item);
         var id = item._id;
-        for (var key in item) {
-            delete item[key]; 
-        }
+        deleted_items[id] = item;
+        db.destroy(
+            item._id,
+            { rev: item._rev },
+            function(result) {
+                if (result.ok == true) {
+                    for (var key in item) {
+                        delete item[key]; 
+                    }
+                    delete deleted_items[id];
+                    console.log("deletion worked!");
+                }
+                else {
+                    console.log(result);
+                    alert("error deleting item!\n" + item.text + "\n");
+                }
+            }
+        );
         delete items[id];
     }
-
 
     function to_path_pos (container) {
         if (container == document) {

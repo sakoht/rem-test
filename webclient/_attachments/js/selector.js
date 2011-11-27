@@ -44,6 +44,7 @@
     if (!document.flinkt_views) {
         document.flinkt_views = {};
     }
+
     var items = document.flinkt_items;
     var pages_by_content = document.flinkt_pages_by_content;
     var views = document.flinkt_views;
@@ -153,6 +154,12 @@
             alert('Error starting the web client from ' + site + ': ' + e);
         }
 
+        add_toolbar();
+        pen_on();
+        bulb_on();
+    }
+
+    function add_toolbar() {
         // the div at the top has elements which are internally at a fixed position
         // they should probably be relative to their parent div, which should itself be fixed
         var p = document.createElement('div');
@@ -177,19 +184,19 @@
         p.innerHTML = s; 
         p.setAttribute('id','flinkt.org app')
         try { document.body.appendChild(p); } catch(e) { alert(e) };
+    }
 
-        // start with the pen on by default
-        pen_on();
-        bulb_on();
+    function remove_toolbar() {
+        var a = document.getElementById('flinkt.org app');
+        if (a != null) { a.parentNode.removeChild(a); }
     }
 
     function stop_app() {
         // turning this off before stopping unhooks all of the event listeners
         pen_off();
         bulb_off();
-        var a = document.getElementById('flinkt.org app');
+        remove_toolbar();
         var b = document.getElementById('flinkt.org bookmarklet');
-        if (a != null) { a.parentNode.removeChild(a); }
         if (b != null) { b.parentNode.removeChild(b); }
     }
 
@@ -249,16 +256,12 @@
 
     var moving = false;
 
-    function on_touchmove() {
-        moving = true;
+    function on_mousedown() {
+        //console.log("down");
     }
 
     function on_mousemove(e) {
         moving = true;
-    }
-
-    function on_mousedown() {
-        //console.log("down");
     }
 
     function on_mouseup(e) {
@@ -268,6 +271,11 @@
         if (!o) o = e.target;
         e.preventDefault();
         add_selection(o, e);
+        moving = false;
+    }
+
+    function on_touchmove() {
+        moving = true;
     }
 
     function on_touchend() {
@@ -294,10 +302,10 @@
         }
     }
 
+    // currently, clicking on an existing selection removes it
+    // later we will give a list of options on the right
+    
     function on_selection_click(e) {
-        // currently, clicking on an existing selection removes it
-        // later we will give a list of options on the right
-        
         if (pen_status == 'off') {
             return;
         }
@@ -316,7 +324,7 @@
             console.log(o);
         }
         else {
-            remove_flinkt_item(prev_selection);
+            delete_item(prev_selection);
         }
         
         e.preventDefault();
@@ -411,15 +419,9 @@
         var page_inner_html = document.body.innerHTML;
         page_inner_html = sanitize_html(page_inner_html);
 
-        if (page_inner_html == prev_html) {
-            console.log("pages match after hide!");
-        }
-        else {
-            console.log("pages differ!");
-            cdiff(prev_html,page_inner_html);
-        }
         var start_path = to_path_pos(irange.startContainer);
         var end_path = to_path_pos(irange.endContainer);
+        
         show_all();
 
         var sha1 = Crypto.SHA1("blob " + page_inner_html.length + "" + page_inner_html);
@@ -469,7 +471,8 @@
             last_modified: document.lastModified,
             page_sha1: page.id,
 
-            // capture the range data for reconstruction
+            // capture the range data for reconstruction on the original doc
+            // to reselect on the repal page requires more effort
             startContainer_dompath_pos: start_path, 
             endContainer_dompath_pos: end_path,
             startOffset: irange.startOffset,
@@ -508,11 +511,6 @@
         for (var id in items) {
             list.push(items[id]);
         }
-        return list;
-    }
-
-    function items_sorted() {
-        var list = items_list();
         return list;
     }
 
@@ -557,7 +555,7 @@
     }
 
     function show_all() {
-        var a = items_sorted();
+        var a = items_list();
         for (var n = 0; n < a.length; n++) {
             show_item(a[n]);
         }
@@ -565,7 +563,7 @@
     }
 
     function hide_all() {
-        var a = items_sorted();
+        var a = items_list();
         for (var n = a.length-1; n >= 0; n--) {
             hide_item(a[n]);
         }
@@ -645,7 +643,7 @@
         return;
     }
 
-    function remove_flinkt_item(item) {
+    function delete_item(item) {
         hide_item(item);
         var id = item._id;
         for (var key in item) {

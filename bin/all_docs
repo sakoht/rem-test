@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+curl -X GET localhost:5983/flinktdb/_all_docs

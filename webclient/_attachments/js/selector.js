@@ -387,9 +387,9 @@
             }
             
             if (
-                    (range.startContainer != range.endContainer)
-                    || 
-                    (range.startOffset != range.endOffset)
+                (range.startContainer != range.endContainer)
+                || 
+                (range.startOffset != range.endOffset)
             ) {
                 // avoid zero-width selections
                 add_item_from_range(range, 'selection');
@@ -514,10 +514,6 @@
                 after = before.replace(s,"XXXX");
                 console.log("replaced " + s);
                 if (after == before) {
-                    console.log("Failed replace!");
-                    console.log(after);
-                    console.log(s);
-                    console.log(session_id);
                     break;
                 }
                 before = after;

@@ -414,13 +414,15 @@
         prev_html = sanitize_html(prev_html);
         
         hide_all();
-        
+        remove_toolbar();
+
         var page_inner_html = document.body.innerHTML;
         page_inner_html = sanitize_html(page_inner_html);
 
         var start_path = to_path_pos(irange.startContainer);
         var end_path = to_path_pos(irange.endContainer);
-        
+       
+        add_toolbar();
         show_all();
 
         var sha1 = Crypto.SHA1("blob " + page_inner_html.length + "" + page_inner_html);
@@ -487,16 +489,35 @@
     };
 
     function sanitize_html(before) {
+        var encoded_session_id = encodeURIComponent(session_id);
+        
+        var enc = encoded_session_id; 
+        for (;;) {
+            var enc_new = enc.replace("(","%28").replace(")","%29").replace("%3A",":");
+            if (enc_new == enc) {
+                break;
+            }
+            enc = enc_new;
+        }
+        var encoded_session_id_clean = enc;
+
         var strings = [
             bookmarklet_id,
             session_id,
+            encoded_session_id,
+            encoded_session_id_clean,
         ];
+
         for (var n = 0; n < strings.length; n++) {
             var s = strings[n];
             for(;;) {
                 after = before.replace(s,"XXXX");
                 console.log("replaced " + s);
                 if (after == before) {
+                    console.log("Failed replace!");
+                    console.log(after);
+                    console.log(s);
+                    console.log(session_id);
                     break;
                 }
                 before = after;

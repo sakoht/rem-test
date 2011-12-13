@@ -417,19 +417,56 @@
     function add_item_from_range(irange, itype) {
         // one item comes from a single range, but will contain multiple spans to preserve document shape
         
+        var text = irange.toString();
+        var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
+
+        var url = document.URL;
+
+        // hide all selections temporarily while snapshotting the page
+        // NOTE: we don't worry about the toolbar here
+        var prev_html = document.body.innerHTML;
+        prev_html = sanitize_html(prev_html);
+        
         hide_all();
         remove_toolbar();
 
-        var page = snapshot_page();
+        var page_inner_html = document.body.innerHTML;
+        page_inner_html = sanitize_html(page_inner_html);
+
         var start_path = to_path_pos(irange.startContainer);
         var end_path = to_path_pos(irange.endContainer);
        
         add_toolbar();
         show_all();
 
-        var text = irange.toString();
-        var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
-        var url = document.URL;
+        var sha1 = Crypto.SHA1("blob " + page_inner_html.length + "" + page_inner_html);
+        var page = pages_by_content[page_inner_html];
+        if (!page) {
+            // save the page the first time we highlight on it
+            page = {
+                _id: sha1,
+                content: page_inner_html,
+            };
+            pages_by_content[page_inner_html] = page;
+            console.log("saving the page with key " + sha1);
+            db.post(
+                page, 
+                function (result) {
+                    console.log(result);
+                    page._rev = result.rev;
+                }
+            );
+        }
+        else {
+            console.log("found the page with id " + page.id + " revision " + page._rev);
+            if (page.id != sha1) {
+                console.log(page.id);
+                console.log(sha1);
+            }
+            else {
+                console.log("page id matches sha1");
+            }
+        }
 
         var domain = url_to_domain(url);
 

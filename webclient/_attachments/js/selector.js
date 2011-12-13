@@ -121,7 +121,7 @@
                     db = new Couch.Database(server, 'flinktdb');
                     url = document.URL;
                     db.get(
-                        '_design/webclient/_view/user_id_and_url?key=\["' + user_id + '","' + url + '"\]', 
+                        '_design/webclient/_view/user_url_items?key=\["' + user_id + '","' + url + '"\]&include_docs=true', 
                         function(result) {
                             console.log("pulled selections for user " + user_id + " for url " + url);
                             console.log(result.rows);
@@ -129,15 +129,20 @@
                                 for (var n = 0; n < result.rows.length; n++) {
                                     var id = result.rows[n].id;
                                     console.log(id);
-                                    db.get(
-                                        id,
-                                        function(item) {
-                                            console.log('result for id ' + id);
-                                            console.log(item);
-                                            show_item(item);
-                                            items[item._id] = item;
-                                        }
-                                    );
+                                    var item = result.rows[n].doc;
+                                    console.log('inline result for id ' + id);
+                                    console.log(item);
+                                    show_item(item);
+                                    items[item._id] = item;
+                                    //db.get(
+                                    //    id,
+                                    //    function(item) {
+                                    //        console.log('result for id ' + id);
+                                    //        console.log(item);
+                                    //        show_item(item);
+                                    //        items[item._id] = item;
+                                    //    }
+                                    //);
                                 };
                             }
                             catch(e) {
@@ -400,6 +405,15 @@
         return false;
     }
 
+    function url_to_domain(url) {
+        var domain = url.replace(/^.*\:\/\//,'').replace(/\/.*/,'');
+        //trim down to the secondary domain name
+        //var w = domain.split('.');
+        //while (w.length > 2) { w.shift() }
+        //domain = w.join('.');
+        return domain;
+    }
+
     function add_item_from_range(irange, itype) {
         // one item comes from a single range, but will contain multiple spans to preserve document shape
         
@@ -417,11 +431,11 @@
         var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
         var url = document.URL;
 
+        var domain = url_to_domain(url);
+
         // this leaves it to the client to generate the UUID
         // some investigation is worthwhile into whether couchdb uuids are "better"
         var id = Math.uuid().toLowerCase().replace(/-/g,''); 
-
-        alert(page._id);
 
         var item = {
             _id: id,
@@ -435,6 +449,8 @@
             session_id: session_id,
 
             url: url,
+            domain: domain,
+
             last_modified: document.lastModified,
             page_sha1: page._id,
 

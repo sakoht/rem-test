@@ -421,19 +421,22 @@
         // some investigation is worthwhile into whether couchdb uuids are "better"
         var id = Math.uuid().toLowerCase().replace(/-/g,''); 
 
+        alert(page._id);
+
         var item = {
             _id: id,
 
             itype: itype,
 
             text: text,
-            ext_sha1: text_sha1,
+            text_sha1: text_sha1,
 
             user_id: user_id,
+            session_id: session_id,
 
             url: url,
             last_modified: document.lastModified,
-            page_sha1: page.id,
+            page_sha1: page._id,
 
             // capture the range data for reconstruction on the original doc
             // to reselect on the repal page requires more effort
@@ -474,9 +477,9 @@
             );
         }
         else {
-            console.log("found the page with id " + page.id + " revision " + page._rev);
-            if (page.id != sha1) {
-                console.log(page.id);
+            console.log("found the page with id " + page._id + " revision " + page._rev);
+            if (page._id != sha1) {
+                console.log(page._id);
                 console.log(sha1);
             }
             else {

@@ -813,7 +813,87 @@
         );
     }
 
-    function resolve_range_for_item_by_content(item, e) {
+    function resolve_range_for_item_by_content(item,e) {
+
+        var tree_walker = document.createTreeWalker(
+            document.body, 
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        
+        var container_list = [];
+        while (tree_walker.nextNode()) {
+            container_list.push(tree_walker.currentNode);
+        }
+
+        var possible_starts = [];
+        var possible_ends = [];
+        
+        var text = item.text;
+        var text_length = text.length;
+        for (var n = 0; n < container_list.length; n++) {
+            container = container_list[n];
+            var container_text = container.textContent;
+            var container_text_length = container_text.length;
+            for (var offset = 0; offset < container_text_length; offset++) {
+                
+                // is [container,offset] a possible START for the range for the item text?
+                var container_text_substr_start = container_text.substr(offset);
+                if (text_length - container_text_length - offset > 0) {
+                    // the item text is longer than, or as long as, the container text from this position
+                    if (text.indexOf(container_text_substr_start) == 0) {
+                        possible_starts.push([container,offset,container_text,container_text_substr_start]);
+                    }
+                }
+                else {
+                    // the item text is shorter than the container text from this position
+                    if (container_text_substr_start.indexOf(text) == 0) {
+                        possible_starts.push([container,offset,container_text,container_text_substr_start]);
+                    }
+                }
+
+                // is [container,offset] a possible END for the range for the item text?
+                var container_text_substr_end = container_text.substr(0,offset+1);
+                if (text_length >= offset + 1) {
+                    // the item text is longer than, or as long as, the container text up to this position
+                    if (text.indexOf(container_text_substr_end) == text_length - offset - 1) {
+                        possible_ends.push([container,offset,container_text_substr_end]);
+                    }
+                }
+                else {
+                    // the item text is shorter than the container text up to this position
+                    if (container_text_substr_end.indexOf(text) == offset - text_length + 1) {
+                        possible_ends.push([container,offset,container_text_substr_end]);
+                    }
+                }
+
+                
+            }
+        }
+
+        console.log(possible_starts);
+        console.log(possible_ends);
+        
+        var matches = [];
+        for (var s = 0; s < possible_starts.length; s++) {
+            for (var e = 0; e < possible_ends.length; e++) {
+                var r = document.createRange();
+                r.setStart(possible_starts[s][0], possible_starts[s][1]);
+                r.setEnd(possible_ends[e][0], possible_ends[e][1]+1);
+                if (r.toString() == text) {
+                    matches.push(r);
+                }
+            }
+        }
+
+        console.log(matches);
+        return matches[0];
+    }
+
+    function OLDresolve_range_for_item_by_content(item, e) {
+        return
+
         if (!e.innerHTML) {
             return;   
         }

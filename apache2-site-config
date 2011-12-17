@@ -66,6 +66,9 @@ LoadFile    /usr/lib/libxml2.so
     ProxyPass /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
     ProxyPassReverse /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
 
+    ProxyPass /test http://localhost:5983/flinktdb/_design/webclient/test
+    ProxyPassReverse /test http://localhost:5983/flinktdb/_design/webclient/test
+    
     ProxyPass / http://localhost:5983/flinktdb/_design/webclient/under-construction.html
     ProxyPassReverse / http://localhost:5983/flinktdb/_design/webclient/under-construction.html
 

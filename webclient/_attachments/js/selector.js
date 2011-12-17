@@ -431,27 +431,48 @@
         var end_path = to_path_pos(irange.endContainer);
        
         var sha1 = Crypto.SHA1("blob " + page_inner_html.length + "" + page_inner_html);
-        var page = pages_by_content[page_inner_html];
+        var page = pages_by_content[sha1];
         if (!page) {
             // save the page the first time we highlight on it
+          
+            // this block is also below in the show code: possibly abstract out?
+            var text_elements = [];
+            var text_element_nodes = [];
+            var tree_walker = document.createTreeWalker(
+                document.body, 
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            while (tree_walker.nextNode()) {
+                text_element_nodes.push(tree_walker.currentNode);
+                text_elements.push(tree_walker.currentNode.textContent);
+            }
+            
             page = {
                 _id: sha1,
                 content: page_inner_html,
+                text_elements: text_elements
             };
-            pages_by_content[page_inner_html] = page;
+            
+            pages_by_content[sha1] = page;
+
             console.log("saving the page with _id/key " + sha1);
             db.post(
                 page, 
                 function (result) {
+                    console.log("page save complete for _id " + sha1);
                     console.log(result);
                     page._rev = result.rev;
                 }
             );
+
+            page.text_element_nodes = text_element_nodes;
         }
         else {
-            console.log("found the page with _id/key " + page.id + " revision " + page._rev);
-            if (page.id != sha1) {
-                console.log(page.id);
+            console.log("found the page with _id/key " + page._id + " revision " + page._rev);
+            if (page._id != sha1) {
+                console.log(page._id);
                 console.log(sha1);
             }
             else {
@@ -544,13 +565,13 @@
         return list;
     }
 
-    function _recalculate_positions() {
-        var list = items_list();
-        for (var n = 0; n < list.length; n++) {
+    function pages_list() {
+        var list = [];
+        for (var id in pages_by_content) {
+            list.push(items[id]);
         }
-        return true;
+        return list;
     }
-
 
     function resolve_range_for_item_by_position(item,e) {
         var s = eval(path_pos_to_js(item.startContainer_dompath_pos));
@@ -608,7 +629,7 @@
             opacity = .9;
         }
 
-        var irange = resolve_range_for_item_by_content(item,document.documentElement);
+        var irange = resolve_range_for_item_by_content(item);
 
         // wrap each element in the range in a highlighted span
         var elements = resolve_range_elements(irange);
@@ -772,19 +793,21 @@
         );
     }
 
-    function resolve_range_for_item_by_content(item,e) {
+    function resolve_range_for_item_by_content(item) {
 
+        var container_list = [];
         var tree_walker = document.createTreeWalker(
             document.body, 
             NodeFilter.SHOW_TEXT,
             null,
             false
         );
-        
-        var container_list = [];
         while (tree_walker.nextNode()) {
             container_list.push(tree_walker.currentNode);
         }
+
+        // TODO: the container_list maps in some way to the text_element_nodes on the page
+        // When re-loading, we don't even load the page but will need to to gather context.
 
         var possible_starts = [];
         var possible_ends = [];

@@ -683,6 +683,9 @@
         }
 
         var irange = resolve_range_for_item_by_content(item);
+        if (!irange) {
+            return;
+        }
 
         // wrap each element in the range in a highlighted span
         var elements = resolve_range_elements(irange);
@@ -855,7 +858,7 @@
                 
                 // is [container,offset] a possible START for the range for the item text?
                 var container_text_substr_start = container_text.substr(offset);
-                if (text_length - container_text_length - offset > 0) {
+                if (text_length - container_text_length + offset > 0) {
                     // the item text is longer than, or as long as, the container text from this position
                     if (text.indexOf(container_text_substr_start) == 0) {
                         possible_starts.push([container,offset,n]);

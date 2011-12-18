@@ -941,11 +941,18 @@
         }
         else if (matches_flank_no_prev.length) {
             // resovles to one, but possibly out of context
+            alert("selection has changed context:\n" + matches_flank_no_prev[0].toString() + "\n" + item.text_context + item.text_flank);
             return matches_flank_no_prev[0];
         }
         else if (matches_no_flank.length) {
             // does not even resolve to one
-            return matches_no_flank[0];
+            alert("selection has changed context and is no longer unambiguous:\n" + matches_no_flank[0].toString() + "\n" + item.text_context + item.text_flank);
+            //return matches_no_flank[0];
+            return;
+        }
+        else {
+            alert("selection is missing: " + item.text);
+            return;
         }
     }
 

@@ -844,10 +844,13 @@
         
         var text = item.text;
         var text_length = text.length;
+        var previous_full_text = '';
+        var previous_full_text_by_container_number = {};
         for (var n = 0; n < container_list.length; n++) {
             container = container_list[n];
             var container_text = container.textContent;
             var container_text_length = container_text.length;
+            var match_count_for_this_start_container = 0;
             for (var offset = 0; offset < container_text_length; offset++) {
                 
                 // is [container,offset] a possible START for the range for the item text?
@@ -856,12 +859,14 @@
                     // the item text is longer than, or as long as, the container text from this position
                     if (text.indexOf(container_text_substr_start) == 0) {
                         possible_starts.push([container,offset,n]);
+                        match_count_for_this_start_container++;
                     }
                 }
                 else {
                     // the item text is shorter than the container text from this position
                     if (container_text_substr_start.indexOf(text) == 0) {
                         possible_starts.push([container,offset,n]);
+                        match_count_for_this_start_container++;
                     }
                 }
 
@@ -880,6 +885,10 @@
                     }
                 }
             }
+            if (match_count_for_this_start_container > 0) {
+                previous_full_text_by_container_number[n] = previous_full_text;
+            }
+            previous_full_text = previous_full_text + container_text;
         }
 
         console.log(possible_starts);
@@ -895,11 +904,9 @@
         console.log("CONTEXT: " + item.text_context.replace(allnl,'\\n'));
         for (var s = 0; s < possible_starts.length; s++) {
             var text_from_prev_elements;
-            if (possible_starts[s][2] >= 0) {
-                text_from_prev_elements = container_list.slice(0,possible_starts[s][2]).map(function(o){ return o.textContent }).join('');
-            }
-            else {
-                text_from_pre_elements = '';
+            text_from_prev_elements = previous_full_text_by_container_number[possible_starts[s][2]];
+            if (text_from_prev_elements == null) {
+                alert("no text for element?");
             }
             for (var e = 0; e < possible_ends.length; e++) {
                 var r = document.createRange();

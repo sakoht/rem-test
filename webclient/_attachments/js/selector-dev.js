@@ -872,9 +872,10 @@
         );
     }
 
-    function resolve_range_for_item_by_content(item) {
+    function OLD2resolve_range_for_item_by_content(item) {
 
         var container_list = [];
+        var content_list = [];
         var tree_walker = document.createTreeWalker(
             document.body, 
             NodeFilter.SHOW_TEXT,
@@ -883,7 +884,55 @@
         );
         while (tree_walker.nextNode()) {
             container_list.push(tree_walker.currentNode);
+            content_list.push(tree_walker.currentNode.textContent);
         }
+
+        var full_content = content_list.join('');
+        var first_pos = full_content.indexOf(item.text_flank + item.text);
+        var last_pos = full_content.lastIndexOf(item.text_flank + item.text) + item.text.length - 1;
+        
+
+        var prev_length = 0;
+        var first_container_n = 0;
+        var last_container_n = container_list.length - 1;
+        var start_offset = 0;
+        var end_offset = container_list[last_container_n].length-1;
+
+        var r = document.createRange();
+        r.setStart(container_list[first_container], start_offset);
+        r.setEnd(container_list[end_container], end_offset);
+        if (r.toString().indexOf(text) == -1) {
+            console.log("text not in original range?");
+            return;
+        }
+
+        for (var n = 1; n < container_list.length; n++) {
+            
+            var next_length = content_list[n].length;
+            if (prev_length + next_length - 1 >= first_pos) {
+                first_container_n = n;
+                start_offset = first_pos - prev_length;
+                break;
+            }
+            prev_length += next_length; 
+        }
+
+        for (var n = first_container_n; n < container_list.length; n++) {
+            var next_length = content_list[n].length;
+            if (prev_length + next_length > last_pos) {
+                last_container_n = n;
+                end_offset = last_pos - prev_length;
+                break;
+            }
+            prev_length += next_length; 
+        }
+
+        var first_container = container_list[first_container_n];
+        var last_container = container_list[last_container_n];
+        r.setStart(first_container,start_offset);
+        r.setEnd(last_container,end_offset);
+
+        return r;
 
         // TODO: the container_list maps in some way to the text_element_nodes on the page
         // When re-loading, we don't even load the page but will need to to gather context.
@@ -984,87 +1033,97 @@
         }
     }
 
-    function OLDresolve_range_for_item_by_content(item, e) {
-        return
+    function resolve_range_for_item_by_content(item) {
 
-        if (!e.innerHTML) {
-            return;   
+        var e1 = [];
+        var tree_walker = document.createTreeWalker(
+            document.body, 
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        while (tree_walker.nextNode()) {
+            e1.push(tree_walker.currentNode);
         }
-        if (e.innerHTML.indexOf(item.text) == -1) {
-            return;
-        }
-        var c = e.childNodes;
-        var r;
-        try {
-            if (c && c.length && c.length > 0) {
-                // the text is under this node: see if it is completely under some child node
-                for (var n = 0; n < c.length; n++) {
-                    r = resolve_range_for_item_by_content(item, c[n]);
-                    if (r) {
-                        return r;
-                    }
-                }
-                // the text is under this node, but is not also completely under any single child node
-                // make the range cover the entire set of child nodes initially, then shrink it gradually
-                r = document.createRange();
-                var se = c[0];
-                var ee = c[c.length-1];
-                r.setStart(se,0);
-                r.setEnd(ee,ee.length);
 
-                // trim nodes from the beginning 
-                var sn;
-                var so;
-                var en;
-                var eo;
+        // start with all text nodes
+        var r1 = document.createRange();
+        r1.setStart(e1[0],0);
+        r1.setEnd(e1[e1.length-1], e1[e1.length-1].length-1);
 
-                for (sn = 0; sn < c.length-1; sn++) {
-                    r.setStart(c[sn+1],0);
-                    if (r.toString().indexOf(item.text) == -1) {
-                        break;
-                    }
-                }
-                r.setStart(c[sn],0);
-                
-                // trim text from the beginning
-                for (so = 0; so < c[sn].length-1; so++) {
-                    r.setStart(c[sn],so+1);
-                    if (r.toString().indexOf(item.text) == -1) {
-                        break;
-                    }
-                }
-                r.setStart(c[sn],so);
+        // narrow to those with flank plus the target text
+        var r2 = find_range_for_text_within_range(
+                item.text_flank + item.text, 
+                r1
+        );
 
-                // trim nodes from the end
-                for (en = c.length-1; en > 0; en--) {
-                    r.setEnd(c[en-1],c[en-1].length-1);
-                    if (r.toString().indexOf(item.text) == -1) {
-                        break;
-                    }
-                }
-                r.setEnd(c[en],c[en].length-1);
-                r.setStart(c[sn],so);
+        // narrow again to remove the flank
+        var r3 = find_range_for_elements_within_range(
+                item.text, 
+                r2
+        );
 
-                // trim text from the end 
-                for (eo = c[en].length; eo > 0; eo--) {
-                    r.setEnd(c[en],eo-1);
-                    if (r.toString().indexOf(item.text) == -1) {
-                        break;
-                    }
-                }
-                r.setEnd(c[en],eo);
-                r.setStart(c[sn],so);
+        return r3;
+    }
+
+    function find_range_for_text_within_range(text, irange) {
+        var c = resolve_range_elements(irange);
+
+        var sn = 0;
+        var so = irange.startOffset;
+        var en = c.length-1;
+        var eo = irange.endOffset;
+
+        var r = document.createRange();
+        r.setStart(c[sn],so);
+        r.setEnd(c[en],eo);
+
+        // trim nodes from the beginning 
+        for (; sn < c.length-1; sn++) {
+            r.setStart(c[sn+1],0);
+            r.setEnd(c[en],eo);
+            if (r.toString().indexOf(text) == -1) {
+                break;
             }
             else {
-                // the text is under this node, and there are no children
-                r = document.createRange();
-                r.setStart(e, e.innerHTML.indexOf(item.text))
-                r.setEnd(e, e.innerHTML.indexOf(item.text) + item.text.length-1)
+                so = 0;
             }
         }
-        catch (e) {
-            console.log(e);
+        
+        // trim text from the beginning
+        for (; so < c[sn].length-1; so++) {
+            r.setStart(c[sn],so+1);
+            r.setEnd(c[en],eo);
+            if (r.toString().indexOf(text) == -1) {
+                break;
+            }
         }
+
+        // trim nodes from the end
+        for (; en > 0; en--) {
+            r.setStart(c[sn],so);
+            console.log(c[en-1]);
+            console.log(c[en-1].textContent.length - 1);
+            r.setEnd(c[en-1], c[en-1].textContent.length - 1);
+            if (r.toString().indexOf(text) == -1) {
+                break;
+            }
+            else {
+                eo = r.endOffset; 
+            }
+        }
+        
+        // trim text from the end 
+        for (; eo > 0; eo--) {
+            r.setStart(c[sn],so);
+            r.setEnd(c[en],eo-1);
+            if (r.toString().indexOf(text) == -1) {
+                break;
+            }
+        }
+        
+        r.setStart(c[sn],so);
+        r.setEnd(c[en],eo);
         return r;
     }
 

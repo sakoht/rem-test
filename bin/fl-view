@@ -1,0 +1,8 @@
+#!/usr/bin/env perl
+use JSON;
+use Data::Dumper;
+for $id (@ARGV) {
+    my $json = `curl -X GET localhost:5983/flinktdb/_design/webclient/_view/$id?include_doc=true`;
+    print Dumper(decode_json($json));
+}
+

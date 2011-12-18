@@ -1,0 +1,22 @@
+#!/usr/bin/env perl
+use Data::Dumper;
+use JSON;
+
+for my $user_id (@ARGV) {
+    my $cmd = 'curl -X GET localhost:5983/flinktdb/_design/webclient/_view/user_items?key=';
+    $cmd .= "'\"$user_id\"'\\&include_docs=true";
+    print $cmd,"\n";
+    my $json = `$cmd`;
+    my $perl = decode_json($json);
+    my $rows = $perl->{rows};
+    for my $row (@$rows) {
+        my $doc = $row->{doc};
+        my $id = $doc->{_id};
+        my $rev = $doc->{_rev};
+        my $cmd = "curl -X DELETE localhost:5983/flinktdb/$id?rev=$rev";
+        print $cmd,"\n";
+        system $cmd;
+    }
+    print Dumper($perl);
+}
+

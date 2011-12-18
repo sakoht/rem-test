@@ -1,0 +1,6 @@
+#!/usr/bin/env perl
+my $path = __FILE__;
+use File::Basename;
+my $dir = File::Basename::dirname($path);
+$dir .= '/../webclient/views';
+system "ls $dir";

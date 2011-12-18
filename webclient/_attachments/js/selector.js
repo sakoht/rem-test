@@ -193,6 +193,9 @@
         s += "<div style='position:fixed; top:72px; right:32px; z-index:999998;' id='flinkt.org bulb on'>\n";
         s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/lightbulb_on32.png'>\n";
         s += "</div>\n";
+        s += "<div style='position:fixed; top:110px; right:32px; z-index:999998;' id='flinkt.org trash'>\n";
+        s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/trash32.png'>\n";
+        s += "</div>\n";
         p.innerHTML = s; 
         p.setAttribute('id','flinkt.org app')
         try { document.body.appendChild(p); } catch(e) { alert(e) };
@@ -549,10 +552,13 @@
         var text_flank = full_text.substr(n, position_in_page_text - n);
 
         // if we have less than 100 characters of flank, get enough additional flank to reach 100
-        var text_pre_flank = '';
+        var text_context = '';
         if (text_flank.length < 100) {
-            var added_n = n - 100 + text_flank.length;
-            text_pre_flank = full_text.substr(added_n, n-added_n);
+            var context_start_pos = n - 100 + text_flank.length;
+            if (context_start_pos < 0) {
+                context_start_pos = 0;
+            }
+            text_context = full_text.substr(context_start_pos, n-context_start_pos);
         }
 
         add_toolbar();
@@ -573,7 +579,7 @@
             text_sha1: text_sha1,
 
             text_flank: text_flank,
-            text_pre_flank: text_pre_flank,
+            text_context: text_context,
 
             user_id: user_id,
             session_id: session_id,
@@ -838,10 +844,13 @@
         
         var text = item.text;
         var text_length = text.length;
+        var previous_full_text = '';
+        var previous_full_text_by_container_number = {};
         for (var n = 0; n < container_list.length; n++) {
             container = container_list[n];
             var container_text = container.textContent;
             var container_text_length = container_text.length;
+            var match_count_for_this_start_container = 0;
             for (var offset = 0; offset < container_text_length; offset++) {
                 
                 // is [container,offset] a possible START for the range for the item text?
@@ -849,13 +858,15 @@
                 if (text_length - container_text_length - offset > 0) {
                     // the item text is longer than, or as long as, the container text from this position
                     if (text.indexOf(container_text_substr_start) == 0) {
-                        possible_starts.push([container,offset,container_text,container_text_substr_start]);
+                        possible_starts.push([container,offset,n]);
+                        match_count_for_this_start_container++;
                     }
                 }
                 else {
                     // the item text is shorter than the container text from this position
                     if (container_text_substr_start.indexOf(text) == 0) {
-                        possible_starts.push([container,offset,container_text,container_text_substr_start]);
+                        possible_starts.push([container,offset,n]);
+                        match_count_for_this_start_container++;
                     }
                 }
 
@@ -864,68 +875,91 @@
                 if (text_length >= offset + 1) {
                     // the item text is longer than, or as long as, the container text up to this position
                     if (text.lastIndexOf(container_text_substr_end) == text_length - offset - 1) {
-                        possible_ends.push([container,offset,container_text_substr_end]);
+                        possible_ends.push([container,offset,n]);
                     }
                 }
                 else {
                     // the item text is shorter than the container text up to this position
                     if (container_text_substr_end.lastIndexOf(text) == offset - text_length + 1) {
-                        possible_ends.push([container,offset,container_text_substr_end]);
+                        possible_ends.push([container,offset,n]);
                     }
                 }
             }
+            if (match_count_for_this_start_container > 0) {
+                previous_full_text_by_container_number[n] = previous_full_text;
+            }
+            previous_full_text = previous_full_text + container_text;
         }
 
-        console.log(possible_starts);
-        console.log(possible_ends);
+        //console.log(possible_starts);
+        //console.log(possible_ends);
         
         // there may be more than one range which has a plausible start and end, but not fully matching in content
         var matches = [];
         var matches_no_flank = [];
         var matches_flank_no_prev = [];
-        var pre_text = '';
+        var allnl = new RegExp("\n",'g');
+        ///console.log("ITEM: " + item.text.replace(allnl,'\\n'));
+        //console.log("FLANK: " + item.text_flank.replace(allnl,'\\n'));
+        //console.log("CONTEXT: " + item.text_context.replace(allnl,'\\n'));
         for (var s = 0; s < possible_starts.length; s++) {
+            var text_from_prev_elements;
+            text_from_prev_elements = previous_full_text_by_container_number[possible_starts[s][2]];
+            if (text_from_prev_elements == null) {
+                alert("no text for element?");
+            }
             for (var e = 0; e < possible_ends.length; e++) {
                 var r = document.createRange();
                 r.setStart(possible_starts[s][0], possible_starts[s][1]);
                 r.setEnd(possible_ends[e][0], possible_ends[e][1]+1);
-                //console.log("CHECK: " + s + " " + e + " : " + r.toString());
+                //console.log("CHECK: " + r.toString());
+                //console.log(" START: " + [s, possible_starts[s][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_starts[s][1]].join(" ") );
+                //console.log(" END: " + [e, possible_ends[e][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_ends[e][1]].join(" ") );
                 if (r.toString() == text) {
-                    // range matches, now check flank
-                    var pre = pre_text;
+                    //console.log(" MATCH TEXT"); 
+                    var pre = text_from_prev_elements;
                     pre = pre + possible_starts[s][0].textContent.substr(0,possible_starts[s][1]);
                     if ( (pre.length - pre.lastIndexOf(item.text_flank)) == item.text_flank.length) {
-                        // the text_flank precedes
-                        var long_flank = item.text_pre_flank + item.text_flank;
+                        //console.log("  MATCH FLANK");
+                        var long_flank = item.text_context + item.text_flank;
                         if ( (pre.length - pre.lastIndexOf(long_flank)) == long_flank.length) {
+                            //console.log("   MATCH CONTEXT");
                             matches.push(r);
                         }
                         else {
+                            //console.log("   NOT CONTEXT");
                             matches_flank_no_prev.push(r);
                         }
                     }
                     else {
+                        //console.log("  NOT FLANK");
                         matches_no_flank.push(r);
                     }
                 }
                 else {
-                    //console.log("MISMATCH: " + r.toString());
+                    //console.log(" NOT TEXT");
                 }
             }
-            pre_text += possible_starts[s][0].textContent;
         }
         
-        console.log("matches: " + matches.length + " flank but no prev: " + matches_flank_no_prev.length + " no flank at all: " + matches_no_flank.length);
+        //console.log("matches with flank and context: " + matches.length + ", flank but not context: " + matches_flank_no_prev.length + ", no flank at all: " + matches_no_flank.length);
         if (matches.length) {
             return matches[0];
         }
         else if (matches_flank_no_prev.length) {
             // resovles to one, but possibly out of context
+            alert("selection has changed context:\n" + matches_flank_no_prev[0].toString() + "\n" + item.text_context + item.text_flank);
             return matches_flank_no_prev[0];
         }
         else if (matches_no_flank.length) {
             // does not even resolve to one
-            return matches_no_flank[0];
+            alert("selection has changed context and is no longer unambiguous:\n" + matches_no_flank[0].toString() + "\n" + item.text_context + item.text_flank);
+            //return matches_no_flank[0];
+            return;
+        }
+        else {
+            alert("selection is missing: " + item.text);
+            return;
         }
     }
 

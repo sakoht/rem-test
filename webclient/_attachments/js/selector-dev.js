@@ -891,17 +891,17 @@
             previous_full_text = previous_full_text + container_text;
         }
 
-        console.log(possible_starts);
-        console.log(possible_ends);
+        //console.log(possible_starts);
+        //console.log(possible_ends);
         
         // there may be more than one range which has a plausible start and end, but not fully matching in content
         var matches = [];
         var matches_no_flank = [];
         var matches_flank_no_prev = [];
         var allnl = new RegExp("\n",'g');
-        console.log("ITEM: " + item.text.replace(allnl,'\\n'));
-        console.log("FLANK: " + item.text_flank.replace(allnl,'\\n'));
-        console.log("CONTEXT: " + item.text_context.replace(allnl,'\\n'));
+        ///console.log("ITEM: " + item.text.replace(allnl,'\\n'));
+        //console.log("FLANK: " + item.text_flank.replace(allnl,'\\n'));
+        //console.log("CONTEXT: " + item.text_context.replace(allnl,'\\n'));
         for (var s = 0; s < possible_starts.length; s++) {
             var text_from_prev_elements;
             text_from_prev_elements = previous_full_text_by_container_number[possible_starts[s][2]];
@@ -912,37 +912,37 @@
                 var r = document.createRange();
                 r.setStart(possible_starts[s][0], possible_starts[s][1]);
                 r.setEnd(possible_ends[e][0], possible_ends[e][1]+1);
-                console.log("CHECK: " + r.toString());
-                console.log(" START: " + [s, possible_starts[s][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_starts[s][1]].join(" ") );
-                console.log(" END: " + [e, possible_ends[e][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_ends[e][1]].join(" ") );
+                //console.log("CHECK: " + r.toString());
+                //console.log(" START: " + [s, possible_starts[s][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_starts[s][1]].join(" ") );
+                //console.log(" END: " + [e, possible_ends[e][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_ends[e][1]].join(" ") );
                 if (r.toString() == text) {
-                    console.log(" MATCH TEXT"); 
+                    //console.log(" MATCH TEXT"); 
                     var pre = text_from_prev_elements;
                     pre = pre + possible_starts[s][0].textContent.substr(0,possible_starts[s][1]);
                     if ( (pre.length - pre.lastIndexOf(item.text_flank)) == item.text_flank.length) {
-                        console.log("  MATCH FLANK");
+                        //console.log("  MATCH FLANK");
                         var long_flank = item.text_context + item.text_flank;
                         if ( (pre.length - pre.lastIndexOf(long_flank)) == long_flank.length) {
-                            console.log("   MATCH CONTEXT");
+                            //console.log("   MATCH CONTEXT");
                             matches.push(r);
                         }
                         else {
-                            console.log("   NOT CONTEXT");
+                            //console.log("   NOT CONTEXT");
                             matches_flank_no_prev.push(r);
                         }
                     }
                     else {
-                        console.log("  NOT FLANK");
+                        //console.log("  NOT FLANK");
                         matches_no_flank.push(r);
                     }
                 }
                 else {
-                    console.log(" NOT TEXT");
+                    //console.log(" NOT TEXT");
                 }
             }
         }
         
-        console.log("matches with flank and context: " + matches.length + ", flank but not context: " + matches_flank_no_prev.length + ", no flank at all: " + matches_no_flank.length);
+        //console.log("matches with flank and context: " + matches.length + ", flank but not context: " + matches_flank_no_prev.length + ", no flank at all: " + matches_no_flank.length);
         if (matches.length) {
             return matches[0];
         }

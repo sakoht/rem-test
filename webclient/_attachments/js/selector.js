@@ -72,16 +72,18 @@
                 s.setAttribute('id',n);
 
                 s.onload = function() {
-                    console.log('onload ' + p);
+                    console.log('loaded (onload signal) script ' + p);
                     callback();
                 };
 
                 s.onreadystatechange= function (s) {
-                    console.log("ready state change");
-                    console.log(s);
                     if (s.readyState == 'complete' ||  s.readyState == 'loaded') {
-                        console.log('complete or loaded' + p);
+                        console.log('loaded (on ready state change: complete or loaded) script ' + p);
                         callback();
+                    }
+                    else {
+                        console.log("loading error for script " + p);
+                        console.log(s);
                     }
                 };
             }
@@ -93,7 +95,7 @@
         function _add_js_complete() {
             n_loaded++;
             if (n_loaded == scripts.length) {
-                console.log("everything loaded");
+                console.log("all scripts loaded");
                 everything_loaded_callback();
             }
         }
@@ -123,14 +125,20 @@
                     db.get(
                         '_design/webclient/_view/user_url_items?key=\["' + user_id + '","' + url + '"\]&include_docs=true', 
                         function(result) {
-                            console.log("pulled selections for user " + user_id + " for url " + url);
-                            console.log(result.rows);
-                            try {
+                            console.log("loaded selections for user " + user_id + " for url " + url);
+                            //console.log(result.rows);
+                            //try {
                                 for (var n = 0; n < result.rows.length; n++) {
                                     var id = result.rows[n].id;
-                                    console.log(id);
                                     var item = result.rows[n].doc;
-                                    console.log('inline result for id ' + id);
+                                    var msg;
+                                    if (item.text_flank == '') {
+                                        msg = 'initial show ' + id + ': ' + item.text;
+                                    }
+                                    else {
+                                        msg = 'initial show with flank ' + id + ': <' + item.text_flank + '> ' + item.text;
+                                    }
+                                    console.log(msg);
                                     console.log(item);
                                     show_item(item);
                                     items[item._id] = item;
@@ -144,11 +152,11 @@
                                     //    }
                                     //);
                                 };
-                            }
-                            catch(e) {
-                                console.log('error loading user page data');
-                                console.log(e);
-                            }
+                            //}
+                            //catch(e) {
+                            //    console.log('error loading user page data');
+                            //    console.log(e);
+                            //}
                             return;
                         }
                     );
@@ -390,13 +398,23 @@
                 }
             }
             
+            // avoid zero-width selections
             if (
                 (range.startContainer != range.endContainer)
                 || 
                 (range.startOffset != range.endOffset)
             ) {
-                // avoid zero-width selections
-                add_item_from_range(range, 'selection');
+                if (range.toString().length < 2) {
+                    console.log("cannot select just one letter for performance reasons");
+                }
+                else {
+                    if (range.toString().match(/\w+/)) {
+                        add_item_from_range(range, 'selection');
+                    }
+                    else {
+                        console.log("not words: '" + range.toString() + "'");
+                    }
+                }
             }    
         }
 
@@ -415,7 +433,12 @@
 
     function add_item_from_range(irange, itype) {
         // one item comes from a single range, but will contain multiple spans to preserve document shape
-        
+       
+        var start_c = irange.startContainer;
+        var start_o = irange.startOffset;
+        var end_c = irange.endContainer;
+        var end_o = irange.endOffset;
+
         var text = irange.toString();
         var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
 
@@ -427,9 +450,6 @@
         var page_inner_html = document.body.innerHTML;
         page_inner_html = sanitize_html(page_inner_html);
 
-        var start_path = to_path_pos(irange.startContainer);
-        var end_path = to_path_pos(irange.endContainer);
-       
         var sha1 = Crypto.SHA1("blob " + page_inner_html.length + "" + page_inner_html);
         var page = pages_by_content[sha1];
         if (!page) {
@@ -466,8 +486,9 @@
                     page._rev = result.rev;
                 }
             );
-
+            
             page.text_element_nodes = text_element_nodes;
+            page.full_text = text_elements.join('');
         }
         else {
             console.log("found the page with _id/key " + page._id + " revision " + page._rev);
@@ -478,6 +499,60 @@
             else {
                 console.log("page id matches sha1");
             }
+        }
+
+        // 1. find the position numbers of the containers bounding the range
+        // 2. determine the linear position of the text in the overall full_text of the page
+        var position_in_page_text = 0;
+        var strings = page.text_elements;
+        var nodes = page.text_element_nodes;
+        var start_cn = -1;
+        var end_cn = -1;
+        for (var n = 0; n < nodes.length; n++) {
+            if (nodes[n] == start_c) {
+                start_cn = n;
+                position_in_page_text += start_o;
+            }
+            if (nodes[n] == end_c) {
+                end_cn = n;
+            }
+            if (start_cn == -1) {
+                position_in_page_text += strings[n].length;
+            }
+        }
+       
+        // sanity check
+        if (start_cn < 0 || end_cn < 0) {
+            console.log(start_cn + ', ' + end_cn + ': error finding irange containers??');
+            position_in_page_text = -1;
+        }
+        else {
+            var expected = page.full_text.substr(position_in_page_text,text.length);
+            if (expected == text) {
+                console.log("position " + position_in_page_text + " returns expected value");
+            }
+            else {
+                console.log("coordinate extraction for text returns unexpected: " + expected);
+            }
+        }
+
+        // extend the left flank until it makes the text unique
+        full_text = page.full_text;
+        var n;
+        for (n = position_in_page_text-1; n >= 0; n--) {
+            text_with_flank = full_text.substr(n, position_in_page_text - n + text.length);
+            if (full_text.indexOf(text_with_flank) == full_text.lastIndexOf(text_with_flank)) {
+                console.log("text with flank is '" + text_with_flank + "'");
+                break;
+            }
+        }
+        var text_flank = full_text.substr(n, position_in_page_text - n);
+
+        // if we have less than 100 characters of flank, get enough additional flank to reach 100
+        var text_pre_flank = '';
+        if (text_flank.length < 100) {
+            var added_n = n - 100 + text_flank.length;
+            text_pre_flank = full_text.substr(added_n, n-added_n);
         }
 
         add_toolbar();
@@ -497,6 +572,9 @@
             text: text,
             text_sha1: text_sha1,
 
+            text_flank: text_flank,
+            text_pre_flank: text_pre_flank,
+
             user_id: user_id,
             session_id: session_id,
 
@@ -505,14 +583,14 @@
 
             last_modified: document.lastModified,
             page_sha1: page._id,
-            position_in_page_text: -1,
+            position_in_page_text: position_in_page_text,
             
             // capture the range data for reconstruction on the original doc
-            // to reselect on the repal page requires more effort
-            startContainer_dompath_pos: start_path, 
-            endContainer_dompath_pos: end_path,
-            startOffset: irange.startOffset,
-            endOffset: irange.endOffset,
+            // in the doc we capture a list of the text elements, and here we record the positions of the elements in that list
+            startContainerN: start_cn, 
+            endContainerN: end_cn,
+            startOffset: start_o,
+            endOffset: end_o,
         };
 
         save_item(item);
@@ -547,7 +625,7 @@
             var s = strings[n];
             for(;;) {
                 after = before.replace(s,"XXXX");
-                console.log("replaced " + s);
+                //console.log("replaced " + s);
                 if (after == before) {
                     break;
                 }
@@ -568,7 +646,7 @@
     function pages_list() {
         var list = [];
         for (var id in pages_by_content) {
-            list.push(items[id]);
+            list.push(pages_by_content[id]);
         }
         return list;
     }
@@ -787,6 +865,7 @@
         db.post(
             item, 
             function (result) {
+                console.log('save complete for item ' + item._id);
                 console.log(result);
                 item._rev = result.rev;
             }
@@ -839,38 +918,70 @@
                 var container_text_substr_end = container_text.substr(0,offset+1);
                 if (text_length >= offset + 1) {
                     // the item text is longer than, or as long as, the container text up to this position
-                    if (text.indexOf(container_text_substr_end) == text_length - offset - 1) {
+                    if (text.lastIndexOf(container_text_substr_end) == text_length - offset - 1) {
                         possible_ends.push([container,offset,container_text_substr_end]);
                     }
                 }
                 else {
                     // the item text is shorter than the container text up to this position
-                    if (container_text_substr_end.indexOf(text) == offset - text_length + 1) {
+                    if (container_text_substr_end.lastIndexOf(text) == offset - text_length + 1) {
                         possible_ends.push([container,offset,container_text_substr_end]);
                     }
                 }
-
-                
             }
         }
 
         console.log(possible_starts);
         console.log(possible_ends);
         
+        // there may be more than one range which has a plausible start and end, but not fully matching in content
         var matches = [];
+        var matches_no_flank = [];
+        var matches_flank_no_prev = [];
+        var pre_text = '';
         for (var s = 0; s < possible_starts.length; s++) {
             for (var e = 0; e < possible_ends.length; e++) {
                 var r = document.createRange();
                 r.setStart(possible_starts[s][0], possible_starts[s][1]);
                 r.setEnd(possible_ends[e][0], possible_ends[e][1]+1);
+                console.log("CHECK: " + s + " " + e + " : " + r.toString());
                 if (r.toString() == text) {
-                    matches.push(r);
+                    // range matches, now check flank
+                    var pre = pre_text;
+                    pre = pre + possible_starts[s][0].textContent.substr(0,possible_starts[s][1]);
+                    if ( (pre.length - pre.lastIndexOf(item.text_flank)) == item.text_flank.length) {
+                        // the text_flank precedes
+                        var long_flank = item.text_pre_flank + item.text_flank;
+                        if ( (pre.length - pre.lastIndexOf(long_flank)) == long_flank.length) {
+                            matches.push(r);
+                        }
+                        else {
+                            matches_flank_no_prev.push(r);
+                        }
+                    }
+                    else {
+                        matches_no_flank.push(r);
+                    }
+                }
+                else {
+                    console.log("MISMATCH: " + r.toString());
                 }
             }
+            pre_text += possible_starts[s][0].textContent;
         }
-
-        console.log(matches);
-        return matches[0];
+        
+        console.log("matches: " + matches.length + " no flank: " + matches_no_flank.length + " no prev: " + matches_flank_no_prev.length);
+        if (matches.length) {
+            return matches[0];
+        }
+        else if (matches_flank_no_prev.length) {
+            // resovles to one, but possibly out of context
+            return matches_flank_no_prev[0];
+        }
+        else if (matches_no_flank.length) {
+            // does not even resolve to one
+            return matches_no_flank[0];
+        }
     }
 
     function OLDresolve_range_for_item_by_content(item, e) {

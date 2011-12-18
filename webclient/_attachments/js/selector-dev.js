@@ -193,6 +193,9 @@
         s += "<div style='position:fixed; top:72px; right:32px; z-index:999998;' id='flinkt.org bulb on'>\n";
         s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/lightbulb_on32.png'>\n";
         s += "</div>\n";
+        s += "<div style='position:fixed; top:110px; right:32px; z-index:999998;' id='flinkt.org trash'>\n";
+        s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/trash32.png'>\n";
+        s += "</div>\n";
         p.innerHTML = s; 
         p.setAttribute('id','flinkt.org app')
         try { document.body.appendChild(p); } catch(e) { alert(e) };
@@ -549,10 +552,13 @@
         var text_flank = full_text.substr(n, position_in_page_text - n);
 
         // if we have less than 100 characters of flank, get enough additional flank to reach 100
-        var text_pre_flank = '';
+        var text_context = '';
         if (text_flank.length < 100) {
-            var added_n = n - 100 + text_flank.length;
-            text_pre_flank = full_text.substr(added_n, n-added_n);
+            var context_start_pos = n - 100 + text_flank.length;
+            if (context_start_pos < 0) {
+                context_start_pos = 0;
+            }
+            text_context = full_text.substr(context_start_pos, n-context_start_pos);
         }
 
         add_toolbar();
@@ -573,7 +579,7 @@
             text_sha1: text_sha1,
 
             text_flank: text_flank,
-            text_pre_flank: text_pre_flank,
+            text_context: text_context,
 
             user_id: user_id,
             session_id: session_id,
@@ -849,13 +855,13 @@
                 if (text_length - container_text_length - offset > 0) {
                     // the item text is longer than, or as long as, the container text from this position
                     if (text.indexOf(container_text_substr_start) == 0) {
-                        possible_starts.push([container,offset,container_text,container_text_substr_start]);
+                        possible_starts.push([container,offset,n]);
                     }
                 }
                 else {
                     // the item text is shorter than the container text from this position
                     if (container_text_substr_start.indexOf(text) == 0) {
-                        possible_starts.push([container,offset,container_text,container_text_substr_start]);
+                        possible_starts.push([container,offset,n]);
                     }
                 }
 
@@ -864,13 +870,13 @@
                 if (text_length >= offset + 1) {
                     // the item text is longer than, or as long as, the container text up to this position
                     if (text.lastIndexOf(container_text_substr_end) == text_length - offset - 1) {
-                        possible_ends.push([container,offset,container_text_substr_end]);
+                        possible_ends.push([container,offset,n]);
                     }
                 }
                 else {
                     // the item text is shorter than the container text up to this position
                     if (container_text_substr_end.lastIndexOf(text) == offset - text_length + 1) {
-                        possible_ends.push([container,offset,container_text_substr_end]);
+                        possible_ends.push([container,offset,n]);
                     }
                 }
             }
@@ -883,12 +889,18 @@
         var matches = [];
         var matches_no_flank = [];
         var matches_flank_no_prev = [];
-        var text_from_prev_elements = '';
         var allnl = new RegExp("\n",'g');
         console.log("ITEM: " + item.text.replace(allnl,'\\n'));
         console.log("FLANK: " + item.text_flank.replace(allnl,'\\n'));
-        console.log("CONTEXT: " + item.text_pre_flank.replace(allnl,'\\n'));
+        console.log("CONTEXT: " + item.text_context.replace(allnl,'\\n'));
         for (var s = 0; s < possible_starts.length; s++) {
+            var text_from_prev_elements;
+            if (possible_starts[s][2] >= 0) {
+                text_from_prev_elements = container_list.slice(0,possible_starts[s][2]).map(function(o){ return o.textContent }).join('');
+            }
+            else {
+                text_from_pre_elements = '';
+            }
             for (var e = 0; e < possible_ends.length; e++) {
                 var r = document.createRange();
                 r.setStart(possible_starts[s][0], possible_starts[s][1]);
@@ -902,7 +914,7 @@
                     pre = pre + possible_starts[s][0].textContent.substr(0,possible_starts[s][1]);
                     if ( (pre.length - pre.lastIndexOf(item.text_flank)) == item.text_flank.length) {
                         console.log("  MATCH FLANK");
-                        var long_flank = item.text_pre_flank + item.text_flank;
+                        var long_flank = item.text_context + item.text_flank;
                         if ( (pre.length - pre.lastIndexOf(long_flank)) == long_flank.length) {
                             console.log("   MATCH CONTEXT");
                             matches.push(r);
@@ -921,7 +933,6 @@
                     console.log(" NOT TEXT");
                 }
             }
-            text_from_prev_elements += possible_starts[s][0].textContent;
         }
         
         console.log("matches with flank and context: " + matches.length + ", flank but not context: " + matches_flank_no_prev.length + ", no flank at all: " + matches_no_flank.length);

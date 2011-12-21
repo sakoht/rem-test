@@ -436,15 +436,51 @@
 
     function add_item_from_range(irange, itype) {
         // one item comes from a single range, but will contain multiple spans to preserve document shape
-       
+        
+        // we'd like to do this only for new pages, but browsers arbitrarily munge text nodes ...and so do we 
+        var text_element_strings = [];
+        var text_element_nodes = [];
+        var tree_walker = document.createTreeWalker(
+            document.body, 
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        while (tree_walker.nextNode()) {
+            text_element_nodes.push(tree_walker.currentNode);
+            text_element_strings.push(tree_walker.currentNode.textContent);
+        }
+
+        // 1. find the position numbers of the containers bounding the range
+        // 2. determine the linear position of the text in the overall full_text of the page
+        var position_in_page_text = 0;
+        var start_cn = -1;
+        var end_cn = -1;
         var start_c = irange.startContainer;
         var start_o = irange.startOffset;
         var end_c = irange.endContainer;
         var end_o = irange.endOffset;
-
+        for (var n = 0; n < text_element_nodes.length; n++) {
+            if (text_element_nodes[n] == start_c) {
+                start_cn = n;
+                position_in_page_text += start_o;
+            }
+            if (text_element_nodes[n] == end_c) {
+                end_cn = n;
+            }
+            if (start_cn == -1) {
+                position_in_page_text += text_element_strings[n].length;
+            }
+        }
+       
+        // sanity check that we found the positions
+        if (start_cn < 0 || end_cn < 0) {
+            alert(start_cn + ', ' + end_cn + ': error finding irange containers??');
+            return;
+        }
+        
         var text = irange.toString();
         var text_sha1 = Crypto.SHA1("blob " + text.length + "" + text); //git std
-
         var url = document.URL;
 
         hide_all();
@@ -454,33 +490,21 @@
         page_inner_html = sanitize_html(page_inner_html);
 
         var sha1 = Crypto.SHA1("blob " + page_inner_html.length + "" + page_inner_html);
+        
         var page = pages_by_content[sha1];
         if (!page) {
             // save the page the first time we highlight on it
-          
-            // this block is also below in the show code: possibly abstract out?
-            var text_elements = [];
-            var text_element_nodes = [];
-            var tree_walker = document.createTreeWalker(
-                document.body, 
-                NodeFilter.SHOW_TEXT,
-                null,
-                false
-            );
-            while (tree_walker.nextNode()) {
-                text_element_nodes.push(tree_walker.currentNode);
-                text_elements.push(tree_walker.currentNode.textContent);
-            }
             
             page = {
                 _id: sha1,
                 content: page_inner_html,
-                text_elements: text_elements
+                text_elements: text_element_strings
             };
             
             pages_by_content[sha1] = page;
 
             console.log("saving the page with _id/key " + sha1);
+        
             db.post(
                 page, 
                 function (result) {
@@ -490,57 +514,23 @@
                 }
             );
             
-            page.text_element_nodes = text_element_nodes;
-            page.full_text = text_elements.join('');
         }
         else {
             console.log("found the page with _id/key " + page._id + " revision " + page._rev);
-            if (page._id != sha1) {
-                console.log(page._id);
-                console.log(sha1);
-            }
-            else {
-                console.log("page id matches sha1");
-            }
+            page.text_elements = text_element_strings;
         }
 
-        // 1. find the position numbers of the containers bounding the range
-        // 2. determine the linear position of the text in the overall full_text of the page
-        var position_in_page_text = 0;
-        var strings = page.text_elements;
-        var nodes = page.text_element_nodes;
-        var start_cn = -1;
-        var end_cn = -1;
-        for (var n = 0; n < nodes.length; n++) {
-            if (nodes[n] == start_c) {
-                start_cn = n;
-                position_in_page_text += start_o;
-            }
-            if (nodes[n] == end_c) {
-                end_cn = n;
-            }
-            if (start_cn == -1) {
-                position_in_page_text += strings[n].length;
-            }
-        }
-       
-        // sanity check
-        if (start_cn < 0 || end_cn < 0) {
-            console.log(start_cn + ', ' + end_cn + ': error finding irange containers??');
-            position_in_page_text = -1;
+        // sanity check the page full text 
+        var full_text = text_element_strings.join('');
+        var expected = full_text.substr(position_in_page_text,text.length);
+        if (expected == text) {
+            console.log("position " + position_in_page_text + " returns expected value");
         }
         else {
-            var expected = page.full_text.substr(position_in_page_text,text.length);
-            if (expected == text) {
-                console.log("position " + position_in_page_text + " returns expected value");
-            }
-            else {
-                console.log("coordinate extraction for text returns unexpected: " + expected);
-            }
+            console.log("coordinate extraction for text returns unexpected: " + expected);
         }
 
         // extend the left flank until it makes the text unique
-        full_text = page.full_text;
         var n;
         for (n = position_in_page_text-1; n >= 0; n--) {
             text_with_flank = full_text.substr(n, position_in_page_text - n + text.length);
@@ -590,21 +580,18 @@
             last_modified: document.lastModified,
             page_sha1: page._id,
             position_in_page_text: position_in_page_text,
-            
-            // capture the range data for reconstruction on the original doc
-            // in the doc we capture a list of the text elements, and here we record the positions of the elements in that list
-            startContainerN: start_cn, 
-            endContainerN: end_cn,
-            startOffset: start_o,
-            endOffset: end_o,
         };
 
         save_item(item);
         console.log(item);
-        show_item(item);
-
-        items[item._id] = item;
-        return item;
+        if (show_item(item)) {
+            items[item._id] = item;
+            return item;
+        }
+        else {
+            alert("error showing item: please report this error...");
+            return;
+        }
     };
 
     function sanitize_html(before) {
@@ -675,16 +662,16 @@
     }
 
     function show_item(item) {
+        var irange = resolve_range_for_item_by_content(item);
+        if (!irange) {
+            return;
+        }
+
         var color;
         var opacity;
         if (item.itype == 'selection') {
             color = 'yellow';
             opacity = .9;
-        }
-
-        var irange = resolve_range_for_item_by_content(item);
-        if (!irange) {
-            return;
         }
 
         // wrap each element in the range in a highlighted span

@@ -7,7 +7,7 @@ if (@ARGV == 0) {
 }
 
 for my $user_id (@ARGV) {
-    my $cmd = 'curl -X GET localhost:5983/flinktdb/_design/webclient/_view/user_items?key=';
+    my $cmd = 'curl -X GET localhost:5983/flinktdb/_design/webclient/_view/items-by-user_id?key=';
     $cmd .= "'\"$user_id\"'\\&include_docs=true";
     print $cmd,"\n";
     my $json = `$cmd`;

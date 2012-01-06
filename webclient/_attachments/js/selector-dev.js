@@ -123,7 +123,7 @@
                     db = new Couch.Database(server, 'flinktdb');
                     url = document.URL;
                     db.get(
-                        '_design/webclient/_view/items-by-user_id-and-url?key=\["' + user_id + '","' + url + '"\]&include_docs=true', 
+                        '_design/webclient/_view/items-by-user_id-and-url?key=\["' + user_id + '","' + url + '"\]&include_docs=true&reduce=false', 
                         function(result) {
                             console.log("loaded selections for user " + user_id + " for url " + url);
                             //console.log(result.rows);

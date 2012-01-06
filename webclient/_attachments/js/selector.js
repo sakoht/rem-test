@@ -123,7 +123,7 @@
                     db = new Couch.Database(server, 'flinktdb');
                     url = document.URL;
                     db.get(
-                        '_design/webclient/_view/user_url_items?key=\["' + user_id + '","' + url + '"\]&include_docs=true', 
+                        '_design/webclient/_view/items-by-user_id-and-url?key=\["' + user_id + '","' + url + '"\]&include_docs=true&reduce=false', 
                         function(result) {
                             console.log("loaded selections for user " + user_id + " for url " + url);
                             //console.log(result.rows);
@@ -836,6 +836,8 @@
         var text_length = text.length;
         var previous_full_text = '';
         var previous_full_text_by_container_number = {};
+        var first_character = text.substr(0,1);
+        var last_character = text.substr(text.length-1,1);
         for (var n = 0; n < container_list.length; n++) {
             container = container_list[n];
             var container_text = container.textContent;

@@ -1,4 +1,9 @@
 
+var prev_bookmarklet;
+if (prev_bookmarklet) {
+    start_app();
+}
+else {
 //(function() {
 
     var site = 'www.flinkt.org';
@@ -212,7 +217,7 @@
         bulb_off();
         remove_toolbar();
         var b = document.getElementById('flinkt.org bookmarklet');
-        if (b != null) { b.parentNode.removeChild(b); }
+        if (b != null) { b.parentNode.removeChild(b); prev_bookmarklet = b; }
     }
 
     function flinkt_bookmarklet_click() {
@@ -969,4 +974,5 @@
         console.log("same!");
     }
 
+}
 //})();

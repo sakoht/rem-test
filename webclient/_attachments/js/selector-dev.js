@@ -984,5 +984,15 @@ else {
         console.log("same!");
     }
 
+    function fe(f) {
+        db.get(
+            "_all_docs?include_docs=true", 
+            function(r) { 
+                for(n = 0; n < r.rows.length; n++) { 
+                    console.log(f(r.rows[n].doc)) 
+                } 
+            }
+        );
+    }
 }
 //})();

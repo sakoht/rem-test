@@ -38,10 +38,19 @@ else {
     var deleted_items = {};
     var views = {};
     var pages_by_content = {}; 
-    
-    load_supporting_js(start_app);
-    
-    // all code below is function definitions
+   
+    if (document.body) {
+        load_supporting_js(start_app);
+    }
+    else {
+        $(document).ready(
+            function() {
+                load_supporting_js(start_app);
+            }
+        );
+    }
+
+    // all code lines below are function definitions
     
     function load_supporting_js(everything_loaded_callback) {
         var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/Math.uuid.js','/js/jquery.cookies.2.2.0.js'];
@@ -116,6 +125,7 @@ else {
 
                     // set application/session globals
                     if (bookmarklet) {
+                        // started from a bookmarklet
                         bookmarklet_id      = bookmarklet.flinkt_init_bookmarklet_id;       // this identifies the browser instance
                         bookmarklet_version = bookmarklet.flinkt_init_bookmarklet_version;  // we rarely updated the bookmarklet, but when we do it's important
                         session_id          = bookmarklet.flinkt_init_session_id;           // todo: ensure the diff vs Date() is reasonable
@@ -132,6 +142,7 @@ else {
                         }
                     }
                     else {
+                        // started from a page which includes this js directly
                         bookmarklet_id = get_cookie('bookmarklet_id');
                         if (bookmarklet_id == null) {
                             bookmarklet_id = Math.uuid().toLowerCase().replace(/-/g,'');

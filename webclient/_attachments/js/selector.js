@@ -179,6 +179,8 @@ else {
     function add_toolbar() {
         // the div at the top has elements which are internally at a fixed position
         // they should probably be relative to their parent div, which should itself be fixed
+        // TODO: this could probably be done directly in javascript, or else pull in the div
+        // content completely from another URL
         var p = document.createElement('div');
         var s =  "<div style='position:fixed; top:32px; right:32px; z-index:999997;' id='flinkt.org pen off'>\n";
         s += "   <img onclick='pen_on()' src='http://www.flinkt.org/images/pen32right.jpg'>\n";
@@ -216,14 +218,22 @@ else {
         pen_off();
         bulb_off();
         remove_toolbar();
+
+        // remove the bookmarklet to clean up after ourselves
+        // Note that the code stays in scope (at least in Chrome)
+        // so we hold a reference to the bookmarklet to avoid re-defining these functions
+        // if they re-activate the highlighter on the same page later.
         var b = document.getElementById('flinkt.org bookmarklet');
-        if (b != null) { b.parentNode.removeChild(b); prev_bookmarklet = b; }
+        if (b != null) {
+            b.parentNode.removeChild(b); 
+            prev_bookmarklet = b; 
+        }
     }
 
     function flinkt_bookmarklet_click() {
         // by default we just stop the app if they re-click the bookmarklet
         // this may change over time, and we don't want to have to replace the bookmarklet, 
-        // so re-clicks are caught here
+        // so re-clicks go here instead of directly to stop_app() 
         stop_app();
     }
 
@@ -269,7 +279,7 @@ else {
     }
 
     function site_click() {
-        alert('site click');
+        alert('TODO: go to the flinkt.org site, or bring in an iframe.');
     }
 
     // events for the pen
@@ -974,5 +984,15 @@ else {
         console.log("same!");
     }
 
+    function fe(f) {
+        db.get(
+            "_all_docs?include_docs=true", 
+            function(r) { 
+                for(n = 0; n < r.rows.length; n++) { 
+                    console.log(f(r.rows[n].doc)) 
+                } 
+            }
+        );
+    }
 }
 //})();

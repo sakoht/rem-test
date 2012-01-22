@@ -1,9 +1,9 @@
 $(document).ready(
     function() {
-        var bookmarklet_id = $.cookies.get('flinkt-bookmarklet-id');
+        var bookmarklet_id = get_cookie('bookmarklet_id');
         if (bookmarklet_id == null) {
             bookmarklet_id = $.couch.newUUID();
-            $.cookies.set('bookmarklet_id', bookmarklet_id);
+            document.cookie = 'bookmarklet_id=' . bookmarklet_id;
         }
         else {
             alert("You already have bookmarklet " + bookmarklet_id + ".");    

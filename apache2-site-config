@@ -23,6 +23,26 @@
 	Redirect / http://www.flinkt.org/
 </VirtualHost>
 
+<VirtualHost *:80>
+	ServerName factmap.net
+	Redirect / http://www.flinkt.org/
+</VirtualHost>
+
+<VirtualHost *:80>
+	ServerName factmap.org
+	Redirect / http://www.flinkt.org/
+</VirtualHost>
+
+<VirtualHost *:80>
+	ServerName www.factmap.net
+	Redirect / http://www.flinkt.org/
+</VirtualHost>
+
+<VirtualHost *:80>
+	ServerName www.factmap.org
+	Redirect / http://www.flinkt.org/
+</VirtualHost>
+
 LoadModule  proxy_module         /usr/lib/apache2/modules/mod_proxy.so
 LoadModule  proxy_http_module    /usr/lib/apache2/modules/mod_proxy_http.so
 LoadModule  headers_module       /usr/lib/apache2/modules/mod_headers.so

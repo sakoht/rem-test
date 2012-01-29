@@ -1,18 +1,14 @@
 
-var prev_bookmarklet;
-if (prev_bookmarklet) {
+var previously_started;
+if (previously_started) {
+    // restart the app without re-creating data structures and closures
     start_app();
 }
 else {
-//(function() {
+    // create a fresh set of data structures and closures, then start the app
+    previously_started = true;
 
     var site = 'www.flinkt.org';
-
-    var bookmarklet         = document.getElementById("flinkt.org bookmarklet");
-    var bookmarklet_id      = bookmarklet.flinkt_init_bookmarklet_id;       // this identifies the browser instance
-    var bookmarklet_version = bookmarklet.flinkt_init_bookmarklet_version;  // we rarely updated the bookmarklet, but when we do it's important
-    var session_id          = bookmarklet.flinkt_init_session_id;           // todo: ensure the diff vs Date() is reasonable
-    var user_id             = bookmarklet_id;                               // todo: get a real user id from a cookie set the first time the app is used
 
     function nostart() {
         var b = document.getElementById('flinkt.org bookmarklet');
@@ -22,42 +18,42 @@ else {
     if (!document.implementation.hasFeature("Range", "2.0")) {
         alert("This browser is too old to use the flinkt tool. :(\n\nTell grandma to upgrade, browsers are free!");
         nostart();
-    }
-    else if (bookmarklet_version != 3) {
-        alert("Your testing bookmarklet is out of date!\nPlease reinstall it from www.flinkt.org/demo!");
-        nostart();
-    }
-    else {
-        load_supporting_js(start_app);
+        throw "this browser does not rupport Range 2.0, and cannot run the flinkt web client";
     }
 
+    var bookmarklet = document.getElementById("flinkt.org bookmarklet");
+    
+    var bookmarklet_id; 
+    var bookmarklet_version; 
+    var session_id; 
+    var user_id;
+    
     var server;
     var db;
 
     var pen_status;
     var bulb_status;
 
-    // for debugging
-    if (!document.flinkt_items) {
-        document.flinkt_items = {};
-    }
-    if (!document.flinkt_pages_by_content) {
-        document.flinkt_pages_by_content = {};
-    }
-    if (!document.flinkt_views) {
-        document.flinkt_views = {};
-    }
-
-    var items = document.flinkt_items;
-    var pages_by_content = document.flinkt_pages_by_content;
-    var views = document.flinkt_views;
-
+    var items = {}; 
     var deleted_items = {};
-    
-    ////////////////////////////
+    var views = {};
+    var pages_by_content = {}; 
+   
+    if (document.body) {
+        load_supporting_js(start_app);
+    }
+    else {
+        $(document).ready(
+            function() {
+                load_supporting_js(start_app);
+            }
+        );
+    }
 
+    // all code lines below are function definitions
+    
     function load_supporting_js(everything_loaded_callback) {
-        var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/Math.uuid.js'];
+        var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/Math.uuid.js','/js/jquery.cookies.2.2.0.js'];
         var n_loaded = 0;
         
         // this could be done with jQuery.getScript, but we need it to get jQuery in the first place..
@@ -119,14 +115,50 @@ else {
         try {
             Couch.init(
                 function() {
+                    // sadly, this function can be called repeatedly
+                    // and that really messes things up
                     if (loaded == 1) {
                         console.log("skipping reload");
                         return;
                     }
                     loaded = 1;
+
+                    // set application/session globals
+                    if (bookmarklet) {
+                        // started from a bookmarklet
+                        bookmarklet_id      = bookmarklet.flinkt_init_bookmarklet_id;       // this identifies the browser instance
+                        bookmarklet_version = bookmarklet.flinkt_init_bookmarklet_version;  // we rarely updated the bookmarklet, but when we do it's important
+                        session_id          = bookmarklet.flinkt_init_session_id;           // todo: ensure the diff vs Date() is reasonable
+                        user_id = bookmarklet_id;
+                        if (bookmarklet_version != 3) {
+                            alert("Your testing bookmarklet is out of date!\nPlease reinstall it from www.flinkt.org/demo!");
+                            nostart();
+                            throw "The flinkt bookmarklet is out of date.  Please reinstall from flinkt.org."
+                        }
+                        expected_bookmarklet_id = get_cookie('bookmarklet_id');
+                        if (expected_bookmarklet_id != bookmarklet_id) {
+                            alert("changing login to user " + bookmarklet_id);
+                            document.cookie = 'bookmarklet_id=' + bookmarklet_id;
+                        }
+                    }
+                    else {
+                        // started from a page which includes this js directly
+                        bookmarklet_id = get_cookie('bookmarklet_id');
+                        if (bookmarklet_id == null) {
+                            bookmarklet_id = Math.uuid().toLowerCase().replace(/-/g,'');
+                            document.cookie = 'bookmarklet_id=' . bookmarklet_id;
+                            alert("new flinkt id: " + bookmarklet_id);
+                        }
+                        bookmarklet_version = 3;
+                        session_id = Date();
+                        user_id = bookmarklet_id;
+                    }
+                    
+                    url = document.URL;
+                    
+                    // connect to the database
                     server = new Couch.Server('http://' + site);
                     db = new Couch.Database(server, 'flinktdb');
-                    url = document.URL;
                     db.get(
                         '_design/webclient/_view/items-by-user_id-and-url?key=\["' + user_id + '","' + url + '"\]&include_docs=true', 
                         function(result) {
@@ -226,7 +258,7 @@ else {
         var b = document.getElementById('flinkt.org bookmarklet');
         if (b != null) {
             b.parentNode.removeChild(b); 
-            prev_bookmarklet = b; 
+            previously_started = 1; 
         }
     }
 
@@ -994,5 +1026,18 @@ else {
             }
         );
     }
+
+    function get_cookie(name) {
+        var pos = document.cookie.indexOf(name);
+        if (pos == -1) {
+            return null;
+        }
+        var value = document.cookie.substr(pos+name.length+1);
+        pos = value.indexOf(';');
+        if (pos != -1) {
+            value = value.substr(0,pos);
+        }
+        return value;
+    }
 }
-//})();
+

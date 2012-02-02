@@ -102,8 +102,8 @@ LoadFile    /usr/lib/libxml2.so
 
     # default page is "under constructions"
 
-    ProxyPass / http://localhost:5983/flinktdb/_design/webclient/under-construction.html
-    ProxyPassReverse / http://localhost:5983/flinktdb/_design/webclient/under-construction.html
+    ProxyPass / http://localhost:5983/flinktdb/_design/webclient/pages/under-construction.html
+    ProxyPassReverse / http://localhost:5983/flinktdb/_design/webclient/pages/under-construction.html
 
     #<Location "/">
 	#    SetHandler python-program

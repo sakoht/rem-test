@@ -58,41 +58,50 @@ LoadFile    /usr/lib/libxml2.so
         Order deny,allow
         Allow from all
     </Proxy>
-    
+   
+    # couchapps
+
     ProxyPass /flinktdb http://localhost:5983/flinktdb
     ProxyPassReverse /flinktdb http://localhost:5983/flinktdb
     
     ProxyPass /couchdb-xd http://localhost:5983/couchdb-xd
     ProxyPassReverse /couchdb-xd http://localhost:5983/couchdb-xd
     
+    # utils
+
     ProxyPass /_utils/script http://localhost:5983/_utils/script
     ProxyPassReverse /_utils/script http://localhost:5983/_utils/script
     
     ProxyPass /_uuids http://localhost:5983/_uuids
     ProxyPassReverse /_uuids http://localhost:5983/_uuids
     
-    ProxyPass /js/ http://localhost:5983/flinktdb/_design/webclient/js/
-    ProxyPassReverse /js/ http://localhost:5983/flinktdb/_design/webclient/js/
-
-    ProxyPass /images http://localhost:5983/flinktdb/_design/webclient/images/
-    ProxyPassReverse /images http://localhost:5983/flinktdb/_design/webclient/images/
-	
-    ProxyPass /demo http://localhost:5983/flinktdb/_design/webclient/demo.html
-    ProxyPassReverse /demo http://localhost:5983/flinktdb/_design/webclient/demo.html
-    
-    ProxyPass /faq http://localhost:5983/flinktdb/_design/webclient/faq.html
-    ProxyPassReverse /faq http://localhost:5983/flinktdb/_design/webclient/faq.html
-
-    ProxyPass /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
-    ProxyPassReverse /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
-
+    # directories of attachments
 
     ProxyPass /pages http://localhost:5983/flinktdb/_design/webclient/pages
     ProxyPassReverse /pages http://localhost:5983/flinktdb/_design/webclient/pages
     
+    ProxyPass /images http://localhost:5983/flinktdb/_design/webclient/images/
+    ProxyPassReverse /images http://localhost:5983/flinktdb/_design/webclient/images/
+	
+    ProxyPass /js/ http://localhost:5983/flinktdb/_design/webclient/js/
+    ProxyPassReverse /js/ http://localhost:5983/flinktdb/_design/webclient/js/
+
+    ProxyPass /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
+    ProxyPassReverse /static/js/ http://localhost:5983/flinktdb/_design/webclient/js/
+
     ProxyPass /test http://localhost:5983/flinktdb/_design/webclient/test
     ProxyPassReverse /test http://localhost:5983/flinktdb/_design/webclient/test
     
+    # static pages
+    
+    ProxyPass /demo http://localhost:5983/flinktdb/_design/webclient/pages/demo.html
+    ProxyPassReverse /demo http://localhost:5983/flinktdb/_design/webclient/pages/demo.html
+    
+    ProxyPass /faq http://localhost:5983/flinktdb/_design/webclient/pages/faq.html
+    ProxyPassReverse /faq http://localhost:5983/flinktdb/_design/webclient/pages/faq.html
+
+    # default page is "under constructions"
+
     ProxyPass / http://localhost:5983/flinktdb/_design/webclient/under-construction.html
     ProxyPassReverse / http://localhost:5983/flinktdb/_design/webclient/under-construction.html
 

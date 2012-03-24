@@ -215,10 +215,10 @@ else {
         // content completely from another URL
         var p = document.createElement('div');
         var s =  "<div style='position:fixed; top:32px; right:32px; z-index:999997;' id='flinkt.org pen off'>\n";
-        s += "   <img onclick='pen_on()' src='http://www.flinkt.org/images/pen32right.jpg'>\n";
+        s += "   <img onclick='pen_on()' src='http://www.flinkt.org/images/pen32right.png'>\n";
         s += "</div>";
         s += "<div style='position:fixed; top:32px; right:32px; z-index:999998;' id='flinkt.org pen on'>\n";
-        s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.jpg'>\n";
+        s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.png'>\n";
         s += "</div>\n";
         s += "<div style='position:fixed; top:32px; right:12px; z-index:999999;'>\n";
         s += "   <img onclick='stop_app()' src='http://www.flinkt.org/images/x12.jpg'>\n";

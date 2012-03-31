@@ -287,8 +287,8 @@ else {
     }
 
     function pen_on() {
-        document.getElementById('flinkt.org pen on').style.zIndex = ztop;
-        document.getElementById('flinkt.org pen off').style.zIndex = zbottom;
+        document.getElementById('flinkt.org pen on').style.opacity = 9;
+        document.getElementById('flinkt.org pen off').style.opacity = 0;
         //document.addEventListener('click',on_click, true);
         document.addEventListener('mousedown',on_mousedown, true);
         document.addEventListener('mousemove',on_mousemove, true);
@@ -299,8 +299,8 @@ else {
     }
 
     function pen_off() {
-        document.getElementById('flinkt.org pen off').style.zIndex = ztop;
-        document.getElementById('flinkt.org pen on').style.zIndex = zbottom;
+        document.getElementById('flinkt.org pen off').style.opacity = 0;
+        document.getElementById('flinkt.org pen on').style.opacity = 9;
         //document.removeEventListener('click',on_click, true);
         document.removeEventListener('mousedown',on_mousedown, true);
         document.removeEventListener('mousemove',on_mousemove, true);

@@ -273,22 +273,33 @@ else {
 
     var ztop = 999998;
     var zbottom = 999996;
+    var ovisible = 9;
+    var ohidden = 0;
 
     function bulb_on() {
-        document.getElementById('flinkt.org bulb on').style.zIndex = ztop;
-        document.getElementById('flinkt.org bulb off').style.zIndex = zbottom;
+        console.log("bulb on");
+        document.getElementById('flinkt.org bulb on').style.zIndex = ztop+1;
+        document.getElementById('flinkt.org bulb on').style.opacity = ovisible;
+        document.getElementById('flinkt.org bulb off').style.zIndex = zbottom-1;
+        document.getElementById('flinkt.org bulb off').style.opacity = ohidden;
         show_all();
     }
 
     function bulb_off() {
+        console.log("bulb off");
         document.getElementById('flinkt.org bulb off').style.zIndex = ztop+1;
+        document.getElementById('flinkt.org bulb off').style.opacity = ovisible;
         document.getElementById('flinkt.org bulb on').style.zIndex = zbottom-1;
+        document.getElementById('flinkt.org bulb on').style.opacity = ohidden;
         hide_all();
     }
 
     function pen_on() {
         document.getElementById('flinkt.org pen on').style.zIndex = ztop;
+        document.getElementById('flinkt.org pen on').style.opacity = ovisible;
         document.getElementById('flinkt.org pen off').style.zIndex = zbottom;
+        document.getElementById('flinkt.org pen off').style.opacity = ohidden;
+
         //document.addEventListener('click',on_click, true);
         document.addEventListener('mousedown',on_mousedown, true);
         document.addEventListener('mousemove',on_mousemove, true);
@@ -300,7 +311,10 @@ else {
 
     function pen_off() {
         document.getElementById('flinkt.org pen off').style.zIndex = ztop;
+        document.getElementById('flinkt.org pen off').style.opacity = ovisible;
         document.getElementById('flinkt.org pen on').style.zIndex = zbottom;
+        document.getElementById('flinkt.org pen on').style.opacity = ohidden;
+
         //document.removeEventListener('click',on_click, true);
         document.removeEventListener('mousedown',on_mousedown, true);
         document.removeEventListener('mousemove',on_mousemove, true);

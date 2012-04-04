@@ -208,7 +208,17 @@ else {
         bulb_on();
     }
 
+    var toolbar_parent;
+    var toolbar;
     function add_toolbar() {
+        if (toolbar_parent) {
+            console.log("OLD TOOLBAR");
+            toolbar_parent.appendChild(toolbar);
+            return;
+        }
+        else {
+            console.log("NEW TOOLBAR");
+        }
         // the div at the top has elements which are internally at a fixed position
         // they should probably be relative to their parent div, which should itself be fixed
         // TODO: this could probably be done directly in javascript, or else pull in the div
@@ -220,6 +230,8 @@ else {
         s += "<div style='position:fixed; top:32px; right:32px; z-index:999998;' id='flinkt.org pen on'>\n";
         s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.png'>\n";
         s += "</div>\n";
+
+        /*
         s += "<div style='position:fixed; top:32px; right:12px; z-index:999999;'>\n";
         s += "   <img onclick='stop_app()' src='http://www.flinkt.org/images/x12.jpg'>\n";
         s += "</div>\n";
@@ -235,14 +247,19 @@ else {
         s += "<div style='position:fixed; top:110px; right:32px; z-index:999998;' id='flinkt.org trash'>\n";
         s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/trash32.png'>\n";
         s += "</div>\n";
+        */
+
         p.innerHTML = s; 
         p.setAttribute('id','flinkt.org app')
         try { document.body.appendChild(p); } catch(e) { alert(e) };
     }
 
     function remove_toolbar() {
-        var a = document.getElementById('flinkt.org app');
-        if (a != null) { a.parentNode.removeChild(a); }
+        toolbar = document.getElementById('flinkt.org app');
+        if (toolbar != null) { 
+            toolbar_parent = toolbar.parentNode;
+            toolbar_parent.removeChild(toolbar); 
+        }
     }
 
     function stop_app() {

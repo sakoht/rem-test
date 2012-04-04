@@ -208,7 +208,17 @@ else {
         bulb_on();
     }
 
+    var toolbar_parent;
+    var toolbar;
     function add_toolbar() {
+        if (toolbar_parent) {
+            console.log("OLD TOOLBAR");
+            toolbar_parent.appendChild(toolbar);
+            return;
+        }
+        else {
+            console.log("NEW TOOLBAR");
+        }
         // the div at the top has elements which are internally at a fixed position
         // they should probably be relative to their parent div, which should itself be fixed
         // TODO: this could probably be done directly in javascript, or else pull in the div
@@ -220,6 +230,8 @@ else {
         s += "<div style='position:fixed; top:32px; right:32px; z-index:999998;' id='flinkt.org pen on'>\n";
         s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.png'>\n";
         s += "</div>\n";
+
+        /*
         s += "<div style='position:fixed; top:32px; right:12px; z-index:999999;'>\n";
         s += "   <img onclick='stop_app()' src='http://www.flinkt.org/images/x12.jpg'>\n";
         s += "</div>\n";
@@ -235,14 +247,19 @@ else {
         s += "<div style='position:fixed; top:110px; right:32px; z-index:999998;' id='flinkt.org trash'>\n";
         s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/trash32.png'>\n";
         s += "</div>\n";
+        */
+
         p.innerHTML = s; 
         p.setAttribute('id','flinkt.org app')
         try { document.body.appendChild(p); } catch(e) { alert(e) };
     }
 
     function remove_toolbar() {
-        var a = document.getElementById('flinkt.org app');
-        if (a != null) { a.parentNode.removeChild(a); }
+        toolbar = document.getElementById('flinkt.org app');
+        if (toolbar != null) { 
+            toolbar_parent = toolbar.parentNode;
+            toolbar_parent.removeChild(toolbar); 
+        }
     }
 
     function stop_app() {
@@ -273,22 +290,33 @@ else {
 
     var ztop = 999998;
     var zbottom = 999996;
+    var ovisible = 9;
+    var ohidden = 0;
 
     function bulb_on() {
-        document.getElementById('flinkt.org bulb on').style.zIndex = ztop;
-        document.getElementById('flinkt.org bulb off').style.zIndex = zbottom;
+        console.log("bulb on");
+        document.getElementById('flinkt.org bulb on').style.zIndex = ztop+1;
+        document.getElementById('flinkt.org bulb on').style.opacity = ovisible;
+        document.getElementById('flinkt.org bulb off').style.zIndex = zbottom-1;
+        document.getElementById('flinkt.org bulb off').style.opacity = ohidden;
         show_all();
     }
 
     function bulb_off() {
+        console.log("bulb off");
         document.getElementById('flinkt.org bulb off').style.zIndex = ztop+1;
+        document.getElementById('flinkt.org bulb off').style.opacity = ovisible;
         document.getElementById('flinkt.org bulb on').style.zIndex = zbottom-1;
+        document.getElementById('flinkt.org bulb on').style.opacity = ohidden;
         hide_all();
     }
 
     function pen_on() {
-        document.getElementById('flinkt.org pen on').style.opacity = 9;
-        document.getElementById('flinkt.org pen off').style.opacity = 0;
+        document.getElementById('flinkt.org pen on').style.zIndex = ztop;
+        document.getElementById('flinkt.org pen on').style.opacity = ovisible;
+        document.getElementById('flinkt.org pen off').style.zIndex = zbottom;
+        document.getElementById('flinkt.org pen off').style.opacity = ohidden;
+
         //document.addEventListener('click',on_click, true);
         document.addEventListener('mousedown',on_mousedown, true);
         document.addEventListener('mousemove',on_mousemove, true);
@@ -299,8 +327,11 @@ else {
     }
 
     function pen_off() {
-        document.getElementById('flinkt.org pen off').style.opacity = 0;
-        document.getElementById('flinkt.org pen on').style.opacity = 9;
+        document.getElementById('flinkt.org pen off').style.zIndex = ztop;
+        document.getElementById('flinkt.org pen off').style.opacity = ovisible;
+        document.getElementById('flinkt.org pen on').style.zIndex = zbottom;
+        document.getElementById('flinkt.org pen on').style.opacity = ohidden;
+
         //document.removeEventListener('click',on_click, true);
         document.removeEventListener('mousedown',on_mousedown, true);
         document.removeEventListener('mousemove',on_mousemove, true);

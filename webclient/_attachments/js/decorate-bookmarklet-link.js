@@ -1,5 +1,20 @@
 $(document).ready(
     function() {
+        // TODO: this is copied from the selector{,-dev}.js
+        // and probably needs a single home.
+        function get_cookie(name) {
+            var pos = document.cookie.indexOf(name);
+            if (pos == -1) {
+                return null;
+            }
+            var value = document.cookie.substr(pos+name.length+1);
+            pos = value.indexOf(';');
+            if (pos != -1) {
+                value = value.substr(0,pos);
+            }
+            return value;
+        }
+
         var bookmarklet_id = get_cookie('bookmarklet_id');
         if (bookmarklet_id == null) {
             bookmarklet_id = $.couch.newUUID();
@@ -8,6 +23,7 @@ $(document).ready(
         else {
             alert("You already have bookmarklet " + bookmarklet_id + ".");    
         }
+
         var b = "javascript:(function(){";
         b += "  if(document.getElementById('flinkt.org bookmarklet') == null) {";
         b += "    s=document.createElement('script');";

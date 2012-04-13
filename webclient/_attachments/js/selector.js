@@ -135,11 +135,11 @@ else {
                             nostart();
                             throw "The flinkt bookmarklet is out of date.  Please reinstall from flinkt.org."
                         }
-                        expected_bookmarklet_id = get_cookie('bookmarklet_id');
-                        if (expected_bookmarklet_id != bookmarklet_id) {
-                            alert("changing login to user " + bookmarklet_id);
-                            document.cookie = 'bookmarklet_id=' + bookmarklet_id;
-                        }
+                        //expected_bookmarklet_id = get_cookie('bookmarklet_id');
+                        //if (expected_bookmarklet_id != bookmarklet_id) {
+                        //    alert("changing login to user " + bookmarklet_id);
+                        //    document.cookie = 'bookmarklet_id=' + bookmarklet_id;
+                        //}
                     }
                     else {
                         // started from a page which includes this js directly

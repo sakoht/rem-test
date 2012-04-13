@@ -135,11 +135,11 @@ else {
                             nostart();
                             throw "The flinkt bookmarklet is out of date.  Please reinstall from flinkt.org."
                         }
-                        expected_bookmarklet_id = get_cookie('bookmarklet_id');
-                        if (expected_bookmarklet_id != bookmarklet_id) {
-                            alert("changing login to user " + bookmarklet_id);
-                            document.cookie = 'bookmarklet_id=' + bookmarklet_id;
-                        }
+                        //expected_bookmarklet_id = get_cookie('bookmarklet_id');
+                        //if (expected_bookmarklet_id != bookmarklet_id) {
+                        //    alert("changing login to user " + bookmarklet_id);
+                        //    document.cookie = 'bookmarklet_id=' + bookmarklet_id;
+                        //}
                     }
                     else {
                         // started from a page which includes this js directly
@@ -227,7 +227,7 @@ else {
         s += "<div style='position:fixed; top:32px; right:32px; z-index:999998;' id='flinkt.org pen on'>\n";
         s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.png'>\n";
         s += "</div>\n";
-        s += "<div style='position:fixed; top:72px; right:32px; z-index:999998; opacity=0' id='flinkt.org save button'>\n";
+        s += "<div style='position:fixed; top:72px; right:32px; z-index:999998;' id='flinkt.org save button'>\n";
         s += "   <img onclick='save_click()' src='http://www.flinkt.org/images/save32.png'>\n";
         s += "</div>\n";
 

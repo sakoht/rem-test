@@ -212,13 +212,10 @@ else {
     var toolbar;
     function add_toolbar() {
         if (toolbar_parent) {
-            console.log("OLD TOOLBAR");
             toolbar_parent.appendChild(toolbar);
             return;
         }
-        else {
-            console.log("NEW TOOLBAR");
-        }
+        
         // the div at the top has elements which are internally at a fixed position
         // they should probably be relative to their parent div, which should itself be fixed
         // TODO: this could probably be done directly in javascript, or else pull in the div
@@ -229,6 +226,9 @@ else {
         s += "</div>";
         s += "<div style='position:fixed; top:32px; right:32px; z-index:999998;' id='flinkt.org pen on'>\n";
         s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.png'>\n";
+        s += "</div>\n";
+        s += "<div style='position:fixed; top:72px; right:32px; z-index:999998;' id='flinkt.org save button'>\n";
+        s += "   <img onclick='save_click()' src='http://www.flinkt.org/images/save32.png'>\n";
         s += "</div>\n";
 
         /*
@@ -339,6 +339,18 @@ else {
         document.removeEventListener('touchend',on_touchend, true);
         document.removeEventListener('touchmove',on_touchmove, true);
         pen_status = 'off';
+    }
+
+    function save_on() {
+        document.getElementById('flinkt.org save button').style.opacity = ovisible;
+    }
+
+    function save_off() {
+        document.getElementById('flinkt.org save button').style.opacity = ohidden;
+    }
+
+    function save_click() {
+        alert('save');
     }
 
     function site_click() {

@@ -1,4 +1,8 @@
 
+// This gets run any time the user clicks the bookmarklet.
+// When we are no longer in development, it should be wrapped in a closure to keep
+// other things out of the data structures.
+
 var previously_started;
 if (previously_started) {
     // restart the app without re-creating data structures and closures
@@ -53,7 +57,7 @@ else {
     // all code lines below are function definitions
     
     function load_supporting_js(everything_loaded_callback) {
-        var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/Math.uuid.js','/js/jquery.cookies.2.2.0.js'];
+        var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/Math.uuid.js','/js/jquery.cookies.2.2.0.js','/js/jquery.ba-postmessage.js'];
         var n_loaded = 0;
         
         // this could be done with jQuery.getScript, but we need it to get jQuery in the first place..
@@ -131,9 +135,9 @@ else {
                         session_id          = bookmarklet.flinkt_init_session_id;           // todo: ensure the diff vs Date() is reasonable
                         user_id = bookmarklet_id;
                         if (bookmarklet_version != 3) {
-                            alert("Your testing bookmarklet is out of date!\nPlease reinstall it from www.flinkt.org/demo!");
+                            alert("Your testing bookmarklet is out of date!\nPlease reinstall it from " + site + "/demo!");
                             nostart();
-                            throw "The flinkt bookmarklet is out of date.  Please reinstall from flinkt.org."
+                            throw "The flinkt bookmarklet is out of date.  Please reinstall from " + site + "."
                         }
                         //expected_bookmarklet_id = get_cookie('bookmarklet_id');
                         //if (expected_bookmarklet_id != bookmarklet_id) {
@@ -207,60 +211,6 @@ else {
         pen_on();
         bulb_on();
         show_all();
-    }
-
-    var toolbar_parent;
-    var toolbar;
-    function add_toolbar() {
-        if (toolbar_parent) {
-            toolbar_parent.appendChild(toolbar);
-            return;
-        }
-        
-        // the div at the top has elements which are internally at a fixed position
-        // they should probably be relative to their parent div, which should itself be fixed
-        // TODO: this could probably be done directly in javascript, or else pull in the div
-        // content completely from another URL
-        var p = document.createElement('div');
-        var s =  "<div style='position:fixed; top:32px; right:32px; z-index:999997;' id='flinkt.org pen off'>\n";
-        s += "   <img onclick='pen_on()' src='http://www.flinkt.org/images/pen32right.png'>\n";
-        s += "</div>";
-        s += "<div style='position:fixed; top:32px; right:32px; z-index:999998;' id='flinkt.org pen on'>\n";
-        s += "   <img onclick='pen_off()' src='http://www.flinkt.org/images/pen32left.png'>\n";
-        s += "</div>\n";
-        s += "<div style='position:fixed; top:72px; right:32px; z-index:999998;' id='flinkt.org save button'>\n";
-        s += "   <img onclick='save_click()' src='http://www.flinkt.org/images/save32.png'>\n";
-        s += "</div>\n";
-
-        /*
-        s += "<div style='position:fixed; top:32px; right:12px; z-index:999999;'>\n";
-        s += "   <img onclick='stop_app()' src='http://www.flinkt.org/images/x12.jpg'>\n";
-        s += "</div>\n";
-        s += "<div style='position:fixed; top:48px; right:8px; z-index:999999;'>\n";
-        s += "   <img onclick='site_click()' src='http://www.flinkt.org/images/right20.jpg'>\n";
-        s += "</div>";
-        s += "<div style='position:fixed; top:72px; right:32px; z-index:999997;' id='flinkt.org bulb off'>\n";
-        s += "   <img onclick='bulb_on()' src='http://www.flinkt.org/images/lightbulb_off32.png'>\n";
-        s += "</div>\n";
-        s += "<div style='position:fixed; top:72px; right:32px; z-index:999998;' id='flinkt.org bulb on'>\n";
-        s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/lightbulb_on32.png'>\n";
-        s += "</div>\n";
-        s += "<div style='position:fixed; top:110px; right:32px; z-index:999998;' id='flinkt.org trash'>\n";
-        s += "   <img onclick='bulb_off()' src='http://www.flinkt.org/images/trash32.png'>\n";
-        s += "</div>\n";
-        */
-
-        p.innerHTML = s; 
-        p.setAttribute('id','flinkt.org app')
-        try { document.body.appendChild(p); } catch(e) { alert(e) };
-    }
-
-    function remove_toolbar() {
-        toolbar = document.getElementById('flinkt.org app');
-        if (toolbar != null) { 
-            toolbar_parent = toolbar.parentNode;
-            toolbar_parent.removeChild(toolbar); 
-        }
     }
 
     function stop_app() {
@@ -441,6 +391,77 @@ else {
         }
         
         e.preventDefault();
+    }
+
+    var toolbar_parent;
+    var toolbar;
+    function add_toolbar() {
+        if (toolbar_parent) {
+            toolbar_parent.appendChild(toolbar);
+            return;
+        }
+        
+        // the div at the top has elements which are internally at a fixed position
+        // they should probably be relative to their parent div, which should itself be fixed
+
+        var toolbar_div = document.createElement('div');
+        toolbar_div.setAttribute('id','flinkt.org app')
+       
+        // talk to flinkt.org to keep flinkt cookies out of the host page
+        i = document.createElement('iframe');
+        i.setAttribute('id','flinkt.org toolbar-home');
+        i.frameBorder = 0;
+        i.scrolling = "no";
+        i.src = "http://" + site + "/pages/toolbar-home.html#" + encodeURIComponent(document.location.href);
+        toolbar_div.appendChild(i);
+
+        pen_on_div = document.createElement('div');
+        pen_on_div.setAttribute('id','flinkt.org pen on');
+        pen_on_div.style.position = 'fixed';
+        pen_on_div.style.top = '32px';
+        pen_on_div.style.right = '32px';
+        pen_on_div.style.zIndex = 999998;
+        toolbar_div.appendChild(pen_on_div);
+
+            pen_on_img = document.createElement('img');
+            pen_on_img.src = "http://" + site + "/images/pen32left.png";
+            pen_on_img.onclick = function() { pen_off() };
+            pen_on_div.appendChild(pen_on_img);
+        
+        pen_off_div = document.createElement('div');
+        pen_off_div.setAttribute('id','flinkt.org pen off');
+        pen_off_div.style.position = 'fixed';
+        pen_off_div.style.top = '32px';
+        pen_off_div.style.right = '32px';
+        pen_off_div.style.zIndex = 999997;
+        toolbar_div.appendChild(pen_off_div);
+
+            pen_off_img = document.createElement('img');
+            pen_off_img.src = "http://" + site + "/images/pen32right.png";
+            pen_off_img.onclick = function() { pen_on() }; 
+            pen_off_div.appendChild(pen_off_img);
+
+        save_div = document.createElement('div');
+        save_div.setAttribute('id','flinkt.org save button');
+        save_div.style.position = 'fixed';
+        save_div.style.top = '64px';
+        save_div.style.right = '32px';
+        toolbar_div.appendChild(save_div);
+
+            save_img = document.createElement('img');
+            save_img.src = "http://" + site + "/images/save32.png";
+            save_img.addEventListener('click','save()');
+            save_div.appendChild(save_img);
+
+            try { document.body.appendChild(toolbar_div); } catch(e) { alert(e) };
+    }
+
+    function remove_toolbar() {
+        toolbar = document.getElementById('flinkt.org app');
+        if (toolbar != null) { 
+            toolbar_parent = toolbar.parentNode;
+            toolbar_parent.removeChild(toolbar); 
+        }
     }
 
     // operations behind the events

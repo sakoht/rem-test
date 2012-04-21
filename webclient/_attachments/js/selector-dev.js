@@ -206,6 +206,7 @@ else {
         add_toolbar();
         pen_on();
         bulb_on();
+        show_all();
     }
 
     var toolbar_parent;
@@ -294,20 +295,27 @@ else {
     var ohidden = 0;
 
     function bulb_on() {
+        return; // the bulb is not currently produced
         console.log("bulb on");
-        document.getElementById('flinkt.org bulb on').style.zIndex = ztop+1;
-        document.getElementById('flinkt.org bulb on').style.opacity = ovisible;
-        document.getElementById('flinkt.org bulb off').style.zIndex = zbottom-1;
-        document.getElementById('flinkt.org bulb off').style.opacity = ohidden;
+        if (false) {
+            // the bulb is not shown anymore, we may re-add it later
+            document.getElementById('flinkt.org bulb on').style.zIndex = ztop+1;
+            document.getElementById('flinkt.org bulb on').style.opacity = ovisible;
+            document.getElementById('flinkt.org bulb off').style.zIndex = zbottom-1;
+            document.getElementById('flinkt.org bulb off').style.opacity = ohidden;
+        }
         show_all();
     }
 
     function bulb_off() {
         console.log("bulb off");
-        document.getElementById('flinkt.org bulb off').style.zIndex = ztop+1;
-        document.getElementById('flinkt.org bulb off').style.opacity = ovisible;
-        document.getElementById('flinkt.org bulb on').style.zIndex = zbottom-1;
-        document.getElementById('flinkt.org bulb on').style.opacity = ohidden;
+        if (false) {
+            // the bulb is not shown anymore, we may re-add it later
+            document.getElementById('flinkt.org bulb off').style.zIndex = ztop+1;
+            document.getElementById('flinkt.org bulb off').style.opacity = ovisible;
+            document.getElementById('flinkt.org bulb on').style.zIndex = zbottom-1;
+            document.getElementById('flinkt.org bulb on').style.opacity = ohidden;
+        }
         hide_all();
     }
 

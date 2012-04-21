@@ -1,37 +1,34 @@
-
+        
 // This gets run any time the user clicks the bookmarklet.
 // When we are no longer in development, it should be wrapped in a closure to keep
 // other things out of the data structures.
 
 var previously_started;
 if (previously_started) {
+    // set application/session globals: it is important that this run every time in case the user switches bookmarklets
     // restart the app without re-creating data structures and closures
+    identify_app_and_session();
     start_app();
 }
 else {
     // create a fresh set of data structures and closures, then start the app
-    previously_started = true;
-
-    var site = 'www.flinkt.org';
-
-    function nostart() {
-        var b = document.getElementById('flinkt.org bookmarklet');
-        if (b != null) { b.parentNode.removeChild(b); }
-    }
-
+    
     if (!document.implementation.hasFeature("Range", "2.0")) {
         alert("This browser is too old to use the flinkt tool. :(\n\nTell grandma to upgrade, browsers are free!");
         nostart();
         throw "this browser does not rupport Range 2.0, and cannot run the flinkt web client";
     }
 
-    var bookmarklet = document.getElementById("flinkt.org bookmarklet");
-    
+    previously_started = true;
+
+    var site = 'www.flinkt.org';
+
+    var bookmarklet;
     var bookmarklet_id; 
     var bookmarklet_version; 
     var session_id; 
     var user_id;
-    
+
     var server;
     var db;
 
@@ -43,6 +40,8 @@ else {
     var views = {};
     var pages_by_content = {}; 
    
+    identify_app_and_session();
+
     if (document.body) {
         load_supporting_js(start_app);
     }
@@ -54,8 +53,39 @@ else {
         );
     }
 
-    // all code lines below are function definitions
+    // end of initialization logic
+    // code below is exclusively function definitions
     
+    function nostart() {
+        var b = document.getElementById('flinkt.org bookmarklet');
+        if (b != null) { b.parentNode.removeChild(b); }
+    }
+
+    function identify_app_and_session() {
+        bookmarklet = document.getElementById("flinkt.org bookmarklet");
+        if (bookmarklet) {
+            // started from a bookmarklet
+            bookmarklet_id      = bookmarklet.flinkt_init_bookmarklet_id;       // this identifies the browser instance
+            bookmarklet_version = bookmarklet.flinkt_init_bookmarklet_version;  // we rarely updated the bookmarklet, but when we do it's important
+            session_id          = bookmarklet.flinkt_init_session_id;           // todo: ensure the diff vs Date() is reasonable
+            user_id = bookmarklet_id;
+            if (bookmarklet_version != 3) {
+                alert("Your testing bookmarklet is out of date!\nPlease reinstall it from " + site + "/demo!");
+                nostart();
+                throw "The flinkt bookmarklet is out of date.  Please reinstall from " + site + "."
+            }
+        }
+        else {
+            // started from a page which includes this js directly
+            // TODO: the bookmarklet_id is really the app_id, which is used to help infer user_id
+            // For sites which have a built-in app they will have to rely entirely on the cookie in the iframe
+            bookmarklet_id = 'NA';
+            bookmarklet_version = 3;
+            session_id = Date();
+            user_id = bookmarklet_id;
+        }
+    }
+
     function load_supporting_js(everything_loaded_callback) {
         var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/Math.uuid.js','/js/jquery.cookies.2.2.0.js','/js/jquery.ba-postmessage.js'];
         var n_loaded = 0;
@@ -116,6 +146,7 @@ else {
     var loaded = 0;
     function start_app() {
         console.log("start app");
+        
         try {
             Couch.init(
                 function() {
@@ -127,36 +158,6 @@ else {
                     }
                     loaded = 1;
 
-                    // set application/session globals
-                    if (bookmarklet) {
-                        // started from a bookmarklet
-                        bookmarklet_id      = bookmarklet.flinkt_init_bookmarklet_id;       // this identifies the browser instance
-                        bookmarklet_version = bookmarklet.flinkt_init_bookmarklet_version;  // we rarely updated the bookmarklet, but when we do it's important
-                        session_id          = bookmarklet.flinkt_init_session_id;           // todo: ensure the diff vs Date() is reasonable
-                        user_id = bookmarklet_id;
-                        if (bookmarklet_version != 3) {
-                            alert("Your testing bookmarklet is out of date!\nPlease reinstall it from " + site + "/demo!");
-                            nostart();
-                            throw "The flinkt bookmarklet is out of date.  Please reinstall from " + site + "."
-                        }
-                        //expected_bookmarklet_id = get_cookie('bookmarklet_id');
-                        //if (expected_bookmarklet_id != bookmarklet_id) {
-                        //    alert("changing login to user " + bookmarklet_id);
-                        //    document.cookie = 'bookmarklet_id=' + bookmarklet_id;
-                        //}
-                    }
-                    else {
-                        // started from a page which includes this js directly
-                        bookmarklet_id = get_cookie('bookmarklet_id');
-                        if (bookmarklet_id == null) {
-                            bookmarklet_id = Math.uuid().toLowerCase().replace(/-/g,'');
-                            document.cookie = 'bookmarklet_id=' . bookmarklet_id;
-                            alert("new flinkt id: " + bookmarklet_id);
-                        }
-                        bookmarklet_version = 3;
-                        session_id = Date();
-                        user_id = bookmarklet_id;
-                    }
                     
                     url = document.URL;
                     
@@ -412,7 +413,7 @@ else {
         i.setAttribute('id','flinkt.org toolbar-home');
         i.frameBorder = 0;
         i.scrolling = "no";
-        i.src = "http://" + site + "/pages/toolbar-home.html#" + encodeURIComponent(document.location.href);
+        i.src = "http://" + site + "/pages/toolbar-home.html#" + bookmarklet_id + "#"+ encodeURIComponent(document.location.href);
         toolbar_div.appendChild(i);
 
         pen_on_div = document.createElement('div');

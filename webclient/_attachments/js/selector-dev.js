@@ -188,6 +188,7 @@ else {
                                     console.log(item);
                                     show_item(item);
                                     items[item._id] = item;
+                                    show_count();
                                     //db.get(
                                     //    id,
                                     //    function(item) {
@@ -732,6 +733,7 @@ else {
         console.log(item);
         if (show_item(item)) {
             items[item._id] = item;
+            show_count();
             return item;
         }
         else {
@@ -884,8 +886,8 @@ else {
     }
 
     function delete_item(item) {
-        hide_item(item);
         var id = item._id;
+        hide_item(item);
         deleted_items[id] = item;
         db.destroy(
             item._id,
@@ -905,6 +907,11 @@ else {
             }
         );
         delete items[id];
+        show_count();
+    }
+
+    function show_count() {
+        count_div.innerHTML = '<b>' + (items_list().length) + '</b>';
     }
 
     // modified from stackoverflow question 1482832 solution 1 (Tim Down) 

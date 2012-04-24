@@ -65,6 +65,10 @@ else {
         bookmarklet = document.getElementById("flinkt.org bookmarklet");
         if (bookmarklet) {
             // started from a bookmarklet
+            if (bookmarklet_id && (bookmarklet_id != bookmarklet.flinkt_init_bookmarklet_id)) {
+                alert("Switching apps from " + bookmarklet_id + " to " + bookmarklet.flinkt_init_bookmarklet_id);
+                loaded = false;
+            }
             bookmarklet_id      = bookmarklet.flinkt_init_bookmarklet_id;       // this identifies the browser instance
             bookmarklet_version = bookmarklet.flinkt_init_bookmarklet_version;  // we rarely updated the bookmarklet, but when we do it's important
             session_id          = bookmarklet.flinkt_init_session_id;           // todo: ensure the diff vs Date() is reasonable
@@ -143,7 +147,7 @@ else {
         }
     }
 
-    var loaded = 0;
+    var loaded = false; 
     function start_app() {
         console.log("start app");
         
@@ -152,11 +156,11 @@ else {
                 function() {
                     // sadly, this function can be called repeatedly
                     // and that really messes things up
-                    if (loaded == 1) {
+                    if (loaded == true) {
                         console.log("skipping reload");
                         return;
                     }
-                    loaded = 1;
+                    loaded = true;
 
                     
                     url = document.URL;
@@ -235,7 +239,18 @@ else {
         // by default we just stop the app if they re-click the bookmarklet
         // this may change over time, and we don't want to have to replace the bookmarklet, 
         // so re-clicks go here instead of directly to stop_app() 
-        stop_app();
+        
+        var bookmarklet = document.getElementById('flinkt.org bookmarklet');
+        if (bookmarklet.flinkt_init_bookmarklet_id != bookmarklet_id) {
+            // this never actually runs TODO
+            alert("different");
+            identify_app_and_session();
+            stop_app();
+            start_app();
+        }
+        else {
+            stop_app();
+        }
     }
 
     // events for the flinkt controls

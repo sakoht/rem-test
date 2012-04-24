@@ -421,7 +421,7 @@ else {
         pen_on_div.style.position = 'fixed';
         pen_on_div.style.top = '32px';
         pen_on_div.style.right = '32px';
-        pen_on_div.style.zIndex = 999998;
+        pen_on_div.style.zIndex = ztop;
         toolbar_div.appendChild(pen_on_div);
 
             pen_on_img = document.createElement('img');
@@ -434,7 +434,7 @@ else {
         pen_off_div.style.position = 'fixed';
         pen_off_div.style.top = '32px';
         pen_off_div.style.right = '32px';
-        pen_off_div.style.zIndex = 999997;
+        pen_off_div.style.zIndex = zbottom;
         toolbar_div.appendChild(pen_off_div);
 
             pen_off_img = document.createElement('img');
@@ -442,10 +442,21 @@ else {
             pen_off_img.onclick = function() { pen_on() }; 
             pen_off_div.appendChild(pen_off_img);
 
+        count_div = document.createElement('div');
+        count_div.setAttribute('id','flinkt.org count box');
+        count_div.style.position = 'fixed';
+        count_div.style.top = '64px';
+        count_div.style.right = '32px';
+        count_div.style.width = '32px';
+        count_div.style.height = '32px';
+        count_div.innerHTML = '<b>123</b>';
+        toolbar_div.appendChild(count_div);
+
+        
         save_div = document.createElement('div');
         save_div.setAttribute('id','flinkt.org save button');
         save_div.style.position = 'fixed';
-        save_div.style.top = '64px';
+        save_div.style.top = '96px';
         save_div.style.right = '32px';
         toolbar_div.appendChild(save_div);
 

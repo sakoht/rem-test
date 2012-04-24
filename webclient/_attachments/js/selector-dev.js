@@ -39,22 +39,9 @@ else {
     var deleted_items = {};
     var views = {};
     var pages_by_content = {}; 
-   
-    identify_app_and_session();
+  
 
-    if (document.body) {
-        load_supporting_js(start_app);
-    }
-    else {
-        $(document).ready(
-            function() {
-                load_supporting_js(start_app);
-            }
-        );
-    }
-
-    // end of initialization logic
-    // code below is exclusively function definitions
+    // function definitions must be declared before the calls in firefox 11, though chrome and safari don't care 
     
     function nostart() {
         var b = document.getElementById('flinkt.org bookmarklet');
@@ -256,8 +243,9 @@ else {
 
     // events for the flinkt controls
 
-    var ztop = 999998;
     var zbottom = 999996;
+    var zmid    = 999997;
+    var ztop    = 999998;
     var ovisible = 9;
     var ohidden = 0;
 
@@ -422,23 +410,37 @@ else {
         // they should probably be relative to their parent div, which should itself be fixed
 
         var toolbar_div = document.createElement('div');
-        toolbar_div.setAttribute('id','flinkt.org app')
-       
-        // talk to flinkt.org to keep flinkt cookies out of the host page
-        i = document.createElement('iframe');
-        i.setAttribute('id','flinkt.org toolbar-home');
-        i.frameBorder = 0;
-        i.scrolling = "no";
-        i.src = "http://" + site + "/pages/toolbar-home.html#" + bookmarklet_id + "#"+ encodeURIComponent(document.location.href);
-        toolbar_div.appendChild(i);
+        toolbar_div.setAttribute('id','flinkt.org app');
+        toolbar_div.style.position = 'fixed';
+        toolbar_div.style.right = '25px';
+        toolbar_div.style.width = '46px';
+        toolbar_div.style.top = '25px';
+        toolbar_div.style.height = '100px';
 
+        bottom_div = document.createElement('div');
+        bottom_div.style.position = 'absolute';
+        bottom_div.style.width = '100%';
+        bottom_div.style.height = '100%';
+        bottom_div.style.zIndex = zbottom;
+        //bottom_div.style.backgroundColor = 'black';
+        bottom_div.style.opacity = .2;
+        toolbar_div.appendChild(bottom_div);
+       
+        top_div = document.createElement('div');
+        bottom_div.style.position = 'absolute';
+        top_div.style.width = '100%';
+        top_div.style.height = '100%';
+        top_div.style.zIndex = ztop;
+        top_div.style.opacity = 1;
+        toolbar_div.appendChild(top_div);
+        
         pen_on_div = document.createElement('div');
         pen_on_div.setAttribute('id','flinkt.org pen on');
-        pen_on_div.style.position = 'fixed';
-        pen_on_div.style.top = '32px';
-        pen_on_div.style.right = '32px';
+        pen_on_div.style.position = 'relative';
         pen_on_div.style.zIndex = ztop;
-        toolbar_div.appendChild(pen_on_div);
+        pen_on_div.style.marginLeft = '7px';
+        pen_on_div.style.marginTop = '7px';
+        top_div.appendChild(pen_on_div);
 
             pen_on_img = document.createElement('img');
             pen_on_img.src = "http://" + site + "/images/pen32left.png";
@@ -447,11 +449,11 @@ else {
         
         pen_off_div = document.createElement('div');
         pen_off_div.setAttribute('id','flinkt.org pen off');
-        pen_off_div.style.position = 'fixed';
-        pen_off_div.style.top = '32px';
-        pen_off_div.style.right = '32px';
+        pen_off_div.style.position = 'relative';
         pen_off_div.style.zIndex = zbottom;
-        toolbar_div.appendChild(pen_off_div);
+        pen_off_div.style.marginLeft = '7px';
+        pen_off_div.style.marginTop = '7px';
+        top_div.appendChild(pen_off_div);
 
             pen_off_img = document.createElement('img');
             pen_off_img.src = "http://" + site + "/images/pen32right.png";
@@ -465,8 +467,9 @@ else {
         count_div.style.right = '32px';
         count_div.style.width = '32px';
         count_div.style.height = '32px';
+        count_div.style.color = 'white';
         count_div.innerHTML = '<b>123</b>';
-        toolbar_div.appendChild(count_div);
+        top_div.appendChild(count_div);
 
         
         save_div = document.createElement('div');
@@ -474,18 +477,35 @@ else {
         save_div.style.position = 'fixed';
         save_div.style.top = '96px';
         save_div.style.right = '32px';
-        toolbar_div.appendChild(save_div);
+        top_div.appendChild(save_div);
 
             save_img = document.createElement('img');
             save_img.src = "http://" + site + "/images/save32.png";
-            save_img.addEventListener('click','save()');
+            save_img.onclick = function() { save() };
             save_div.appendChild(save_img);
 
-            try { document.body.appendChild(toolbar_div); } catch(e) { alert(e) };
+        // talk to flinkt.org to keep flinkt cookies out of the host page
+        i = document.createElement('iframe');
+        i.setAttribute('id','flinkt.org toolbar-home');
+        i.frameBorder = 0;
+        i.scrolling = "no";
+        i.src = "http://" + site + "/pages/toolbar-home.html#" + bookmarklet_id + "#"+ encodeURIComponent(document.location.href);
+        toolbar_div.appendChild(i);
+
+        try { 
+            toolbar_div.style.opacity = 0;
+            document.body.appendChild(toolbar_div);
+            toolbar_div.style.opacity = 1;
+            document.ft = toolbar_div;
+        } 
+        catch(e) { 
+            alert(e) 
+        };
     }
 
     function remove_toolbar() {
         toolbar = document.getElementById('flinkt.org app');
+       //toolbar.style.opacity = 0;
         if (toolbar != null) { 
             toolbar_parent = toolbar.parentNode;
             toolbar_parent.removeChild(toolbar); 
@@ -911,7 +931,7 @@ else {
     }
 
     function show_count() {
-        count_div.innerHTML = '<b>' + (items_list().length) + '</b>';
+        count_div.innerHTML = '<b><big>' + (items_list().length) + '</big></b>';
     }
 
     // modified from stackoverflow question 1482832 solution 1 (Tim Down) 
@@ -1144,6 +1164,21 @@ else {
             value = value.substr(0,pos);
         }
         return value;
+    }
+
+    // end function declarations
+
+    identify_app_and_session();
+
+    if (document.body) {
+        load_supporting_js(start_app);
+    }
+    else {
+        $(document).ready(
+            function() {
+                load_supporting_js(start_app);
+            }
+        );
     }
 }
 

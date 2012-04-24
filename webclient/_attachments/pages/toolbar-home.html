@@ -8,6 +8,15 @@
     <body>
         <script lang='javascript'>
             console.log("iframe js running " + document.location.href);
+            var href = document.location.href;
+            var parts = href.split('#');
+            var this_href = parts.shift();
+            var bookmarklet_id = parts.shift();
+            var parent_href = parts.join('#');
+            parent_href = decodeURIComponent(parent_href);
+            console.log('b: ' + bookmarklet_id + ' p: ' + parent_href);
+            var r = $.postMessage('{ "cookie" : "' + encodeURIComponent(document.cookie) + '" }',parent_href);
+            console.log(r);
             //if (bookmarklet_id == null) {
             //    bookmarklet_id = Math.uuid().toLowerCase().replace(/-/g,'');
             //    document.cookie = 'bookmarklet_id=' . bookmarklet_id;

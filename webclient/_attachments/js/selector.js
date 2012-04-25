@@ -39,22 +39,9 @@ else {
     var deleted_items = {};
     var views = {};
     var pages_by_content = {}; 
-   
-    identify_app_and_session();
+  
 
-    if (document.body) {
-        load_supporting_js(start_app);
-    }
-    else {
-        $(document).ready(
-            function() {
-                load_supporting_js(start_app);
-            }
-        );
-    }
-
-    // end of initialization logic
-    // code below is exclusively function definitions
+    // function definitions must be declared before the calls in firefox 11, though chrome and safari don't care 
     
     function nostart() {
         var b = document.getElementById('flinkt.org bookmarklet');
@@ -188,6 +175,7 @@ else {
                                     console.log(item);
                                     show_item(item);
                                     items[item._id] = item;
+                                    show_count();
                                     //db.get(
                                     //    id,
                                     //    function(item) {
@@ -255,8 +243,9 @@ else {
 
     // events for the flinkt controls
 
-    var ztop = 999998;
     var zbottom = 999996;
+    var zmid    = 999997;
+    var ztop    = 999998;
     var ovisible = 9;
     var ohidden = 0;
 
@@ -285,11 +274,12 @@ else {
         hide_all();
     }
 
+    function pen_off() {
+
+    }
+
     function pen_on() {
-        document.getElementById('flinkt.org pen on').style.zIndex = ztop;
-        document.getElementById('flinkt.org pen on').style.opacity = ovisible;
-        document.getElementById('flinkt.org pen off').style.zIndex = zbottom;
-        document.getElementById('flinkt.org pen off').style.opacity = ohidden;
+        document.getElementById('flinkt.org pen on').style.backgroundPositionY = '0px';
 
         //document.addEventListener('click',on_click, true);
         document.addEventListener('mousedown',on_mousedown, true);
@@ -297,14 +287,12 @@ else {
         document.addEventListener('mouseup',on_mouseup, true);
         document.addEventListener('touchend',on_touchend, true);
         document.addEventListener('touchmove',on_touchmove, true);
+
         pen_status = 'on';
     }
 
     function pen_off() {
-        document.getElementById('flinkt.org pen off').style.zIndex = ztop;
-        document.getElementById('flinkt.org pen off').style.opacity = ovisible;
-        document.getElementById('flinkt.org pen on').style.zIndex = zbottom;
-        document.getElementById('flinkt.org pen on').style.opacity = ohidden;
+        document.getElementById('flinkt.org pen on').style.backgroundPositionY = '32px';
 
         //document.removeEventListener('click',on_click, true);
         document.removeEventListener('mousedown',on_mousedown, true);
@@ -312,7 +300,17 @@ else {
         document.removeEventListener('mouseup',on_mouseup, true);
         document.removeEventListener('touchend',on_touchend, true);
         document.removeEventListener('touchmove',on_touchmove, true);
+
         pen_status = 'off';
+    }
+
+    function pen_toggle() {
+        if (pen_status == 'off') {
+            pen_on();
+        }
+        else {
+            pen_off();
+        }
     }
 
     function save_on() {
@@ -413,7 +411,10 @@ else {
     var toolbar;
     function add_toolbar() {
         if (toolbar_parent) {
+            toolbar.hidden = true;
             toolbar_parent.appendChild(toolbar);
+            console.log('fadin 2');
+            jQuery(toolbar).fadeIn('slow');
             return;
         }
         
@@ -421,70 +422,90 @@ else {
         // they should probably be relative to their parent div, which should itself be fixed
 
         var toolbar_div = document.createElement('div');
-        toolbar_div.setAttribute('id','flinkt.org app')
-       
+        toolbar_div.hidden = true;
+        toolbar_div.setAttribute('id','flinkt.org app');
+        toolbar_div.style.position = 'fixed';
+        toolbar_div.style.right = '25px';
+        toolbar_div.style.width = '46px';
+        toolbar_div.style.top = '25px';
+        toolbar_div.style.height = '100px';
+
+        bottom_div = document.createElement('div');
+        bottom_div.style.position = 'absolute';
+        bottom_div.style.width = '100%';
+        bottom_div.style.height = '100%';
+        bottom_div.style.zIndex = zbottom;
+        bottom_div.style.backgroundColor = 'black';
+        bottom_div.style.opacity = .2;
+        toolbar_div.appendChild(bottom_div);
+
+        top_div = document.createElement('div');
+        top_div.style.position = 'absolute';
+        top_div.style.width = '100%';
+        top_div.style.height = '100%';
+        top_div.style.zIndex = ztop;
+        top_div.style.opacity = 1;
+        toolbar_div.appendChild(top_div);
+        top_div = toolbar_div;
+
+        pen_div = document.createElement('div');
+        pen_div.setAttribute('id','flinkt.org pen on');
+        pen_div.style.position = 'relative';
+        pen_div.style.zIndex = ztop;
+        pen_div.style.marginLeft = '7px';
+        pen_div.style.marginTop = '7px';
+        pen_div.style.width = '32px';
+        pen_div.style.height = '32px';
+        pen_div.style.overflow = 'hidden';
+        pen_div.style.backgroundImage = 'url("http://www.flinkt.org/images/pen32stacked-red.png")'
+        pen_div.addEventListener('click',pen_toggle,true);
+        top_div.appendChild(pen_div);
+        
+        count_div = document.createElement('div');
+        count_div.setAttribute('id','flinkt.org count box');
+        count_div.style.position = 'relative';
+        count_div.style.zIndex = ztop;
+        count_div.style.marginLeft = '7px';
+        count_div.style.marginTop = '7px';
+        count_div.style.color = 'white';
+        count_div.innerHTML = '<b>123</b>';
+        top_div.appendChild(count_div);
+        
+        save_div = document.createElement('div');
+        save_div.setAttribute('id','flinkt.org save button');
+        save_div.style.position = 'relative';
+        save_div.style.zIndex = ztop;
+        save_div.style.marginLeft = '7px';
+        save_div.style.marginTop = '7px';
+        save_div.style.backgroundImage = 'url("http://' + site + '/images/save32.png")'
+        save_div.addEventListener('click',function() { save() },true);
+        top_div.appendChild(save_div);
+
         // talk to flinkt.org to keep flinkt cookies out of the host page
+        /*
         i = document.createElement('iframe');
         i.setAttribute('id','flinkt.org toolbar-home');
         i.frameBorder = 0;
         i.scrolling = "no";
         i.src = "http://" + site + "/pages/toolbar-home.html#" + bookmarklet_id + "#"+ encodeURIComponent(document.location.href);
         toolbar_div.appendChild(i);
+        */
 
-        pen_on_div = document.createElement('div');
-        pen_on_div.setAttribute('id','flinkt.org pen on');
-        pen_on_div.style.position = 'fixed';
-        pen_on_div.style.top = '32px';
-        pen_on_div.style.right = '32px';
-        pen_on_div.style.zIndex = ztop;
-        toolbar_div.appendChild(pen_on_div);
-
-            pen_on_img = document.createElement('img');
-            pen_on_img.src = "http://" + site + "/images/pen32left.png";
-            pen_on_img.onclick = function() { pen_off() };
-            pen_on_div.appendChild(pen_on_img);
-        
-        pen_off_div = document.createElement('div');
-        pen_off_div.setAttribute('id','flinkt.org pen off');
-        pen_off_div.style.position = 'fixed';
-        pen_off_div.style.top = '32px';
-        pen_off_div.style.right = '32px';
-        pen_off_div.style.zIndex = zbottom;
-        toolbar_div.appendChild(pen_off_div);
-
-            pen_off_img = document.createElement('img');
-            pen_off_img.src = "http://" + site + "/images/pen32right.png";
-            pen_off_img.onclick = function() { pen_on() }; 
-            pen_off_div.appendChild(pen_off_img);
-
-        count_div = document.createElement('div');
-        count_div.setAttribute('id','flinkt.org count box');
-        count_div.style.position = 'fixed';
-        count_div.style.top = '64px';
-        count_div.style.right = '32px';
-        count_div.style.width = '32px';
-        count_div.style.height = '32px';
-        count_div.innerHTML = '<b>123</b>';
-        toolbar_div.appendChild(count_div);
-
-        
-        save_div = document.createElement('div');
-        save_div.setAttribute('id','flinkt.org save button');
-        save_div.style.position = 'fixed';
-        save_div.style.top = '96px';
-        save_div.style.right = '32px';
-        toolbar_div.appendChild(save_div);
-
-            save_img = document.createElement('img');
-            save_img.src = "http://" + site + "/images/save32.png";
-            save_img.addEventListener('click','save()');
-            save_div.appendChild(save_img);
-
-            try { document.body.appendChild(toolbar_div); } catch(e) { alert(e) };
+        try { 
+            toolbar_div.hidden = true;
+            document.body.appendChild(toolbar_div);
+            console.log("fadeIn");
+            jQuery(toolbar_div).fadeIn('slow');
+            document.ft = toolbar_div;
+        } 
+        catch(e) { 
+            alert(e) 
+        };
     }
 
     function remove_toolbar() {
         toolbar = document.getElementById('flinkt.org app');
+        jQuery(toolbar).fadeOut('fast');
         if (toolbar != null) { 
             toolbar_parent = toolbar.parentNode;
             toolbar_parent.removeChild(toolbar); 
@@ -504,7 +525,7 @@ else {
             }
             if (obj.parentElement && obj.parentElement.id == 'flinkt.org app') {
                 // ignore this app's control set
-                alert("app");
+                // alert("app");
                 return;
             }
             if (pen_status != 'on') {
@@ -732,6 +753,7 @@ else {
         console.log(item);
         if (show_item(item)) {
             items[item._id] = item;
+            show_count();
             return item;
         }
         else {
@@ -884,8 +906,8 @@ else {
     }
 
     function delete_item(item) {
-        hide_item(item);
         var id = item._id;
+        hide_item(item);
         deleted_items[id] = item;
         db.destroy(
             item._id,
@@ -905,6 +927,11 @@ else {
             }
         );
         delete items[id];
+        show_count();
+    }
+
+    function show_count() {
+        count_div.innerHTML = '<b><big>' + (items_list().length) + '</big></b>';
     }
 
     // modified from stackoverflow question 1482832 solution 1 (Tim Down) 
@@ -1137,6 +1164,21 @@ else {
             value = value.substr(0,pos);
         }
         return value;
+    }
+
+    // end function declarations
+
+    identify_app_and_session();
+
+    if (document.body) {
+        load_supporting_js(start_app);
+    }
+    else {
+        $(document).ready(
+            function() {
+                load_supporting_js(start_app);
+            }
+        );
     }
 }
 

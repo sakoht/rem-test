@@ -274,11 +274,12 @@ else {
         hide_all();
     }
 
+    function pen_off() {
+
+    }
+
     function pen_on() {
-        document.getElementById('flinkt.org pen on').style.zIndex = ztop;
-        document.getElementById('flinkt.org pen on').style.opacity = ovisible;
-        //document.getElementById('flinkt.org pen off').style.zIndex = zbottom;
-        //document.getElementById('flinkt.org pen off').style.opacity = ohidden;
+        document.getElementById('flinkt.org pen on').style.backgroundPositionY = '0px';
 
         //document.addEventListener('click',on_click, true);
         document.addEventListener('mousedown',on_mousedown, true);
@@ -286,14 +287,12 @@ else {
         document.addEventListener('mouseup',on_mouseup, true);
         document.addEventListener('touchend',on_touchend, true);
         document.addEventListener('touchmove',on_touchmove, true);
+
         pen_status = 'on';
     }
 
     function pen_off() {
-        //document.getElementById('flinkt.org pen off').style.zIndex = ztop;
-        //document.getElementById('flinkt.org pen off').style.opacity = ovisible;
-        document.getElementById('flinkt.org pen on').style.zIndex = zbottom;
-        document.getElementById('flinkt.org pen on').style.opacity = ohidden;
+        document.getElementById('flinkt.org pen on').style.backgroundPositionY = '32px';
 
         //document.removeEventListener('click',on_click, true);
         document.removeEventListener('mousedown',on_mousedown, true);
@@ -301,7 +300,17 @@ else {
         document.removeEventListener('mouseup',on_mouseup, true);
         document.removeEventListener('touchend',on_touchend, true);
         document.removeEventListener('touchmove',on_touchmove, true);
+
         pen_status = 'off';
+    }
+
+    function pen_toggle() {
+        if (pen_status == 'off') {
+            pen_on();
+        }
+        else {
+            pen_off();
+        }
     }
 
     function save_on() {
@@ -439,57 +448,38 @@ else {
         toolbar_div.appendChild(top_div);
         top_div = toolbar_div;
 
-        pen_on_div = document.createElement('div');
-        pen_on_div.setAttribute('id','flinkt.org pen on');
-        pen_on_div.style.position = 'relative';
-        pen_on_div.style.zIndex = ztop;
-        pen_on_div.style.marginLeft = '7px';
-        pen_on_div.style.marginTop = '7px';
-        top_div.appendChild(pen_on_div);
-
-            pen_on_img = document.createElement('img');
-            pen_on_img.src = "http://" + site + "/images/pen32stacked-red.png";
-            pen_on_img.onclick = function() { pen_off() };
-            pen_on_div.appendChild(pen_on_img);
+        pen_div = document.createElement('div');
+        pen_div.setAttribute('id','flinkt.org pen on');
+        pen_div.style.position = 'relative';
+        pen_div.style.zIndex = ztop;
+        pen_div.style.marginLeft = '7px';
+        pen_div.style.marginTop = '7px';
+        pen_div.style.width = '32px';
+        pen_div.style.height = '32px';
+        pen_div.style.overflow = 'hidden';
+        pen_div.style.backgroundImage = 'url("http://www.flinkt.org/images/pen32stacked-red.png")'
+        pen_div.addEventListener('click',pen_toggle,true);
+        top_div.appendChild(pen_div);
         
-        /*
-        pen_off_div = document.createElement('div');
-        pen_off_div.setAttribute('id','flinkt.org pen off');
-        pen_off_div.style.position = 'relative';
-        pen_off_div.style.zIndex = zbottom;
-        pen_off_div.style.marginLeft = '7px';
-        pen_off_div.style.marginTop = '7px';
-        top_div.appendChild(pen_off_div);
-
-            pen_off_img = document.createElement('img');
-            pen_off_img.src = "http://" + site + "/images/pen32right.png";
-            pen_off_img.onclick = function() { pen_on() }; 
-            pen_off_div.appendChild(pen_off_img);
-        */
-
         count_div = document.createElement('div');
         count_div.setAttribute('id','flinkt.org count box');
-        count_div.style.position = 'fixed';
-        count_div.style.top = '64px';
-        count_div.style.right = '32px';
-        count_div.style.width = '32px';
-        count_div.style.height = '32px';
+        count_div.style.position = 'relative';
+        count_div.style.zIndex = ztop;
+        count_div.style.marginLeft = '7px';
+        count_div.style.marginTop = '7px';
         count_div.style.color = 'white';
         count_div.innerHTML = '<b>123</b>';
         top_div.appendChild(count_div);
-
         
         save_div = document.createElement('div');
         save_div.setAttribute('id','flinkt.org save button');
-        save_div.style.position = 'fixed';
-        save_div.style.top = '96px';
-        save_div.style.right = '32px';
+        save_div.style.position = 'relative';
+        save_div.style.zIndex = ztop;
+        save_div.style.marginLeft = '7px';
+        save_div.style.marginTop = '7px';
+        save_div.style.backgroundImage = 'url("http://' + site + '/images/save32.png")'
+        save_div.addEventListener('click',function() { save() },true);
         top_div.appendChild(save_div);
-
-            save_img = document.createElement('img');
-            save_img.src = "http://" + site + "/images/save32.png";
-            save_img.onclick = function() { save() };
-            save_div.appendChild(save_img);
 
         // talk to flinkt.org to keep flinkt cookies out of the host page
         /*
@@ -535,7 +525,7 @@ else {
             }
             if (obj.parentElement && obj.parentElement.id == 'flinkt.org app') {
                 // ignore this app's control set
-                alert("app");
+                // alert("app");
                 return;
             }
             if (pen_status != 'on') {

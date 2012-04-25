@@ -277,8 +277,8 @@ else {
     function pen_on() {
         document.getElementById('flinkt.org pen on').style.zIndex = ztop;
         document.getElementById('flinkt.org pen on').style.opacity = ovisible;
-        document.getElementById('flinkt.org pen off').style.zIndex = zbottom;
-        document.getElementById('flinkt.org pen off').style.opacity = ohidden;
+        //document.getElementById('flinkt.org pen off').style.zIndex = zbottom;
+        //document.getElementById('flinkt.org pen off').style.opacity = ohidden;
 
         //document.addEventListener('click',on_click, true);
         document.addEventListener('mousedown',on_mousedown, true);
@@ -290,8 +290,8 @@ else {
     }
 
     function pen_off() {
-        document.getElementById('flinkt.org pen off').style.zIndex = ztop;
-        document.getElementById('flinkt.org pen off').style.opacity = ovisible;
+        //document.getElementById('flinkt.org pen off').style.zIndex = ztop;
+        //document.getElementById('flinkt.org pen off').style.opacity = ovisible;
         document.getElementById('flinkt.org pen on').style.zIndex = zbottom;
         document.getElementById('flinkt.org pen on').style.opacity = ohidden;
 
@@ -402,7 +402,10 @@ else {
     var toolbar;
     function add_toolbar() {
         if (toolbar_parent) {
+            toolbar.hidden = true;
             toolbar_parent.appendChild(toolbar);
+            console.log('fadin 2');
+            jQuery(toolbar).fadeIn('slow');
             return;
         }
         
@@ -410,6 +413,7 @@ else {
         // they should probably be relative to their parent div, which should itself be fixed
 
         var toolbar_div = document.createElement('div');
+        toolbar_div.hidden = true;
         toolbar_div.setAttribute('id','flinkt.org app');
         toolbar_div.style.position = 'fixed';
         toolbar_div.style.right = '25px';
@@ -422,18 +426,19 @@ else {
         bottom_div.style.width = '100%';
         bottom_div.style.height = '100%';
         bottom_div.style.zIndex = zbottom;
-        //bottom_div.style.backgroundColor = 'black';
+        bottom_div.style.backgroundColor = 'black';
         bottom_div.style.opacity = .2;
         toolbar_div.appendChild(bottom_div);
-       
+
         top_div = document.createElement('div');
-        bottom_div.style.position = 'absolute';
+        top_div.style.position = 'absolute';
         top_div.style.width = '100%';
         top_div.style.height = '100%';
         top_div.style.zIndex = ztop;
         top_div.style.opacity = 1;
         toolbar_div.appendChild(top_div);
-        
+        top_div = toolbar_div;
+
         pen_on_div = document.createElement('div');
         pen_on_div.setAttribute('id','flinkt.org pen on');
         pen_on_div.style.position = 'relative';
@@ -443,10 +448,11 @@ else {
         top_div.appendChild(pen_on_div);
 
             pen_on_img = document.createElement('img');
-            pen_on_img.src = "http://" + site + "/images/pen32left.png";
+            pen_on_img.src = "http://" + site + "/images/pen32stacked-red.png";
             pen_on_img.onclick = function() { pen_off() };
             pen_on_div.appendChild(pen_on_img);
         
+        /*
         pen_off_div = document.createElement('div');
         pen_off_div.setAttribute('id','flinkt.org pen off');
         pen_off_div.style.position = 'relative';
@@ -459,6 +465,7 @@ else {
             pen_off_img.src = "http://" + site + "/images/pen32right.png";
             pen_off_img.onclick = function() { pen_on() }; 
             pen_off_div.appendChild(pen_off_img);
+        */
 
         count_div = document.createElement('div');
         count_div.setAttribute('id','flinkt.org count box');
@@ -485,17 +492,20 @@ else {
             save_div.appendChild(save_img);
 
         // talk to flinkt.org to keep flinkt cookies out of the host page
+        /*
         i = document.createElement('iframe');
         i.setAttribute('id','flinkt.org toolbar-home');
         i.frameBorder = 0;
         i.scrolling = "no";
         i.src = "http://" + site + "/pages/toolbar-home.html#" + bookmarklet_id + "#"+ encodeURIComponent(document.location.href);
         toolbar_div.appendChild(i);
+        */
 
         try { 
-            toolbar_div.style.opacity = 0;
+            toolbar_div.hidden = true;
             document.body.appendChild(toolbar_div);
-            toolbar_div.style.opacity = 1;
+            console.log("fadeIn");
+            jQuery(toolbar_div).fadeIn('slow');
             document.ft = toolbar_div;
         } 
         catch(e) { 
@@ -505,7 +515,7 @@ else {
 
     function remove_toolbar() {
         toolbar = document.getElementById('flinkt.org app');
-       //toolbar.style.opacity = 0;
+        jQuery(toolbar).fadeOut('fast');
         if (toolbar != null) { 
             toolbar_parent = toolbar.parentNode;
             toolbar_parent.removeChild(toolbar); 

@@ -427,8 +427,9 @@ else {
         toolbar_div.style.position = 'fixed';
         toolbar_div.style.right = '25px';
         toolbar_div.style.width = '46px';
-        toolbar_div.style.top = '25px';
-        toolbar_div.style.height = '100px';
+        toolbar_div.style.top = '28px';
+        toolbar_div.style.marginBottom = '7px';
+        //toolbar_div.style.height = '100px';
 
         bottom_div = document.createElement('div');
         bottom_div.style.position = 'absolute';
@@ -456,6 +457,7 @@ else {
         pen_div.style.marginTop = '7px';
         pen_div.style.width = '32px';
         pen_div.style.height = '32px';
+        pen_div.style.marginBottom = '7px';
         pen_div.style.overflow = 'hidden';
         pen_div.style.backgroundImage = 'url("http://www.flinkt.org/images/pen32stacked-red.png")'
         pen_div.addEventListener('click',pen_toggle,true);
@@ -465,10 +467,11 @@ else {
         count_div.setAttribute('id','flinkt.org count box');
         count_div.style.position = 'relative';
         count_div.style.zIndex = ztop;
-        count_div.style.marginLeft = '7px';
-        count_div.style.marginTop = '7px';
+        count_div.style.textAlign = 'center';
+        count_div.style.marginTop = '10px';
+        count_div.style.marginBottom = '7px';
         count_div.style.color = 'white';
-        count_div.innerHTML = '<b>123</b>';
+        count_div.innerHTML = '<b></b>';
         top_div.appendChild(count_div);
         
         save_div = document.createElement('div');
@@ -477,7 +480,10 @@ else {
         save_div.style.zIndex = ztop;
         save_div.style.marginLeft = '7px';
         save_div.style.marginTop = '7px';
-        save_div.style.backgroundImage = 'url("http://' + site + '/images/save32.png")'
+        save_div.style.marginBottom = '7px';
+        save_div.style.width = '32px';
+        save_div.style.height = '32px';
+        save_div.style.backgroundImage = 'url("http://www.flinkt.org/images/save32.png")'
         save_div.addEventListener('click',function() { save() },true);
         top_div.appendChild(save_div);
 

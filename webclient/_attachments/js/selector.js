@@ -279,7 +279,7 @@ else {
     }
 
     function pen_on() {
-        document.getElementById('flinkt.org pen on').style.backgroundPositionY = '0px';
+        document.getElementById('flinkt.org pen').style.backgroundPositionY = '0px';
 
         //document.addEventListener('click',on_click, true);
         document.addEventListener('mousedown',on_mousedown, true);
@@ -292,7 +292,7 @@ else {
     }
 
     function pen_off() {
-        document.getElementById('flinkt.org pen on').style.backgroundPositionY = '32px';
+        document.getElementById('flinkt.org pen').style.backgroundPositionY = '32px';
 
         //document.removeEventListener('click',on_click, true);
         document.removeEventListener('mousedown',on_mousedown, true);
@@ -413,23 +413,20 @@ else {
         if (toolbar_parent) {
             toolbar.hidden = true;
             toolbar_parent.appendChild(toolbar);
-            console.log('fadin 2');
-            jQuery(toolbar).fadeIn('slow');
+            //jQuery(toolbar).fadeIn('fast');
+            toolbar.hidden = false;
             return;
         }
-        
-        // the div at the top has elements which are internally at a fixed position
-        // they should probably be relative to their parent div, which should itself be fixed
+
+        // TODO: switch to css?  
 
         var toolbar_div = document.createElement('div');
-        toolbar_div.hidden = true;
         toolbar_div.setAttribute('id','flinkt.org app');
         toolbar_div.style.position = 'fixed';
         toolbar_div.style.right = '25px';
         toolbar_div.style.width = '46px';
         toolbar_div.style.top = '28px';
         toolbar_div.style.marginBottom = '7px';
-        //toolbar_div.style.height = '100px';
 
         bottom_div = document.createElement('div');
         bottom_div.style.position = 'absolute';
@@ -450,7 +447,7 @@ else {
         top_div = toolbar_div;
 
         pen_div = document.createElement('div');
-        pen_div.setAttribute('id','flinkt.org pen on');
+        pen_div.setAttribute('id','flinkt.org pen');
         pen_div.style.position = 'relative';
         pen_div.style.zIndex = ztop;
         pen_div.style.marginLeft = '7px';
@@ -459,12 +456,12 @@ else {
         pen_div.style.height = '32px';
         pen_div.style.marginBottom = '7px';
         pen_div.style.overflow = 'hidden';
-        pen_div.style.backgroundImage = 'url("http://www.flinkt.org/images/pen32stacked-red.png")'
+        pen_div.style.backgroundImage = 'url("http://' + site + '/images/pen32stacked-red.png")'
         pen_div.addEventListener('click',pen_toggle,true);
         top_div.appendChild(pen_div);
         
         count_div = document.createElement('div');
-        count_div.setAttribute('id','flinkt.org count box');
+        count_div.setAttribute('id','flinkt.org counter');
         count_div.style.position = 'relative';
         count_div.style.zIndex = ztop;
         count_div.style.textAlign = 'center';
@@ -475,7 +472,7 @@ else {
         top_div.appendChild(count_div);
         
         mail_div = document.createElement('div');
-        mail_div.setAttribute('id','flinkt.org mail button');
+        mail_div.setAttribute('id','flinkt.org email button');
         mail_div.style.position = 'relative';
         mail_div.style.zIndex = ztop;
         mail_div.style.marginLeft = '7px';
@@ -483,7 +480,7 @@ else {
         mail_div.style.marginBottom = '7px';
         mail_div.style.width = '32px';
         mail_div.style.height = '32px';
-        mail_div.style.backgroundImage = 'url("http://www.flinkt.org/images/mail32.png")'
+        mail_div.style.backgroundImage = 'url("http://' + site + '/images/mail32.png")'
         mail_div.addEventListener('click',function() { mail() },true);
         top_div.appendChild(mail_div);
 
@@ -498,11 +495,11 @@ else {
         */
 
         try { 
-            toolbar_div.hidden = true;
+            //toolbar_div.hidden = true;
             document.body.appendChild(toolbar_div);
-            console.log("fadeIn");
+            //console.log("fadeIn");
             jQuery(toolbar_div).fadeIn('slow');
-            document.ft = toolbar_div;
+            //document.ft = toolbar_div;
         } 
         catch(e) { 
             alert(e) 
@@ -511,7 +508,8 @@ else {
 
     function remove_toolbar() {
         toolbar = document.getElementById('flinkt.org app');
-        jQuery(toolbar).fadeOut('fast');
+        //jQuery(toolbar).fadeOut('fast');
+        toolbar.hidden = true;
         if (toolbar != null) { 
             toolbar_parent = toolbar.parentNode;
             toolbar_parent.removeChild(toolbar); 
@@ -724,7 +722,9 @@ else {
             text_context = full_text.substr(context_start_pos, n-context_start_pos);
         }
 
+        console.log("restoring toolbar...");
         add_toolbar();
+        console.log("showing all...");
         show_all();
 
         var domain = url_to_domain(url);
@@ -755,11 +755,15 @@ else {
             position_in_page_text: position_in_page_text,
         };
 
-        save_item(item);
+        console.log("showing item...");
         console.log(item);
         if (show_item(item)) {
             items[item._id] = item;
+            console.log("showing count...");
             show_count();
+            console.log("saving...");
+            save_item(item);
+            console.log("returning...");
             return item;
         }
         else {
@@ -980,6 +984,7 @@ else {
     }
 
     function save_item(item) {
+        console.log("save begin " + item._id);
         db.post(
             item, 
             function (result) {
@@ -988,6 +993,7 @@ else {
                 item._rev = result.rev;
             }
         );
+        console.log("save sent " + item._id);
     }
 
     function resolve_range_for_item_by_content(item) {
@@ -1119,17 +1125,17 @@ else {
         }
         else if (matches_flank_no_prev.length) {
             // resovles to one, but possibly out of context
-            alert("selection has changed context:\n" + matches_flank_no_prev[0].toString() + "\n" + item.text_context + item.text_flank);
+            console.log("selection has changed context:\n" + matches_flank_no_prev[0].toString() + "\n" + item.text_context + item.text_flank);
             return matches_flank_no_prev[0];
         }
         else if (matches_no_flank.length) {
             // does not even resolve to one
-            alert("selection has changed context and is no longer unambiguous:\n" + matches_no_flank[0].toString() + "\n" + item.text_context + item.text_flank);
+            console.log("selection has changed context and is no longer unambiguous:\n" + matches_no_flank[0].toString() + "\n" + item.text_context + item.text_flank);
             //return matches_no_flank[0];
             return;
         }
         else {
-            alert("selection is missing: " + item.text);
+            console.log("selection is missing: " + item.text);
             return;
         }
     }

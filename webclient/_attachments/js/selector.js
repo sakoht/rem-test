@@ -474,18 +474,18 @@ else {
         count_div.innerHTML = '<b></b>';
         top_div.appendChild(count_div);
         
-        save_div = document.createElement('div');
-        save_div.setAttribute('id','flinkt.org save button');
-        save_div.style.position = 'relative';
-        save_div.style.zIndex = ztop;
-        save_div.style.marginLeft = '7px';
-        save_div.style.marginTop = '7px';
-        save_div.style.marginBottom = '7px';
-        save_div.style.width = '32px';
-        save_div.style.height = '32px';
-        save_div.style.backgroundImage = 'url("http://www.flinkt.org/images/save32.png")'
-        save_div.addEventListener('click',function() { save() },true);
-        top_div.appendChild(save_div);
+        mail_div = document.createElement('div');
+        mail_div.setAttribute('id','flinkt.org mail button');
+        mail_div.style.position = 'relative';
+        mail_div.style.zIndex = ztop;
+        mail_div.style.marginLeft = '7px';
+        mail_div.style.marginTop = '7px';
+        mail_div.style.marginBottom = '7px';
+        mail_div.style.width = '32px';
+        mail_div.style.height = '32px';
+        mail_div.style.backgroundImage = 'url("http://www.flinkt.org/images/mail32.png")'
+        mail_div.addEventListener('click',function() { mail() },true);
+        top_div.appendChild(mail_div);
 
         // talk to flinkt.org to keep flinkt cookies out of the host page
         /*

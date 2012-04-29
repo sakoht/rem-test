@@ -21,7 +21,7 @@ else {
 
     previously_started = true;
 
-    var site = 'www.flinkt.org';
+    var site = 'http://localhost:5982';
 
     var bookmarklet;
     var bookmarklet_id; 
@@ -94,7 +94,7 @@ else {
                 s = document.createElement('script');
                 s.setAttribute('type','text/javascript');
                 s.setAttribute('charset','UTF-8');
-                s.setAttribute('src','http://' + site + '/' + p);
+                s.setAttribute('src',site + '/' + p);
                 s.setAttribute('id',n);
 
                 s.onload = function() {
@@ -153,7 +153,7 @@ else {
                     url = document.URL;
                     
                     // connect to the database
-                    server = new Couch.Server('http://' + site);
+                    server = new Couch.Server(site);
                     db = new Couch.Database(server, 'flinktdb');
                     db.get(
                         '_design/webclient/_view/items-by-user_id-and-url?key=\["' + user_id + '","' + url + '"\]&include_docs=true', 
@@ -456,7 +456,7 @@ else {
         pen_div.style.height = '32px';
         pen_div.style.marginBottom = '7px';
         pen_div.style.overflow = 'hidden';
-        pen_div.style.backgroundImage = 'url("http://' + site + '/images/pen32stacked-red.png")'
+        pen_div.style.backgroundImage = 'url("' site + '/images/pen32stacked-red.png")'
         pen_div.addEventListener('click',pen_toggle,true);
         top_div.appendChild(pen_div);
         
@@ -480,7 +480,7 @@ else {
         mail_div.style.marginBottom = '7px';
         mail_div.style.width = '32px';
         mail_div.style.height = '32px';
-        mail_div.style.backgroundImage = 'url("http://' + site + '/images/mail32.png")'
+        mail_div.style.backgroundImage = 'url("' + site + '/images/mail32.png")'
         mail_div.addEventListener('click',function() { mail() },true);
         top_div.appendChild(mail_div);
 

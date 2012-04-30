@@ -50,11 +50,17 @@ if ($url =~ /localhost/) {
 elsif ($host =~ /flinkt.org/) {
     $url = 'http://localhost:5982';
     print STDERR "Tunneling to $host, redirecting port 5982 to its 5983...\n";
-    $child_pid = fork();
-    if (not $child_pid) {
-        # child
-        my $cmd = "ssh -L 5982:localhost:5983 $host -N";
-        exec $cmd;
+    if (0) {
+        $child_pid = fork();
+        if (not $child_pid) {
+            # child
+            my $cmd = "ssh -L 5982:localhost:5983 $host -N";
+            exec $cmd;
+        }
+        else { 
+            # parent
+            #sleep 5;
+        }
     }
 }
 
@@ -67,12 +73,15 @@ if ($ENV{FLINKTP} and $ENV{FLINKTU}) {
 my $cmd = "$couchapp push $url/flinktdb";
 print "RUN: $cmd\n";
 my $rv = system $cmd;
+
+if ($child_pid) {
+    print STDER "killing temporary background process...\n";
+    #sleep 10;
+    system "kill $child_pid";
+}
+
 $rv /= 256;
 if ($rv) {
     die "ERROR: $!\n";
-}
-if ($child_pid) {
-    print STDER "killing temporary background process...\n";
-    system "kill $child_pid";
 }
 

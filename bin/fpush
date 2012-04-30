@@ -31,19 +31,35 @@ if ($url eq 'http://www.flinkt.org' and not `hostname` =~ /sakohtland/) {
 }
 else {
     my $cmd = 'ps ax | grep couchdb | grep -v grep';
-    if ($url !~ /localhost/) {
+    if ($url =~ /localhost/) {
+        my @out = `$cmd`;
+        if (@out == 0) {
+            print STDERR "couchdb not running: starting couchdb server to take updates...\n";
+            $child_pid = fork();
+            if (not $child_pid) {
+                my $cmd = 'couchdb -a "' . $FindBin::Bin . '/../etc-couchdb/local.ini"';
+                # child
+                exec $cmd;
+            }
+        }
+    }
+    else {
         my $host = $url;
         $host =~ s|^http.*://||;
-        $cmd = "ssh $host '$cmd'";
-    }
-    my @out = `$cmd`;
-    unless (@out) {
-        print STDERR "couchdb not running: starting couchdb server to take updates...\n";
-        $child_pid = fork();
-        if (not $child_pid) {
-            my $cmd = 'couchdb -a "' . $FindBin::Bin . '/../etc-couchdb/local.ini"';
-            # child
-            exec $cmd;
+        
+        if ($host =~ /^(.*?)\:(.*?)$/) {
+            $host = $1;
+        }
+        
+        $cmd = "ssh $host '$cmd' 2>&1";
+        print "RUN $cmd\n";
+        my @out = `$cmd`;
+        print "DONE\n";
+        if (@out == 0) {
+            die "couchdb not running on $host?";
+        }
+        elsif (@out > 0 and grep { $_ !~ /couchdb/ } @out) {
+            die "ERROR CONNECTING TO $host:\n@out\n";
         }
     }
 }

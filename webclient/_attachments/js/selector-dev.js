@@ -82,10 +82,10 @@ else {
         var scripts = [
             '/couchdb-xd/_design/couchdb-xd/couchdb.js',
             '/' + prefix + '/assets/js/jquery.js', 
-            '/' + prefix + '/js/2.3.0-crypto-sha1.js', 
-            '/' + prefix + '/js/Math.uuid.js',
-            '/' + prefix + '/js/jquery.cookies.2.2.0.js',
-            '/' + prefix + '/js/jquery.ba-postmessage.js'
+            '/' + prefix + '/assets/js/2.3.0-crypto-sha1.js', 
+            '/' + prefix + '/assets/js/Math.uuid.js',
+            '/' + prefix + '/assets/js/jquery.cookies.2.2.0.js',
+            '/' + prefix + '/assets/js/jquery.ba-postmessage.js'
         ];
         var n_loaded = 0;
         

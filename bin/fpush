@@ -1,5 +1,8 @@
 #!/usr/bin/env perl
 use FindBin;
+use IPC::Run run;
+
+# this is a pretty sloppy script but it keeps several flinkt dev instances in sync with the appropriate "couchapp push"
 
 my $couchapp = `which couchapp`;
 chomp $couchapp;
@@ -9,33 +12,57 @@ unless (-e $selector) {
     die "no file at $selector";
 }
 
-my $site = `grep 'var site = ' '$selector'`;
-chomp $site;
-unless ($site) {
+my $url = `grep 'var site = ' '$selector'`;
+chomp $url;
+unless ($url) {
     die "failed to find site variable declaration in $selector"
 }
 
-$site =~ s/^.*var site = //;
-$site =~ s/^['"](.*)['"];\s*$/$1/;
+$url =~ s/^.*var site = //;
+$url =~ s/^['"](.*)['"];\s*$/$1/;
 
-print STDERR "pushing to $site with $couchapp\n";
+print STDERR "pushing to $url with $couchapp\n";
 
-if ($site eq 'http://www.flinkt.org' and not `hostname` =~ /sakohtland/) {
-    $site = 'http://localhost:5982';
-    print STDERR "Rewriting site as $site\n";
+my $child_pid;
+
+if ($url eq 'http://www.flinkt.org' and not `hostname` =~ /sakohtland/) {
+    $url = 'http://localhost:5982';
+    print STDERR "Rewriting site as $url\n";
+}
+else {
+    my $cmd = 'ps ax | grep couchdb | grep -v grep';
+    if ($url !~ /localhost/) {
+        my $host = $url;
+        $host =~ s|^http.*://||;
+        $cmd = "ssh $host '$cmd'";
+    }
+    my @out = `$cmd`;
+    unless (@out) {
+        print STDERR "couchdb not running: starting couchdb server to take updates...\n";
+        $child_pid = fork();
+        if (not $child_pid) {
+            my $cmd = 'couchdb -a "' . $FindBin::Bin . '/../etc-couchdb/local.ini"';
+            # child
+            exec $cmd;
+        }
+    }
 }
 
 if ($ENV{FLINKTP} and $ENV{FLINKTU}) {
     print STDERR "setting user and password\n";
     my $up = "$ENV{FLINKTU}:$ENV{FLINKTP}";
-    $site =~ s|//|//$up\@|;
+    $url =~ s|//|//$up\@|;
 }
 
-my $cmd = "$couchapp push $site/flinktdb";
+my $cmd = "$couchapp push $url/flinktdb";
 print "RUN: $cmd\n";
 my $rv = system $cmd;
 $rv /= 256;
 if ($rv) {
     die "ERROR: $!\n";
+}
+if ($child_pid) {
+    print STDER "killing temporary couchdb server\n";
+    system "kill $child_pid";
 }
 

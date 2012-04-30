@@ -21,7 +21,7 @@ else {
 
     previously_started = true;
 
-    var site = 'http://localhost:5982';
+    var site = 'http://localhost:5983';
 
     var bookmarklet;
     var bookmarklet_id; 
@@ -456,11 +456,7 @@ else {
         pen_div.style.height = '32px';
         pen_div.style.marginBottom = '7px';
         pen_div.style.overflow = 'hidden';
-<<<<<<< HEAD
-        pen_div.style.backgroundImage = 'url("' site + '/images/pen32stacked-red.png")'
-=======
         pen_div.style.backgroundImage = 'url("' + site + '/images/pen32stacked-red.png")'
->>>>>>> master
         pen_div.addEventListener('click',pen_toggle,true);
         top_div.appendChild(pen_div);
         

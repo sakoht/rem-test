@@ -22,6 +22,7 @@ else {
     previously_started = true;
 
     var site = 'http://localhost:5983';
+    var prefix = 'flinktdb/_design/webclient';
 
     var bookmarklet;
     var bookmarklet_id; 
@@ -78,7 +79,14 @@ else {
     }
 
     function load_supporting_js(everything_loaded_callback) {
-        var scripts = ['/js/2.3.0-crypto-sha1.js', '/_utils/script/jquery.js', '/couchdb-xd/_design/couchdb-xd/couchdb.js','/js/Math.uuid.js','/js/jquery.cookies.2.2.0.js','/js/jquery.ba-postmessage.js'];
+        var scripts = [
+            '/couchdb-xd/_design/couchdb-xd/couchdb.js',
+            '/' + prefix + '/assets/js/jquery.js', 
+            '/' + prefix + '/js/2.3.0-crypto-sha1.js', 
+            '/' + prefix + '/js/Math.uuid.js',
+            '/' + prefix + '/js/jquery.cookies.2.2.0.js',
+            '/' + prefix + '/js/jquery.ba-postmessage.js'
+        ];
         var n_loaded = 0;
         
         // this could be done with jQuery.getScript, but we need it to get jQuery in the first place..
@@ -94,7 +102,7 @@ else {
                 s = document.createElement('script');
                 s.setAttribute('type','text/javascript');
                 s.setAttribute('charset','UTF-8');
-                s.setAttribute('src',site + '/' + p);
+                s.setAttribute('src', site + '/' + p);
                 s.setAttribute('id',n);
 
                 s.onload = function() {
@@ -456,7 +464,7 @@ else {
         pen_div.style.height = '32px';
         pen_div.style.marginBottom = '7px';
         pen_div.style.overflow = 'hidden';
-        pen_div.style.backgroundImage = 'url("' + site + '/images/pen32stacked-red.png")'
+        pen_div.style.backgroundImage = 'url("' + site + '/' + prefix + '/images/pen32stacked-red.png")'
         pen_div.addEventListener('click',pen_toggle,true);
         top_div.appendChild(pen_div);
         
@@ -480,7 +488,7 @@ else {
         mail_div.style.marginBottom = '7px';
         mail_div.style.width = '32px';
         mail_div.style.height = '32px';
-        mail_div.style.backgroundImage = 'url("' + site + '/images/mail32.png")'
+        mail_div.style.backgroundImage = 'url("' + site + '/' + prefix + '/images/mail32.png")'
         mail_div.addEventListener('click',function() { mail() },true);
         top_div.appendChild(mail_div);
 

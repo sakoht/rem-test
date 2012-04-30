@@ -1,0 +1,41 @@
+#!/usr/bin/env perl
+use FindBin;
+
+my $couchapp = `which couchapp`;
+chomp $couchapp;
+
+my $selector = $FindBin::Bin . "/../webclient/_attachments/js/selector-dev.js";
+unless (-e $selector) {
+    die "no file at $selector";
+}
+
+my $site = `grep 'var site = ' '$selector'`;
+chomp $site;
+unless ($site) {
+    die "failed to find site variable declaration in $selector"
+}
+
+$site =~ s/^.*var site = //;
+$site =~ s/^['"](.*)['"];\s*$/$1/;
+
+print STDERR "pushing to $site with $couchapp\n";
+
+if ($site eq 'http://www.flinkt.org' and not `hostname` =~ /sakohtland/) {
+    $site = 'http://localhost:5982';
+    print STDERR "Rewriting site as $site\n";
+}
+
+if ($ENV{FLINKTP} and $ENV{FLINKTU}) {
+    print STDERR "setting user and password\n";
+    my $up = "$ENV{FLINKTU}:$ENV{FLINKTP}";
+    $site =~ s|//|//$up\@|;
+}
+
+my $cmd = "$couchapp push $site/flinktdb";
+print "RUN: $cmd\n";
+my $rv = system $cmd;
+$rv /= 256;
+if ($rv) {
+    die "ERROR: $!\n";
+}
+

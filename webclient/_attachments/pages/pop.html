@@ -1,0 +1,39 @@
+<html>
+    <head>
+    <script type='text/javascript' charset='utf-8' src='../assets/js/jquery.js'></script>
+    <script type='text/javascript' charset='utf-8' src='../assets/js/popbox.js'></script>
+    <link rel='stylesheet' href='../assets/css/popbox.css' type='text/css'>
+    </head>
+    <body>
+        <div class='popbox'>
+        <a class='open' href='#'>Click Here!</a>
+        <div class='collapse'>
+            <div class='box'>
+            <div class='arrow'></div>
+            <div class='arrow-border'></div>
+
+            Content in PopBox goes here :)
+
+            <a href="#" class="close">close</a>
+            </div>
+        </div>
+        </div>
+        <script type='text/javascript'>
+            //$(document).ready(function(){
+            //    $('.popbox').popbox();
+            //});
+        </script>
+        <script type='text/javascript'>
+            $(document).ready(function(){
+                $('.popbox').popbox({
+                'open'          : '.open',
+                'box'           : '.box',
+                'arrow'         : '.arrow',
+                'arrow_border'  : '.arrow_border',
+                'close'         : '.close'
+                });
+            });
+        </script>
+    </body>
+</head>
+

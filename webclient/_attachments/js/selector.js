@@ -81,6 +81,7 @@ else {
     function load_supporting_js(everything_loaded_callback) {
         var scripts = [
             '/couchdb-xd/_design/couchdb-xd/couchdb.js',
+            '/' + prefix + '/assets/js/popbox.js',
             '/' + prefix + '/assets/js/jquery.js', 
             '/' + prefix + '/assets/js/2.3.0-crypto-sha1.js', 
             '/' + prefix + '/assets/js/Math.uuid.js',
@@ -491,6 +492,8 @@ else {
         mail_div.style.backgroundImage = 'url("' + site + '/' + prefix + '/images/mail32.png")'
         mail_div.addEventListener('click',function() { mail() },true);
         top_div.appendChild(mail_div);
+
+
 
         // talk to flinkt.org to keep flinkt cookies out of the host page
         /*

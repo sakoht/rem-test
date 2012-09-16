@@ -1,7 +1,6 @@
 $(document).ready(
     function() {
-        site = 'http://www.flinkt.org';
-        //site = 'http://localhost:5983';
+        site = 'http://localhost:5983';
         path_prefix = '/flinktdb/_design/webclient';
 
         // TODO: this is copied from the selector{,-dev}.js

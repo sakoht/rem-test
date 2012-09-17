@@ -130,7 +130,7 @@ else {
         function _add_js_complete() {
             n_loaded++;
             if (n_loaded == scripts.length) {
-                console.log("all scripts loaded");
+                console.log("all js loaded");
                 everything_loaded_callback();
             }
         }

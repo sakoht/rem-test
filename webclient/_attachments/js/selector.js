@@ -86,13 +86,15 @@ else {
             '/' + prefix + '/assets/js/2.3.0-crypto-sha1.js', 
             '/' + prefix + '/assets/js/Math.uuid.js',
             '/' + prefix + '/assets/js/jquery.cookies.2.2.0.js',
-            '/' + prefix + '/assets/js/jquery.ba-postmessage.js'
+            '/' + prefix + '/assets/js/jquery.ba-postmessage.js',
+            '/' + prefix + '/assets/css/popbox.css'
+            //<link rel='stylesheet' href='../assets/css/popbox.css' type='text/css'>
         ];
         var n_loaded = 0;
         
         // this could be done with jQuery.getScript, but we need it to get jQuery in the first place..
         function add_js(p,callback) {
-            var n = 'flinkt.org js ' + p;
+            var n = 'flinkt.org asset ' + p;
 
             var s = document.getElementById(n);
             if (s) {
@@ -100,10 +102,18 @@ else {
                 callback();
             }
             else {
-                s = document.createElement('script');
-                s.setAttribute('type','text/javascript');
+                var s;
+                if (p.substr(-4) == '.css') {
+                    s = document.createElement('link');
+                    s.setAttribute('rel','stylesheet');
+                    s.setAttribute('href', site + '/' + p);
+                }
+                else if (p.substr(-3) == '.js') {
+                    s = document.createElement('script');
+                    s.setAttribute('type','text/javascript');
+                    s.setAttribute('src', site + '/' + p);
+                }
                 s.setAttribute('charset','UTF-8');
-                s.setAttribute('src', site + '/' + p);
                 s.setAttribute('id',n);
 
                 s.onload = function() {
@@ -130,7 +140,7 @@ else {
         function _add_js_complete() {
             n_loaded++;
             if (n_loaded == scripts.length) {
-                console.log("all scripts loaded");
+                console.log("all js loaded");
                 everything_loaded_callback();
             }
         }
@@ -492,6 +502,21 @@ else {
         mail_div.style.backgroundImage = 'url("' + site + '/' + prefix + '/images/mail32.png")'
         mail_div.addEventListener('click',function() { mail() },true);
         top_div.appendChild(mail_div);
+
+          mail_popup = document.createElement('div');
+          mail_popup.classList.add('popup');
+          mail_div.appendChild(mail_popup);
+
+            mail_open = document.createElement('div');
+            mail_open.innerHTML = '<a class="open" href="#">Click</a>';
+            //mail_open.classList.add('open');
+            mail_popup.appendChild(mail_open);
+
+            mail_collapse = document.createElement('div');
+            mail_collapse.classList.add('collapse');
+            mail_collapse.innerHTML = "<div class='box'> <div class='arrow'></div> <div class='arrow-border'></div> CONTENT! <a href='#' class='close'>Close</a> </div>";
+            mail_popup.appendChild(mail_collapse);
+
 
 
 

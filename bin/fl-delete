@@ -7,7 +7,7 @@ if (@ARGV == 0) {
 }
 
 for my $user_id (@ARGV) {
-    my $cmd = 'curl -X GET localhost:5983/flinktdb/_design/webclient/_view/items-by-user_id?key=';
+    my $cmd = 'curl -X GET localhost:5984/flinktdb/_design/webclient/_view/items-by-user_id?key=';
     $cmd .= "'\"$user_id\"'\\&include_docs=true";
     print $cmd,"\n";
     my $json = `$cmd`;
@@ -17,7 +17,7 @@ for my $user_id (@ARGV) {
         my $doc = $row->{doc};
         my $id = $doc->{_id};
         my $rev = $doc->{_rev};
-        my $cmd = "curl -X DELETE localhost:5983/flinktdb/$id?rev=$rev";
+        my $cmd = "curl -X DELETE localhost:5984/flinktdb/$id?rev=$rev";
         print $cmd,"\n";
         system $cmd;
     }

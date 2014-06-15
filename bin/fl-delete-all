@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-curl -X GET localhost:5983/flinktdb/_all_docs | perl -ne '/"id":"(.*?)".*"rev":"(.*?)"/ && print "curl -X DELETE localhost:5983/flinktdb/$1?rev=$2\n"' | sh
+curl -X GET localhost:5984/flinktdb/_all_docs | perl -ne '/"id":"(.*?)".*"rev":"(.*?)"/ && print "curl -X DELETE localhost:5984/flinktdb/$1?rev=$2\n"' | sh

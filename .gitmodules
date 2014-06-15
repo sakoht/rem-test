@@ -1,0 +1,6 @@
+[submodule "couchdb-xd"]
+	path = couchdb-xd
+	url = git@github.com:benvinegar/couchdb-xd.git
+[submodule "couchapp"]
+	path = couchapp
+	url = git@github.com:couchapp/couchapp.git

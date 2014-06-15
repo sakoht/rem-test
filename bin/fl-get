@@ -2,7 +2,7 @@
 use JSON;
 use Data::Dumper;
 for $id (@ARGV) {
-    my $json = `curl -X GET localhost:5983/flinktdb/$id?include_doc=true`;
+    my $json = `curl -X GET localhost:5984/flinktdb/$id?include_doc=true`;
     print Dumper(decode_json($json));
 }
 

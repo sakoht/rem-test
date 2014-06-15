@@ -21,8 +21,9 @@ else {
 
     previously_started = true;
 
-    var site = 'http://localhost:5983';
-    var prefix = 'flinktdb/_design/webclient';
+    var site = 'http://localhost:5984';
+    var db = 'flinktdb'
+    var prefix = db + '/_design/webclient';
 
     var bookmarklet;
     var bookmarklet_id; 
@@ -31,7 +32,6 @@ else {
     var user_id;
 
     var server;
-    var db;
 
     var pen_status;
     var bulb_status;
@@ -43,7 +43,15 @@ else {
   
 
     // function definitions must be declared before the calls in firefox 11, though chrome and safari don't care 
-    
+   
+    function console_log(s) {
+        // a single point at which to enable/disable logging
+        if (typeof s == 'string') {
+            s = s.substr(0,30) + '...'
+        }
+        //console.log(s)
+    }
+
     function nostart() {
         var b = document.getElementById('flinkt.org bookmarklet');
         if (b != null) { b.parentNode.removeChild(b); }
@@ -98,7 +106,7 @@ else {
 
             var s = document.getElementById(n);
             if (s) {
-                console.log('loaded ' + p);
+                console_log('loaded ' + p);
                 callback();
             }
             else {
@@ -117,18 +125,18 @@ else {
                 s.setAttribute('id',n);
 
                 s.onload = function() {
-                    console.log('loaded (onload signal) script ' + p);
+                    console_log('loaded (onload signal) script ' + p);
                     callback();
                 };
 
                 s.onreadystatechange= function (s) {
                     if (s.readyState == 'complete' ||  s.readyState == 'loaded') {
-                        console.log('loaded (on ready state change: complete or loaded) script ' + p);
+                        console_log('loaded (on ready state change: complete or loaded) script ' + p);
                         callback();
                     }
                     else {
-                        console.log("loading error for script " + p);
-                        console.log(s);
+                        console_log("loading error for script " + p);
+                        console_log(s);
                     }
                 };
             }
@@ -140,7 +148,7 @@ else {
         function _add_js_complete() {
             n_loaded++;
             if (n_loaded == scripts.length) {
-                console.log("all js loaded");
+                console_log("all js loaded");
                 everything_loaded_callback();
             }
         }
@@ -155,61 +163,46 @@ else {
 
     var loaded = false; 
     function start_app() {
-        console.log("start app");
-        
+        console_log("start app");
         try {
             Couch.init(
                 function() {
                     // sadly, this function can be called repeatedly
                     // and that really messes things up
                     if (loaded == true) {
-                        console.log("skipping reload");
+                        console_log("skipping reload");
                         return;
                     }
                     loaded = true;
 
                     
                     url = document.URL;
-                    
+                    url_encoded = encodeURIComponent(url)
+
                     // connect to the database
                     server = new Couch.Server(site);
                     db = new Couch.Database(server, 'flinktdb');
                     db.get(
-                        '_design/webclient/_view/items-by-user_id-and-url?key=\["' + user_id + '","' + url + '"\]&include_docs=true', 
+                        '_design/webclient/_view/items-by-user_id-and-url?key=\["' + user_id + '","' + url_encoded + '"\]&include_docs=true', 
                         function(result) {
-                            console.log("loaded selections for user " + user_id + " for url " + url);
-                            //console.log(result.rows);
-                            //try {
-                                for (var n = 0; n < result.rows.length; n++) {
-                                    var id = result.rows[n].id;
-                                    var item = result.rows[n].doc;
-                                    var msg;
-                                    if (item.text_flank == '') {
-                                        msg = 'initial show ' + id + ': ' + item.text;
-                                    }
-                                    else {
-                                        msg = 'initial show with flank ' + id + ': <' + item.text_flank + '> ' + item.text;
-                                    }
-                                    console.log(msg);
-                                    console.log(item);
-                                    show_item(item);
-                                    items[item._id] = item;
-                                    show_count();
-                                    //db.get(
-                                    //    id,
-                                    //    function(item) {
-                                    //        console.log('result for id ' + id);
-                                    //        console.log(item);
-                                    //        show_item(item);
-                                    //        items[item._id] = item;
-                                    //    }
-                                    //);
-                                };
-                            //}
-                            //catch(e) {
-                            //    console.log('error loading user page data');
-                            //    console.log(e);
-                            //}
+                            console_log("loaded selections for user " + user_id + " for url " + url);
+                            //console_log(result.rows);
+                            for (var n = 0; n < result.rows.length; n++) {
+                                var id = result.rows[n].id;
+                                var item = result.rows[n].doc;
+                                var msg;
+                                if (item.text_flank == '') {
+                                    msg = 'initial show ' + id + ': ' + item.text;
+                                }
+                                else {
+                                    msg = 'initial show with flank ' + id + ': <' + item.text_flank + '> ' + item.text;
+                                }
+                                console_log(msg);
+                                console_log(item);
+                                show_item(item);
+                                items[item._id] = item;
+                                show_count();
+                            };
                             return;
                         }
                     );
@@ -270,7 +263,7 @@ else {
 
     function bulb_on() {
         return; // the bulb is not currently produced
-        console.log("bulb on");
+        console_log("bulb on");
         if (false) {
             // the bulb is not shown anymore, we may re-add it later
             document.getElementById('flinkt.org bulb on').style.zIndex = ztop+1;
@@ -282,7 +275,7 @@ else {
     }
 
     function bulb_off() {
-        console.log("bulb off");
+        console_log("bulb off");
         if (false) {
             // the bulb is not shown anymore, we may re-add it later
             document.getElementById('flinkt.org bulb off').style.zIndex = ztop+1;
@@ -353,7 +346,7 @@ else {
     var moving = false;
 
     function on_mousedown() {
-        //console.log("down");
+        //console_log("down");
     }
 
     function on_mousemove(e) {
@@ -361,7 +354,7 @@ else {
     }
 
     function on_mouseup(e) {
-        //console.log("up with moving set to " + moving.toString());
+        //console_log("up with moving set to " + moving.toString());
         if (!e) e = window.event;
         var o = e.target;
         if (!o) o = e.target;
@@ -416,8 +409,8 @@ else {
         
         var prev_selection = o.flinkt_item;
         if (!prev_selection) {
-            console.log("no selection for " + flinkt_item);
-            console.log(o);
+            console_log("no selection for " + flinkt_item);
+            console_log(o);
         }
         else {
             delete_item(prev_selection);
@@ -503,24 +496,7 @@ else {
         mail_div.addEventListener('click',function() { mail() },true);
         top_div.appendChild(mail_div);
 
-          mail_popup = document.createElement('div');
-          mail_popup.classList.add('popup');
-          mail_div.appendChild(mail_popup);
-
-            mail_open = document.createElement('div');
-            mail_open.innerHTML = '<a class="open" href="#">Click</a>';
-            //mail_open.classList.add('open');
-            mail_popup.appendChild(mail_open);
-
-            mail_collapse = document.createElement('div');
-            mail_collapse.classList.add('collapse');
-            mail_collapse.innerHTML = "<div class='box'> <div class='arrow'></div> <div class='arrow-border'></div> CONTENT! <a href='#' class='close'>Close</a> </div>";
-            mail_popup.appendChild(mail_collapse);
-
-
-
-
-        // talk to flinkt.org to keep flinkt cookies out of the host page
+        // talk to the host db site to keep its cookies out of the host page
         /*
         i = document.createElement('iframe');
         i.setAttribute('id','flinkt.org toolbar-home');
@@ -533,7 +509,7 @@ else {
         try { 
             //toolbar_div.hidden = true;
             document.body.appendChild(toolbar_div);
-            //console.log("fadeIn");
+            //console_log("fadeIn");
             jQuery(toolbar_div).fadeIn('slow');
             //document.ft = toolbar_div;
         } 
@@ -615,14 +591,14 @@ else {
                 (range.startOffset != range.endOffset)
             ) {
                 if (range.toString().length < 2) {
-                    console.log("cannot select just one letter for performance reasons");
+                    console_log("cannot select just one letter for performance reasons");
                 }
                 else {
                     if (range.toString().match(/\w+/)) {
                         add_item_from_range(range, 'selection');
                     }
                     else {
-                        console.log("not words: '" + range.toString() + "'");
+                        console_log("not words: '" + range.toString() + "'");
                     }
                 }
             }    
@@ -710,20 +686,20 @@ else {
             
             pages_by_content[sha1] = page;
 
-            console.log("saving the page with _id/key " + sha1);
+            console_log("saving the page with _id/key " + sha1);
         
             db.post(
                 page, 
                 function (result) {
-                    console.log("page save complete for _id " + sha1);
-                    console.log(result);
+                    console_log("page save complete for _id " + sha1);
+                    console_log(result);
                     page._rev = result.rev;
                 }
             );
             
         }
         else {
-            console.log("found the page with _id/key " + page._id + " revision " + page._rev);
+            console_log("found the page with _id/key " + page._id + " revision " + page._rev);
             page.text_elements = text_element_strings;
         }
 
@@ -731,10 +707,10 @@ else {
         var full_text = text_element_strings.join('');
         var expected = full_text.substr(position_in_page_text,text.length);
         if (expected == text) {
-            console.log("position " + position_in_page_text + " returns expected value");
+            console_log("position " + position_in_page_text + " returns expected value");
         }
         else {
-            console.log("coordinate extraction for text returns unexpected: " + expected);
+            console_log("coordinate extraction for text returns unexpected: " + expected);
         }
 
         // extend the left flank until it makes the text unique
@@ -742,7 +718,7 @@ else {
         for (n = position_in_page_text-1; n >= 0; n--) {
             text_with_flank = full_text.substr(n, position_in_page_text - n + text.length);
             if (full_text.indexOf(text_with_flank) == full_text.lastIndexOf(text_with_flank)) {
-                console.log("text with flank is '" + text_with_flank + "'");
+                console_log("text with flank is '" + text_with_flank + "'");
                 break;
             }
         }
@@ -758,9 +734,9 @@ else {
             text_context = full_text.substr(context_start_pos, n-context_start_pos);
         }
 
-        console.log("restoring toolbar...");
+        console_log("restoring toolbar...");
         add_toolbar();
-        console.log("showing all...");
+        console_log("showing all...");
         show_all();
 
         var domain = url_to_domain(url);
@@ -791,15 +767,15 @@ else {
             position_in_page_text: position_in_page_text,
         };
 
-        console.log("showing item...");
-        console.log(item);
+        console_log("showing item...");
+        console_log(item);
         if (show_item(item)) {
             items[item._id] = item;
-            console.log("showing count...");
+            console_log("showing count...");
             show_count();
-            console.log("saving...");
+            console_log("saving...");
             save_item(item);
-            console.log("returning...");
+            console_log("returning...");
             return item;
         }
         else {
@@ -832,7 +808,7 @@ else {
             var s = strings[n];
             for(;;) {
                 after = before.replace(s,"XXXX");
-                //console.log("replaced " + s);
+                //console_log("replaced " + s);
                 if (after == before) {
                     break;
                 }
@@ -964,10 +940,10 @@ else {
                         delete item[key]; 
                     }
                     delete deleted_items[id];
-                    console.log("deletion worked!");
+                    console_log("deletion worked!");
                 }
                 else {
-                    console.log(result);
+                    console_log(result);
                     alert("error deleting item!\n" + item.text + "\n");
                 }
             }
@@ -1020,16 +996,16 @@ else {
     }
 
     function save_item(item) {
-        console.log("save begin " + item._id);
+        console_log("save begin " + item._id);
         db.post(
             item, 
             function (result) {
-                console.log('save complete for item ' + item._id);
-                console.log(result);
+                console_log('save complete for item ' + item._id);
+                console_log(result);
                 item._rev = result.rev;
             }
         );
-        console.log("save sent " + item._id);
+        console_log("save sent " + item._id);
     }
 
     function resolve_range_for_item_by_content(item) {
@@ -1104,17 +1080,17 @@ else {
             previous_full_text = previous_full_text + container_text;
         }
 
-        //console.log(possible_starts);
-        //console.log(possible_ends);
+        //console_log(possible_starts);
+        //console_log(possible_ends);
         
         // there may be more than one range which has a plausible start and end, but not fully matching in content
         var matches = [];
         var matches_no_flank = [];
         var matches_flank_no_prev = [];
         var allnl = new RegExp("\n",'g');
-        ///console.log("ITEM: " + item.text.replace(allnl,'\\n'));
-        //console.log("FLANK: " + item.text_flank.replace(allnl,'\\n'));
-        //console.log("CONTEXT: " + item.text_context.replace(allnl,'\\n'));
+        ///console_log("ITEM: " + item.text.replace(allnl,'\\n'));
+        //console_log("FLANK: " + item.text_flank.replace(allnl,'\\n'));
+        //console_log("CONTEXT: " + item.text_context.replace(allnl,'\\n'));
         for (var s = 0; s < possible_starts.length; s++) {
             var text_from_prev_elements;
             text_from_prev_elements = previous_full_text_by_container_number[possible_starts[s][2]];
@@ -1125,53 +1101,53 @@ else {
                 var r = document.createRange();
                 r.setStart(possible_starts[s][0], possible_starts[s][1]);
                 r.setEnd(possible_ends[e][0], possible_ends[e][1]+1);
-                //console.log("CHECK: " + r.toString());
-                //console.log(" START: " + [s, possible_starts[s][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_starts[s][1]].join(" ") );
-                //console.log(" END: " + [e, possible_ends[e][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_ends[e][1]].join(" ") );
+                //console_log("CHECK: " + r.toString());
+                //console_log(" START: " + [s, possible_starts[s][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_starts[s][1]].join(" ") );
+                //console_log(" END: " + [e, possible_ends[e][0].textContent.replace(new RegExp("\n",'g'),'\\n'),possible_ends[e][1]].join(" ") );
                 if (r.toString() == text) {
-                    //console.log(" MATCH TEXT"); 
+                    //console_log(" MATCH TEXT"); 
                     var pre = text_from_prev_elements;
                     pre = pre + possible_starts[s][0].textContent.substr(0,possible_starts[s][1]);
                     if ( (pre.length - pre.lastIndexOf(item.text_flank)) == item.text_flank.length) {
-                        //console.log("  MATCH FLANK");
+                        //console_log("  MATCH FLANK");
                         var long_flank = item.text_context + item.text_flank;
                         if ( (pre.length - pre.lastIndexOf(long_flank)) == long_flank.length) {
-                            //console.log("   MATCH CONTEXT");
+                            //console_log("   MATCH CONTEXT");
                             matches.push(r);
                         }
                         else {
-                            //console.log("   NOT CONTEXT");
+                            //console_log("   NOT CONTEXT");
                             matches_flank_no_prev.push(r);
                         }
                     }
                     else {
-                        //console.log("  NOT FLANK");
+                        //console_log("  NOT FLANK");
                         matches_no_flank.push(r);
                     }
                 }
                 else {
-                    //console.log(" NOT TEXT");
+                    //console_log(" NOT TEXT");
                 }
             }
         }
         
-        //console.log("matches with flank and context: " + matches.length + ", flank but not context: " + matches_flank_no_prev.length + ", no flank at all: " + matches_no_flank.length);
+        //console_log("matches with flank and context: " + matches.length + ", flank but not context: " + matches_flank_no_prev.length + ", no flank at all: " + matches_no_flank.length);
         if (matches.length) {
             return matches[0];
         }
         else if (matches_flank_no_prev.length) {
             // resovles to one, but possibly out of context
-            console.log("selection has changed context:\n" + matches_flank_no_prev[0].toString() + "\n" + item.text_context + item.text_flank);
+            console_log("selection has changed context:\n" + matches_flank_no_prev[0].toString() + "\n" + item.text_context + item.text_flank);
             return matches_flank_no_prev[0];
         }
         else if (matches_no_flank.length) {
             // does not even resolve to one
-            console.log("selection has changed context and is no longer unambiguous:\n" + matches_no_flank[0].toString() + "\n" + item.text_context + item.text_flank);
+            console_log("selection has changed context and is no longer unambiguous:\n" + matches_no_flank[0].toString() + "\n" + item.text_context + item.text_flank);
             //return matches_no_flank[0];
             return;
         }
         else {
-            console.log("selection is missing: " + item.text);
+            console_log("selection is missing: " + item.text);
             return;
         }
     }
@@ -1181,13 +1157,13 @@ else {
         var blines = b.split("\n");
         for (var n = 0; n < alines.length; n++) {
             if (alines[n] != blines[n]) {
-                console.log(n);
-                console.log(alines[n]);
-                console.log(blines[n]);
+                console_log(n);
+                console_log(alines[n]);
+                console_log(blines[n]);
                 return;
             }
         }
-        console.log("same!");
+        console_log("same!");
     }
 
     function fe(f) {
@@ -1195,7 +1171,7 @@ else {
             "_all_docs?include_docs=true", 
             function(r) { 
                 for(n = 0; n < r.rows.length; n++) { 
-                    console.log(f(r.rows[n].doc)) 
+                    console_log(f(r.rows[n].doc)) 
                 } 
             }
         );

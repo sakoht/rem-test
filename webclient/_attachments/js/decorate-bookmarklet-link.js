@@ -1,8 +1,8 @@
 $(document).ready(
     function() {
-        site = 'http://www.flinkt.org';
-        //site = 'http://localhost:5983';
-        path_prefix = '/flinktdb/_design/webclient';
+        site = 'http://localhost:5984';
+        db = 'flinktdb'
+        path_prefix = db + '/_design/webclient';
 
         // TODO: this is copied from the selector{,-dev}.js
         // and probably needs a single home.
@@ -37,7 +37,7 @@ $(document).ready(
         b += "    s.flinkt_init_bookmarklet_version = 3;";
         b += "    s.setAttribute('type','text/javascript');";
         b += "    s.setAttribute('charset','UTF-8');";
-        b += "    s.setAttribute('src','" + site + path_prefix + "/js/selector.js?id=" + bookmarklet_id + "&date=\"' + s.flinkt_init_session_id + '\"');";
+        b += "    s.setAttribute('src','" + site + '/' + path_prefix + "/js/selector.js?id=" + bookmarklet_id + "&date=\"' + s.flinkt_init_session_id + '\"');";
         b += "    s.setAttribute('id','flinkt.org bookmarklet');";
         b += "    document.body.appendChild(s);";
         b += "  }";
@@ -47,7 +47,7 @@ $(document).ready(
         b += "})();";
         var a = document.getElementById('flinkt.org bookmarklet link');
         a.href=b;
-        a.innerHTML = a.innerHTML + ' ' + site + path_prefix;
+        //a.innerHTML = a.innerHTML + ' ' + site + '/' + path_prefix;
     }
 );
 

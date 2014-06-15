@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>flinkt</title>
-    <link rel="stylesheet" href="../style/main.css" type="text/css">
+    <title>rememberthis</title>
+    <xlink rel="stylesheet" href="../style/main.css" type="text/css">
     <script type="text/javascript" src="/_utils/script/jquery.js"></script>
     <script type="text/javascript" src="/_utils/script/jquery.couch.js"></script>
     <script type="text/javascript" src="/flinktdb/_design/webclient/js/decorate-bookmarklet-link.js"></script>
@@ -10,7 +10,7 @@
   <body>
     <div id="account"></div>
 
-    <h1>flinkt</h1>
+    <h1>rememberthis</h1>
 
     <div id="profile"></div>
     <div id="items"></div>
@@ -18,25 +18,23 @@
     <div id="sidebar">
         <ol>
             <li>
-                <a id='flinkt.org bookmarklet link' href="alert('still loading!...')">flinkt</a>   <==========   drag this link onto your bookmarks bar!
+                <a id='flinkt.org bookmarklet link' href="alert('still loading!...')">rememberthis</a>   &lt==========   drag this link onto your bookmarks bar!
             </li>
+            <ul>
+                <li> in Chrome, go to View -&lt Always Show Bookmarks Bar if the bar is not visible
+            </ul>
             <li>go to any web site (or stay right here to try it)</li>
-            <li>click the bookmark to turn on the flinkt pen ...it appears on the right</li>
-            <li>select any statement to highlight it</li><
-            li>click any highlighted statement to see options like email, digg, facebook, google+, and twitter (NOT IMPLEMENTED)</li>
-            <li>turn the pen on and off whenever you want by clicking on the image on the right (NOT IMPEMENTED)</li>
-            <li>when you come back to the site, turn on the pen again to see your previous highlights (NOT IMPLEMENTED)</li>
-            <li>click on the green arrow to see all of your highlights, see a capture of the page, and send them around (NOT IMPLEMENTED)</li>
+            <li>highlight something</li>
+            <li>click the bookmark to highlighit it</li>
+            <li>highlight more things as you like</li>
+            <li>note that a pen appears in the upper right of the page while the highlighter is on</li>
+            <li>click the pen to turn it off</li>
+            <li>click the bookmark again to turn it off, and hide the highlights</li>
+            <li>click the bookmark again to turn it back on and see your highlights</li>
         </ol>
     </div>
   </body>
-  <script src="vendor/couchapp/loader.js"></script>
-  <script type="text/javascript" charset="utf-8">
-    $.couch.app(function(app) {
-      $("#account").evently("account", app);
-      $("#profile").evently("profile", app);
-      $.evently.connect("#account","#profile", ["loggedIn","loggedOut"]);
-      $("#items").evently("items", app);
-    });
+  <xscript src="vendor/couchapp/loader.js"></script>
+  <xscript type="text/javascript" charset="utf-8">
   </script>
 </html>
